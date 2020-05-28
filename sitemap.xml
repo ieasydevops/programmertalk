@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/authors/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/author/nelson-bighetti/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/post/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/publication_types/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/publication/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/talk/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/tags/</loc>
+  </url>
+  
+</urlset>
