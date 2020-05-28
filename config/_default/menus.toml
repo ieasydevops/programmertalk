@@ -28,6 +28,12 @@
   url = "courses/"
   weight = 50
 
+
+[[main]]
+  name = "AAAAA"
+  url = "#contact"
+  weight = 60
+
 [[main]]
   name = "Contact"
   url = "#contact"
