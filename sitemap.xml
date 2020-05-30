@@ -3,22 +3,57 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/courses/redis/example1/</loc>
+    <loc>https://meixinyun.github.io/programmertalk/ee/cicd/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/collaborationplatform/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/cicd/gitlabpipeline/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/cicd/gitops/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/cicd/tekton/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/courses/redis/history/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/courses/example/example1/</loc>
+    <loc>https://meixinyun.github.io/programmertalk/courses/tikv/example1/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/courses/example/</loc>
-    <lastmod>2018-09-09T00:00:00+00:00</lastmod>
+    <loc>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</loc>
+    <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/courses/redis/</loc>
+    <lastmod>2018-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/courses/tikv/</loc>
     <lastmod>2018-09-09T00:00:00+00:00</lastmod>
   </url>
   
@@ -28,13 +63,18 @@
   </url>
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/courses/example/example2/</loc>
+    <loc>https://meixinyun.github.io/programmertalk/courses/tikv/example2/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
   <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/</loc>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://meixinyun.github.io/programmertalk/</loc>
-    <lastmod>2019-05-05T00:00:00+01:00</lastmod>
+    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -43,15 +83,19 @@
   </url>
   
   <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/cicd/z/</loc>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/author/ace-mei/</loc>
+  </url>
+  
+  <url>
     <loc>https://meixinyun.github.io/programmertalk/authors/</loc>
   </url>
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/categories/</loc>
-  </url>
-  
-  <url>
-    <loc>https://meixinyun.github.io/programmertalk/author/nelson-bighetti/</loc>
   </url>
   
   <url>

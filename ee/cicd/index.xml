@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CICD实现方案 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/ee/cicd/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/ee/cicd/index.xml" rel="self" type="application/rss+xml" />
+    <description>CICD实现方案</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 09 Sep 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>CICD实现方案</title>
+      <link>https://meixinyun.github.io/programmertalk/ee/cicd/</link>
+    </image>
+    
+    <item>
+      <title>基于GitlabPipeline实现CI/CD</title>
+      <link>https://meixinyun.github.io/programmertalk/ee/cicd/gitlabpipeline/</link>
+      <pubDate>Mon, 09 Sep 2019 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/ee/cicd/gitlabpipeline/</guid>
+      <description>&lt;h2 id=&#34;1-基本概念&#34;&gt;1 基本概念&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Continuous Integration (CI) 持续集成，主要指在代码构建过程中持续地进行代码的集成、构建、以及自动化测试等。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Continuous Deployment (CD) 持续部署。在代码构建完毕后，可以方便地将新版本部署上线,方便持续交付。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Continuous Delivery (CD) 持续交付&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;GitLab-CICD 配合GitLab使用的持续集成/部署系统，（当然，可以配合GitLab使用，比如Jenkins等)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;GitLab-Runner 用来执行软件集成脚本的执行引擎。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code&gt;
+  Runner就像一个个的工人，而GitLab-CI就是这些工人的一个管理中心，所有工人都要在GitLab-CI里面登记注册，并且表明自己是为哪个工程服务的。当相应的工程发生变化时（Push Code），GitLab-CI就会通知相应的工人执行软件集成脚本直到部署上线
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;GitLab-Runner 分为两类&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Shared Runner ：所有工程都能够用的。只有系统管理员能够创建Shared Runner&lt;/li&gt;
+&lt;li&gt;Specific Runner ：只能为指定的工程服务。拥有该工程访问权限的人都能够为该工程创建Shared Runner&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;CI/CD Pipeline: 基于各个项目中的CICD配置文件（.gitlab-ci.yml）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-基本概念&#34;&gt;2 基本概念&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>基于GitOps的实现</title>
+      <link>https://meixinyun.github.io/programmertalk/ee/cicd/gitops/</link>
+      <pubDate>Mon, 09 Sep 2019 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/ee/cicd/gitops/</guid>
+      <description>&lt;h1 id=&#34;gitops&#34;&gt;GitOps&lt;/h1&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>CI/CD构建框架TekTon的深入剖析</title>
+      <link>https://meixinyun.github.io/programmertalk/ee/cicd/tekton/</link>
+      <pubDate>Mon, 09 Sep 2019 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/ee/cicd/tekton/</guid>
+      <description>&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Tekton 的历史&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Tekton 的设计分析&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Tekton 详细设计&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Tekton 实践案例&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Tekton 源码分析&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Tekton 问题汇总&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;tekton-历史&#34;&gt;Tekton 历史&lt;/h1&gt;
+&lt;p&gt;Tekton 是一个谷歌开源的kubernetes原生CI/CD系统，功能强大且灵活。google cloud已经推出了基于Tekton的服务（https://cloud.google.com/Tekton/）&lt;/p&gt;
+&lt;p&gt;其实Tekton的前身是Knative的build-pipeline项目，从名字可以看出这个项目是为了给build模块增加pipeline的功能，但是大家发现随着不同的功能加入到Knative build模块中，build模块越来越变得像一个通用的CI/CD系统，这已经脱离了Knative build设计的初衷，于是，索性将build-pipeline剥离出Knative，摇身一变成为Tekton，而Tekton也从此致力于提供全功能、标准化的原生kubernetesCI/CD解决方案。&lt;/p&gt;
+&lt;p&gt;Tekton虽然还是一个挺新的项目，但是已经成为 Continuous Delivery Foundation (CDF) 的四个初始项目之一，另外三个则是大名鼎鼎的Jenkins、Jenkins X、Spinnaker，实际上Tekton还可以作为插件集成到JenkinsX中。所以，如果你觉得Jenkins太重，没必要用Spinnaker这种专注于多云平台的CD，为了避免和Gitlab耦合不想用gitlab-ci，那么Tekton值得一试。&lt;/p&gt;
+&lt;h1 id=&#34;tekton-的设计分析&#34;&gt;Tekton 的设计分析&lt;/h1&gt;
+&lt;h2 id=&#34;tekton目标&#34;&gt;Tekton目标&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;标准化你的 CI/CD 工具：Tekton 提供的开源组件可以跨供应商，语言和部署环境标准化 CI / CD 工具和流程。Tekton 提供的管道，版本，工作流程和其他 CI / CD 组件与行业规范一致，可以和你现有的 CI / CD 工具（如 Jenkins，Jenkins X，Skaffold 和 Knative 等）配合使用&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;内置用于 Kubernetes 的最佳实践：使用 Tekton 的内置最佳实践可以快速创建云原生 CI / CD 管道，目标是让开发人员创建和部署不可变镜像，管理基础架构的版本控制或执行更简单的回滚。 还可以利用 Tekton 的滚动部署，蓝 / 绿部署，金丝雀部署或 GitOps 工作流等高级部署模式。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;tekton-的核心概念&#34;&gt;Tekton 的核心概念&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Task：顾名思义，task表示一个构建任务，task里可以定义一系列的steps，例如编译代码、构建镜像、推送镜像等，每个step实际由一个Pod执行。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;TaskRun：task只是定义了一个模版，taskRun才真正代表了一次实际的运行，当然你也可以自己手动创建一个taskRun，taskRun创建出来之后，就会自动触发task描述的构建任务。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Pipeline：一个或多个task、PipelineResource以及各种定义参数的集合。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;PipelineRun：类似task和taskRun的关系，pipelineRun也表示某一次实际运行的pipeline，下发一个pipelineRun CRD实例到kubernetes后，同样也会触发一次pipeline的构建。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;PipelineResource：表示pipeline input资源，比如github上的源码，或者pipeline output资源，例如一个容器镜像或者构建生成的jar包等。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;相关的概念&#34;&gt;相关的概念&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;蓝绿部署： 是不停老版本，部署新版本然后进行测试，确认OK，将流量切到新版本，然后老版本同时也升级到新版本。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;灰度： 是选择部分部署新版本，将部分流量引入到新版本，新老版本同时提供服务。等待灰度的版本OK，可全量覆盖老版本。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;灰度是不同版本共存，蓝绿是新旧版本切换，2种模式的出发点不一样。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://meixinyun.github.io/programmertalk/ee/cicd/z/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/ee/cicd/z/</guid>
+      <description>&lt;p&gt;开源 CI/CD 构建框架 TekTon 的深入剖析
+九辩 DevOps时代 5月13日&lt;/p&gt;
+&lt;p&gt;简介
+Tekton 是一个功能强大且灵活的 Kubernetes 原生 CI/CD 构建框架，用于创建持续集成和交付（CI/CD）系统。关于 Tekton ，网上可以搜到很多很多介绍文档，本文主要阐述我对 Tekton 的实现原理和背后的技术逻辑的一点理解。
+Tekton 定义了 Task、TaskRun、Pipeline、PipelineRun、PipelineResource 五类核心对象，通过对 Task 和 Pipeline 的抽象，我们可以定义出任意组合的 pipeline 模板来完成各种各样的 CI/CD 任务，再通过 TaskRun、PipelineRun和PipelineResource 可以将这些模板套用到各个实际的项目中。
+实现原理
+高度抽象的结构化设计使得 Tekton 具有非常灵活的特性，那么 Tekton 是如何实现 workflow 的流转的呢？
+Tekton 利用 Kubernetes 的 List-Watch 机制，在启动时初始化了 2 个 Controller、PipelineRunController 和 TaskRunController 。
+PipelineRunController 监听 PipelineRun 对象的变化。在它的 reconcile 逻辑中，将 pipeline 中所有的 Task 构建为一张有向无环图(DAG)，通过遍历 DAG 找到当前可被调度的 Task 节点创建对应的 TaskRun 对象。&lt;/p&gt;
+&lt;p&gt;DAG 支持
+Tekton 对 DAG 的支持相对比较简单。在 Tekton 中一个 Pipeline 就是一张 DAG ，Pipeline 中的多个Task可是DAG中的节点。Task 默认并发执行，可以通过 RunAfter 和 From 关键字控制执行顺序。
+示例：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;name: lint-repo
+taskRef:
+name: pylint
+resources:
+inputs:
+- name: workspace
+resource: my-repo&lt;/li&gt;
+&lt;li&gt;name: test-app
+taskRef:
+name: make-test
+resources:
+inputs:
+- name: workspace
+resource: my-repo&lt;/li&gt;
+&lt;li&gt;name: build-app
+taskRef:
+name: kaniko-build-app
+runAfter:
+&lt;ul&gt;
+&lt;li&gt;test-app
+resources:
+inputs:
+&lt;ul&gt;
+&lt;li&gt;name: workspace
+resource: my-repo
+outputs:&lt;/li&gt;
+&lt;li&gt;name: image
+resource: my-app-image&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;name: build-frontend
+taskRef:
+name: kaniko-build-frontend
+runAfter:
+&lt;ul&gt;
+&lt;li&gt;test-app
+resources:
+inputs:
+&lt;ul&gt;
+&lt;li&gt;name: workspace
+resource: my-repo
+outputs:&lt;/li&gt;
+&lt;li&gt;name: image
+resource: my-frontend-image&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;name: deploy-all
+taskRef:
+name: deploy-kubectl
+resources:
+inputs:
+- name: my-app-image
+resource: my-app-image
+from:
+- build-app
+- name: my-frontend-image
+resource: my-frontend-image
+from:
+- build-frontend
+渲染出的执行顺序为：
+|            |
+v            v
+test-app    lint-repo
+/       &lt;br&gt;
+v          v
+build-app  build-frontend
+\          /
+v        v
+deploy-all
+相比于 Argo 等专注在 workflow 的项目而言， Tekton 支持的任务编排方式是非常有限的。常见的循环，递归，重试，超时等待等策略都是没有的。
+条件判断
+Tekton 支持 condition 关键字来进行条件判断。Condtion 只支持判断当前Task是否执行，不能作为 DAG 的分支条件来进行动态 DAG 的渲染。
+condition：
+&lt;a href=&#34;https://github.com/tektoncd/pipeline/blob/e2755583d52ae46907790d40ba4886d55611cd23/docs/conditions.md&#34;&gt;https://github.com/tektoncd/pipeline/blob/e2755583d52ae46907790d40ba4886d55611cd23/docs/conditions.md&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ul&gt;
+&lt;li&gt;condition检查失败(exitCode != 0)，task不会被执行，pipelineRun状态不会因为condition检查失败而失败。&lt;/li&gt;
+&lt;li&gt;多个条件之间 “与” 逻辑关系
+PipelineResource 在 Task 间数据交换
+作为 CI/CD 的工具，代码在什么时候 Clone 到 WorkSpace 中，如何实现的？Tekton 中抽象了 PipelineResource 进行任务之间的数据交换， GitResource 是其中最基础的一种。用法如下。
+声明一个 Git 类型的 PipelineResource :
+kind: PipelineResource
+metadata:
+name: skaffold-git-build-push-kaniko
+spec:
+type: git
+params:
+&lt;ul&gt;
+&lt;li&gt;name: revision
+value: v0.32.0&lt;/li&gt;
+&lt;li&gt;name: url
+value: &lt;a href=&#34;https://github.com/GoogleContainerTools/skaffold&#34;&gt;https://github.com/GoogleContainerTools/skaffold&lt;/a&gt;
+在 Task 中引用这个 Resource 做为输入：
+kind: Task
+metadata:
+name: build-push-kaniko
+spec:
+inputs:
+resources:
+&lt;ul&gt;
+&lt;li&gt;name: workspace
+type: git
+steps:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;name: build-and-push
+image: registry.cn-shanghai.aliyuncs.com/kaniko-project-edas/executor:v0.17.1
+代码会被 clone 在 /workspace 目录。
+Tekton 是如何处理这些 PipelineResource 的呢，这就要从 Taskrun Controller 如何创建 Pod 说起。
+Tekton 中一个 TaskRun 对应一个 Pod ，每个 Pod 有一系列 init-containers 和 step-containers 组成。init-container 中完成认证信息初始化， workspace 目录初始化等初始化工作。
+在处理 step-container 时，会根据这个 Task 引用的资源 Append 或者 Insert 一个 step-container 来处理对应的输和输出，如下图所示。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Task中Step执行顺序控制
+Tekton 源自 Knative Build ，在 Knative Build 中使用 Init-container 来串联 Steps 保证 Steps 顺序执行，在上面的分析中我们知道 Tekton 是用 Containers 来执行 Steps ， Pod 的 Containers 是并行执行的， Tekton 是如何保证 Steps 执行顺序呢？&lt;/p&gt;
+&lt;p&gt;这是一个 TaskRun 创建的 Pod 的部分描述信息，可以看到所有的 Step 都是被 /tekton/tools/entrypoints 封装起来执行的。 -wait_file 指定一个文件，通过监听文件句柄，在探测到文件存在时执行被封装的 Step 任务。 -post_file 指定一个文件，在Step任务完成后创建这个文件。通过文件序列 /tekton/tools/${index} 来对 Step 进行排序。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;args:
+&lt;ul&gt;
+&lt;li&gt;-wait_file&lt;/li&gt;
+&lt;li&gt;/tekton/tools/0&lt;/li&gt;
+&lt;li&gt;-post_file&lt;/li&gt;
+&lt;li&gt;/tekton/tools/1&lt;/li&gt;
+&lt;li&gt;-termination_path&lt;/li&gt;
+&lt;li&gt;/tekton/termination&lt;/li&gt;
+&lt;li&gt;-entrypoint&lt;/li&gt;
+&lt;li&gt;/ko-app/git-init&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;-url&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/GoogleContainerTools/skaffold&#34;&gt;https://github.com/GoogleContainerTools/skaffold&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;-revision&lt;/li&gt;
+&lt;li&gt;v0.32.0&lt;/li&gt;
+&lt;li&gt;-path&lt;/li&gt;
+&lt;li&gt;/workspace/workspace
+command:&lt;/li&gt;
+&lt;li&gt;/tekton/tools/entrypoint
+image: registry.cn-shanghai.aliyuncs.com/kaniko-project-edas/git-init:v0.10.2
+name: step-git-source-skaffold-git-build-push-kaniko-rz765&lt;/li&gt;
+&lt;li&gt;args:
+&lt;ul&gt;
+&lt;li&gt;-wait_file&lt;/li&gt;
+&lt;li&gt;/tekton/tools/1&lt;/li&gt;
+&lt;li&gt;-post_file&lt;/li&gt;
+&lt;li&gt;/tekton/tools/2&lt;/li&gt;
+&lt;li&gt;-termination_path&lt;/li&gt;
+&lt;li&gt;/tekton/termination&lt;/li&gt;
+&lt;li&gt;-entrypoint&lt;/li&gt;
+&lt;li&gt;/kaniko/executor&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;&amp;ndash;dockerfile=Dockerfile&lt;/li&gt;
+&lt;li&gt;&amp;ndash;destination=localhost:5000/leeroy-web&lt;/li&gt;
+&lt;li&gt;&amp;ndash;context=/workspace/workspace/examples/microservices/leeroy-web&lt;/li&gt;
+&lt;li&gt;&amp;ndash;oci-layout-path=$(inputs.resources.builtImage.path)
+command:&lt;/li&gt;
+&lt;li&gt;/tekton/tools/entrypoint
+image: registry.cn-shanghai.aliyuncs.com/kaniko-project-edas/executor@sha256:565d31516f9bb91763dcf8e23ee161144fd4e27624b257674136c71559ce4493
+name: step-build-and-push&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;args:
+&lt;ul&gt;
+&lt;li&gt;-wait_file&lt;/li&gt;
+&lt;li&gt;/tekton/tools/2&lt;/li&gt;
+&lt;li&gt;-post_file&lt;/li&gt;
+&lt;li&gt;/tekton/tools/3&lt;/li&gt;
+&lt;li&gt;-termination_path&lt;/li&gt;
+&lt;li&gt;/tekton/termination&lt;/li&gt;
+&lt;li&gt;-entrypoint&lt;/li&gt;
+&lt;li&gt;/ko-app/imagedigestexporter&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;-images&lt;/li&gt;
+&lt;li&gt;&amp;lsquo;[{&amp;ldquo;name&amp;rdquo;:&amp;ldquo;skaffold-image-leeroy-web-build-push-kaniko&amp;rdquo;,&amp;ldquo;type&amp;rdquo;:&amp;ldquo;image&amp;rdquo;,&amp;ldquo;url&amp;rdquo;:&amp;ldquo;localhost:5000/leeroy-web&amp;rdquo;,&amp;ldquo;digest&amp;rdquo;:&amp;quot;&amp;quot;,&amp;ldquo;OutputImageDir&amp;rdquo;:&amp;quot;/workspace/output/builtImage&amp;rdquo;}]&amp;rsquo;
+command:&lt;/li&gt;
+&lt;li&gt;/tekton/tools/entrypoint
+image: registry.cn-shanghai.aliyuncs.com/kaniko-project-edas/imagedigestexporter:v0.10.2
+name: step-image-digest-exporter-lvlj9
+实践
+使用 Tekton 构建代码并部署到 SAE
+Serverless 应用引擎（ SAE ） 是阿里云上一款面向应用的 Serverless PaaS 平台，帮助 PaaS 层用户免运维 IaaS，按需使用，按量计费，实现低门槛微服务应用上云，有效解决成本及效率问题。支持 Spring Cloud、Dubbo 和 HSF 等流行的开发框架，真正实现了 Serverless 架构和微服务架构的完美融合。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;接下来将使用 Tekton 部署一个 Spring Cloud 微服务应用到 SAE 平台。&lt;/p&gt;
+&lt;p&gt;示例中的演示代码地址：https://github.com/alicloud-demo/spring-cloud-demo
+1、前置条件
+在 Kubernetes 集群上安装 Tekton ：
+&lt;a href=&#34;https://github.com/tektoncd/pipeline/blob/master/docs/install.md&#34;&gt;https://github.com/tektoncd/pipeline/blob/master/docs/install.md&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;创建一个 SAE 应用：
+&lt;a href=&#34;https://help.aliyun.com/document_detail/122439.html&#34;&gt;https://help.aliyun.com/document_detail/122439.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;2、定义一个 Git 资源
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+name: spring-cloud-demo
+spec:
+type: git
+params:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;name: url
+value: &lt;a href=&#34;https://github.com/alicloud-demo/spring-cloud-demo&#34;&gt;https://github.com/alicloud-demo/spring-cloud-demo&lt;/a&gt;
+3、定义构建和部署 Task
+根据 SAE 官方文档进行部署，详情参考：
+&lt;a href=&#34;https://help.aliyun.com/document_detail/110639.html&#34;&gt;https://help.aliyun.com/document_detail/110639.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+name: build-deploy-sae
+spec:
+inputs:
+resources:
+- name: source
+type: git
+steps:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;name: build-and-deploy
+image: maven:3.3-jdk-8
+command: [&amp;ldquo;mvn&amp;rdquo;, &amp;ldquo;clean&amp;rdquo;, &amp;ldquo;package&amp;rdquo;, &amp;ldquo;-f&amp;rdquo;, &amp;ldquo;source&amp;rdquo;, &amp;ldquo;toolkit:deploy&amp;rdquo;, &amp;ldquo;-Dtoolkit_profile=toolkit_profile.yaml&amp;rdquo;, &amp;ldquo;-Dtoolkit_package=toolkit_package.yaml&amp;rdquo;, &amp;ldquo;-Dtoolkit_deploy=toolkit_deploy.yaml&amp;rdquo;]
+securityContext:
+runAsUser: 0
+4、定义 TaskRun 运行任务
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+name: build-deploy-sae
+spec:
+taskRef:
+name: build-deploy-sae
+inputs:
+resources:
+&lt;ul&gt;
+&lt;li&gt;name: source
+resourceRef:
+name: spring-cloud-demo
+5、导入到kubernetes中运行
+kubectl apply -f source-2-service-taskrun.yaml&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;6、查看日志
+kubectl logs build-deploy-sae-pod-85xdk step-build-and-deploy
+构建日志：&lt;/p&gt;
+&lt;p&gt;部署日志：&lt;/p&gt;
+&lt;p&gt;[INFO] Start to upload [provider3-1.0-SNAPSHOT.jar] using [Sae uploader].
+[INFO] [##################################################] 100.0%
+[INFO] Upload finished in 3341 ms, download url: [https://edas-hz.oss-cn-hangzhou.aliyuncs.com/apps/K8S_APP_ID/37adb12b-5f0c-4711-98ec-1f1e91e6b043/provider3-1.0-SNAPSHOT.jar]
+[INFO] Begin to trace change order: e2499b9a-6a51-4904-819c-1838c1dd62cb
+[INFO] PipelineName: Batch: 1, PipelineId:f029314a-88bb-450b-aa35-7cc550ff1329
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Waiting&amp;hellip;
+[INFO] Deploy application successfully!
+[INFO] &amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;
+[INFO] BUILD SUCCESS
+[INFO] &amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;
+[INFO] Total time: 32:41 min
+[INFO] Finished at: 2020-04-15T10:09:39+00:00
+[INFO] Final Memory: 47M/190M
+[INFO] &amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;
+7、验证部署结果
+在 SAE 控制台查看变更记录：&lt;/p&gt;
+&lt;p&gt;验证应用访问：&lt;/p&gt;
+&lt;p&gt;总结
+区别于传统的 CI/CD 工具（Jenkins），Tekton 是一套构建 CICD 系统的框架。Tekton 不能使你立即获得 CI/CD 的能力。但是基于 Tekton 可以设计出各种花式的构建部署流水线。&lt;/p&gt;
+&lt;p&gt;得益于 Tekton 良好的抽象，这些设计出的流水线可以作为模板在多个组织，项目间共享。Tekton 源自 Knative 的 Build-Template 项目，设计之初的一个重要目标就是使人们能够共享和重用构成 pipeline 的组件，以及 Pipeline 本身。在 Tekton的RoadMap 中 Tekton Catelog 就是为了实现这一目标而提出的。
+区别于 Argo 这种基于 Kubernetes 的 Workflow 工具， Tekton 在工作流控制上的支持是比较弱的。一些复杂的场景比如循环，递归等都是不支持的。更不用说 Argo 在高并发和大集群调度下的性能优化。这和 Tekton 的定位有关， Tekton 定位于实现 CICD 的框架，对于 CICD 不需要过于复杂的流程控制。
+大部分的研发流程可以被若干个最佳实践来覆盖。而这些最佳实践应该也必须可以在不同的组织间共享，为此 Tekton 设计了 PipelineResource 的概念。PipelineResource 是 Task 间交互的接口，也是跨平台跨组织共享重用的组件，在 PipelineResource 上还可以有很多想象空间。
+作者信息：
+九辩，阿里巴巴高级开发工程师，负责阿里云EDAS(企业级分布式应用服务)应用生命周期研发工作，长期关注云时代微服务的部署和治理工作。&lt;/p&gt;
+&lt;p&gt;来源：本文转自公众号阿里巴巴中间件，点击查看原文。&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

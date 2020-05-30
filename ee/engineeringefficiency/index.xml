@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>工程效率体系 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/index.xml" rel="self" type="application/rss+xml" />
+    <description>工程效率体系</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 09 Sep 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>工程效率体系</title>
+      <link>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/</link>
+    </image>
+    
+    <item>
+      <title>研发效能-指标度量</title>
+      <link>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</link>
+      <pubDate>Sun, 05 May 2019 00:00:00 +0100</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</guid>
+      <description>&lt;h1 id=&#34;目标&#34;&gt;目标&lt;/h1&gt;
+&lt;p&gt;本文定义了研发效能，它指的是一个组织持续快速交付价值的能力，可以从流动效率、资源效率和质量三个方面来衡量。其中流动效率是改进研发效能的核心抓手，它带来系统和全局的改进。&lt;/p&gt;
+&lt;h2 id=&#34;研发效能质量度量&#34;&gt;研发效能质量度量&lt;/h2&gt;
+&lt;h3 id=&#34;衡量指标&#34;&gt;衡量指标&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;持续发布能力&lt;/li&gt;
+&lt;li&gt;需求响应周期&lt;/li&gt;
+&lt;li&gt;交付吞吐率&lt;/li&gt;
+&lt;li&gt;交付过程质量&lt;/li&gt;
+&lt;li&gt;对外交付质量&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/programmertalk/ee/%E6%95%88%E8%83%BD%E8%A1%A1%E9%87%8F%E6%8C%87%E6%A0%87.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;效能目标设定&#34;&gt;效能目标设定&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;部分团队的2-1-1愿景&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/programmertalk/ee/%E6%95%88%E8%83%BD%E7%9B%AE%E6%A0%87.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;解释&#34;&gt;解释&lt;/h2&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
