@@ -52,10 +52,13 @@ subtitle = "Learning is a life long journey"
 
 Welcome !!
 
-Life goes on, exploration goes on.
+
+
+
 
 
 Technology makes our lives better.
+
 
 
 
