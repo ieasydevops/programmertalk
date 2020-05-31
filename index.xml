@@ -246,7 +246,7 @@
       <link>https://meixinyun.github.io/programmertalk/post/concurrency/</link>
       <pubDate>Sat, 30 May 2020 23:17:49 +0800</pubDate>
       <guid>https://meixinyun.github.io/programmertalk/post/concurrency/</guid>
-      <description>&lt;h2 id=&#34;why-is-concurrency-hard&#34;&gt;“Why Is Concurrency Hard?”&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;basic-concept-of-concurrency&#34;&gt;“Basic Concept of Concurrency”&lt;/h2&gt;
 &lt;h3 id=&#34;race-conditions&#34;&gt;Race Conditions&lt;/h3&gt;
 &lt;p&gt;“A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained.”&lt;/p&gt;
 &lt;p&gt;Most of the time, this shows up in what’s called a data race, where one concurrent operation attempts to read a variable while at some undetermined time another concurrent operation is attempting to write to the same variable.&lt;/p&gt;
@@ -272,6 +272,7 @@ understand livelocks.
 &lt;p&gt;Livelocks are a subset of a larger set of problems called starvation.&lt;/p&gt;
 &lt;h4 id=&#34;starvation&#34;&gt;Starvation&lt;/h4&gt;
 &lt;p&gt;Starvation is any situation where a concurrent process cannot get all the resources it needs to perform work.&lt;/p&gt;
+&lt;p&gt;Keep in mind that starvation can also apply to CPU, memory, file handles, database connections: any resource that must be shared is a candidate for starvation&lt;/p&gt;
 </description>
     </item>
     
