@@ -68,12 +68,22 @@
   </url>
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/ee/</loc>
-    <lastmod>2019-09-09T00:00:00+00:00</lastmod>
+    <loc>https://meixinyun.github.io/programmertalk/post/concurrency/</loc>
+    <lastmod>2020-05-30T23:17:49+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/post/</loc>
+    <lastmod>2020-05-30T23:17:49+08:00</lastmod>
   </url>
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/</loc>
+    <lastmod>2020-05-30T23:17:49+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/</loc>
     <lastmod>2019-09-09T00:00:00+00:00</lastmod>
   </url>
   
@@ -96,10 +106,6 @@
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/categories/</loc>
-  </url>
-  
-  <url>
-    <loc>https://meixinyun.github.io/programmertalk/post/</loc>
   </url>
   
   <url>
