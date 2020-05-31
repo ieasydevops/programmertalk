@@ -27,7 +27,7 @@
   
     
   
-  <meta name="description" content="“Why Is Concurrency Hard?” Race Conditions “A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained.">
+  <meta name="description" content="“Basic Concept of Concurrency” Race Conditions “A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained.">
 
   
   <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/post/concurrency/">
@@ -235,7 +235,7 @@
   <meta property="og:site_name" content="ProgrammerTalk">
   <meta property="og:url" content="https://meixinyun.github.io/programmertalk/post/concurrency/">
   <meta property="og:title" content="Concurrency | ProgrammerTalk">
-  <meta property="og:description" content="“Why Is Concurrency Hard?” Race Conditions “A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained."><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="og:description" content="“Basic Concept of Concurrency” Race Conditions “A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained."><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
   <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
   
     
@@ -285,7 +285,7 @@
       "url": "https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "“Why Is Concurrency Hard?” Race Conditions “A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained."
+  "description": "“Basic Concept of Concurrency” Race Conditions “A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained."
 }
 </script>
 
@@ -691,7 +691,7 @@
   <div class="article-container">
 
     <div class="article-style">
-      <h2 id="why-is-concurrency-hard">“Why Is Concurrency Hard?”</h2>
+      <h2 id="basic-concept-of-concurrency">“Basic Concept of Concurrency”</h2>
 <h3 id="race-conditions">Race Conditions</h3>
 <p>“A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained.”</p>
 <p>Most of the time, this shows up in what’s called a data race, where one concurrent operation attempts to read a variable while at some undetermined time another concurrent operation is attempting to write to the same variable.</p>
@@ -717,6 +717,7 @@ understand livelocks.
 <p>Livelocks are a subset of a larger set of problems called starvation.</p>
 <h4 id="starvation">Starvation</h4>
 <p>Starvation is any situation where a concurrent process cannot get all the resources it needs to perform work.</p>
+<p>Keep in mind that starvation can also apply to CPU, memory, file handles, database connections: any resource that must be shared is a candidate for starvation</p>
 
     </div>
 

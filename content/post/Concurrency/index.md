@@ -28,7 +28,7 @@ image:
 projects: []
 ---
 
-## “Why Is Concurrency Hard?”
+## “Basic Concept of Concurrency”
 
 ### Race Conditions
 
@@ -79,3 +79,5 @@ Livelocks are a subset of a larger set of problems called starvation.
 #### Starvation
 
 Starvation is any situation where a concurrent process cannot get all the resources it needs to perform work.
+
+Keep in mind that starvation can also apply to CPU, memory, file handles, database connections: any resource that must be shared is a candidate for starvation
