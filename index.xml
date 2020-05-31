@@ -5,7 +5,7 @@
     <link>https://meixinyun.github.io/programmertalk/</link>
       <atom:link href="https://meixinyun.github.io/programmertalk/index.xml" rel="self" type="application/rss+xml" />
     <description>ProgrammerTalk</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 09 Sep 2019 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Sat, 30 May 2020 23:17:49 +0800</lastBuildDate>
     <image>
       <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>ProgrammerTalk</title>
@@ -238,6 +238,40 @@
 &lt;p&gt;Cras aliquam rhoncus ipsum, in hendrerit nunc mattis vitae. Duis vitae efficitur metus, ac tempus leo. Cras nec fringilla lacus. Quisque sit amet risus at ipsum pharetra commodo. Sed aliquam mauris at consequat eleifend. Praesent porta, augue sed viverra bibendum, neque ante euismod ante, in vehicula justo lorem ac eros. Suspendisse augue libero, venenatis eget tincidunt ut, malesuada at lorem. Donec vitae bibendum arcu. Aenean maximus nulla non pretium iaculis. Quisque imperdiet, nulla in pulvinar aliquet, velit quam ultrices quam, sit amet fringilla leo sem vel nunc. Mauris in lacinia lacus.&lt;/p&gt;
 &lt;p&gt;Suspendisse a tincidunt lacus. Curabitur at urna sagittis, dictum ante sit amet, euismod magna. Sed rutrum massa id tortor commodo, vitae elementum turpis tempus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean purus turpis, venenatis a ullamcorper nec, tincidunt et massa. Integer posuere quam rutrum arcu vehicula imperdiet. Mauris ullamcorper quam vitae purus congue, quis euismod magna eleifend. Vestibulum semper vel augue eget tincidunt. Fusce eget justo sodales, dapibus odio eu, ultrices lorem. Duis condimentum lorem id eros commodo, in facilisis mauris scelerisque. Morbi sed auctor leo. Nullam volutpat a lacus quis pharetra. Nulla congue rutrum magna a ornare.&lt;/p&gt;
 &lt;p&gt;Aliquam in turpis accumsan, malesuada nibh ut, hendrerit justo. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Quisque sed erat nec justo posuere suscipit. Donec ut efficitur arcu, in malesuada neque. Nunc dignissim nisl massa, id vulputate nunc pretium nec. Quisque eget urna in risus suscipit ultricies. Pellentesque odio odio, tincidunt in eleifend sed, posuere a diam. Nam gravida nisl convallis semper elementum. Morbi vitae felis faucibus, vulputate orci placerat, aliquet nisi. Aliquam erat volutpat. Maecenas sagittis pulvinar purus, sed porta quam laoreet at.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Concurrency</title>
+      <link>https://meixinyun.github.io/programmertalk/post/concurrency/</link>
+      <pubDate>Sat, 30 May 2020 23:17:49 +0800</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/concurrency/</guid>
+      <description>&lt;h2 id=&#34;why-is-concurrency-hard&#34;&gt;“Why Is Concurrency Hard?”&lt;/h2&gt;
+&lt;h3 id=&#34;race-conditions&#34;&gt;Race Conditions&lt;/h3&gt;
+&lt;p&gt;“A race condition occurs when two or more operations must execute in the correct order, but the program has not been written so that this order is guaranteed to be maintained.”&lt;/p&gt;
+&lt;p&gt;Most of the time, this shows up in what’s called a data race, where one concurrent operation attempts to read a variable while at some undetermined time another concurrent operation is attempting to write to the same variable.&lt;/p&gt;
+&lt;h3 id=&#34;atomicity&#34;&gt;Atomicity&lt;/h3&gt;
+&lt;p&gt;When something is considered atomic, or to have the property of atomicity, this means that within the context that it is operating, it is indivisible, or uninterruptible.&lt;/p&gt;
+&lt;p&gt;Something may be atomic in one context, but not another.&lt;/p&gt;
+&lt;p&gt;When thinking about atomicity, very often the first thing you need to do is to define the context, or scope, the operation will be considered to be atomic in
+Everything follows from this.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“indivisible” and “uninterruptible”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;These terms mean that within the context you’ve defined, something that is atomic will happen in its entirety without anything happening in that context simultaneously&lt;/p&gt;
+&lt;h3 id=&#34;deadlocks-livelocks-and-starvation&#34;&gt;Deadlocks, Livelocks, and Starvation”&lt;/h3&gt;
+&lt;h4 id=&#34;deadlocks&#34;&gt;Deadlocks&lt;/h4&gt;
+&lt;p&gt;A deadlocked program is one in which all concurrent processes are waiting on one another. In this state, the program will never recover without outside intervention.&lt;/p&gt;
+&lt;h4 id=&#34;livelocks&#34;&gt;Livelocks&lt;/h4&gt;
+&lt;p&gt;Livelocks are programs that are actively performing concurrent operations, but these operations do nothing to move the state of the program forward.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Have you ever been in a hallway walking toward another person? She moves to one 
+side to let you pass, but you’ve just done the same. So you move to the other
+side, but she’s also done the same. Imagine this going on forever, and you 
+understand livelocks.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Livelocks are a subset of a larger set of problems called starvation.&lt;/p&gt;
+&lt;h4 id=&#34;starvation&#34;&gt;Starvation&lt;/h4&gt;
+&lt;p&gt;Starvation is any situation where a concurrent process cannot get all the resources it needs to perform work.&lt;/p&gt;
 </description>
     </item>
     
