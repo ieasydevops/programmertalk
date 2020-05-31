@@ -28,7 +28,7 @@ image:
 projects: []
 ---
 
-## “Basic Concept of Concurrency”
+## Basic Concept of Concurrency
 
 ### Race Conditions
 
