@@ -653,8 +653,8 @@
 
       <nav id="TableOfContents">
   <ul>
-    <li><a href="#1-基本概念">1 基本概念</a></li>
-    <li><a href="#2-基本概念">2 基本概念</a></li>
+    <li><a href="#术语表">术语表</a></li>
+    <li><a href="#实现架构">实现架构</a></li>
   </ul>
 </nav>
 
@@ -670,37 +670,44 @@
           <h1>基于GitlabPipeline实现CI/CD</h1>
 
           <div class="article-style">
-            <h2 id="1-基本概念">1 基本概念</h2>
-<ul>
-<li>
-<p>Continuous Integration (CI) 持续集成，主要指在代码构建过程中持续地进行代码的集成、构建、以及自动化测试等。</p>
-</li>
-<li>
-<p>Continuous Deployment (CD) 持续部署。在代码构建完毕后，可以方便地将新版本部署上线,方便持续交付。</p>
-</li>
-<li>
-<p>Continuous Delivery (CD) 持续交付</p>
-</li>
-<li>
-<p>GitLab-CICD 配合GitLab使用的持续集成/部署系统，（当然，可以配合GitLab使用，比如Jenkins等)</p>
-</li>
-<li>
-<p>GitLab-Runner 用来执行软件集成脚本的执行引擎。</p>
-</li>
-</ul>
-<pre><code>
-  Runner就像一个个的工人，而GitLab-CI就是这些工人的一个管理中心，所有工人都要在GitLab-CI里面登记注册，并且表明自己是为哪个工程服务的。当相应的工程发生变化时（Push Code），GitLab-CI就会通知相应的工人执行软件集成脚本直到部署上线
-
-</code></pre>
-<p>GitLab-Runner 分为两类</p>
-<ol>
-<li>Shared Runner ：所有工程都能够用的。只有系统管理员能够创建Shared Runner</li>
-<li>Specific Runner ：只能为指定的工程服务。拥有该工程访问权限的人都能够为该工程创建Shared Runner</li>
-</ol>
-<ul>
-<li>CI/CD Pipeline: 基于各个项目中的CICD配置文件（.gitlab-ci.yml）</li>
-</ul>
-<h2 id="2-基本概念">2 基本概念</h2>
+            <h2 id="术语表">术语表</h2>
+<table>
+<thead>
+<tr>
+<th align="left">术语</th>
+<th align="left">简称</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Continuous Integration</td>
+<td align="left">CI</td>
+<td align="left">持续集成，主要指在代码构建过程中持续地进行代码<br>的集成、构建、以及自动化测试等</td>
+</tr>
+<tr>
+<td align="left">Continuous Deployment</td>
+<td align="left">CD</td>
+<td align="left">持续部署。在代码构建完毕后，可以方便地将新版本部<br>署上线,方便持续交付。</td>
+</tr>
+<tr>
+<td align="left">Continuous Delivery</td>
+<td align="left">CD</td>
+<td align="left">持续交付</td>
+</tr>
+<tr>
+<td align="left">GitLab-CICD</td>
+<td align="left">GitLab-CICD</td>
+<td align="left">配合GitLab使用的持续集成/部署系统</td>
+</tr>
+<tr>
+<td align="left">GitLab-Runner</td>
+<td align="left">Runner</td>
+<td align="left">用来执行软件集成脚本的执行引擎</td>
+</tr>
+</tbody>
+</table>
+<h2 id="实现架构">实现架构</h2>
 
           </div>
 
