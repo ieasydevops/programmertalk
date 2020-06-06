@@ -35,3 +35,4 @@ menu:
 
 ## 实现架构
 
+{{< gdocs src="https://meixinyun.github.io/mtsdb/docs/chapter2/influxdb/InfluxdbOverView.html" >}}
