@@ -17,37 +17,44 @@
       <link>https://meixinyun.github.io/programmertalk/ee/cicd/gitlabpipeline/</link>
       <pubDate>Mon, 09 Sep 2019 00:00:00 +0000</pubDate>
       <guid>https://meixinyun.github.io/programmertalk/ee/cicd/gitlabpipeline/</guid>
-      <description>&lt;h2 id=&#34;1-基本概念&#34;&gt;1 基本概念&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;Continuous Integration (CI) 持续集成，主要指在代码构建过程中持续地进行代码的集成、构建、以及自动化测试等。&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Continuous Deployment (CD) 持续部署。在代码构建完毕后，可以方便地将新版本部署上线,方便持续交付。&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Continuous Delivery (CD) 持续交付&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;GitLab-CICD 配合GitLab使用的持续集成/部署系统，（当然，可以配合GitLab使用，比如Jenkins等)&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;GitLab-Runner 用来执行软件集成脚本的执行引擎。&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;pre&gt;&lt;code&gt;
-  Runner就像一个个的工人，而GitLab-CI就是这些工人的一个管理中心，所有工人都要在GitLab-CI里面登记注册，并且表明自己是为哪个工程服务的。当相应的工程发生变化时（Push Code），GitLab-CI就会通知相应的工人执行软件集成脚本直到部署上线
-
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;GitLab-Runner 分为两类&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Shared Runner ：所有工程都能够用的。只有系统管理员能够创建Shared Runner&lt;/li&gt;
-&lt;li&gt;Specific Runner ：只能为指定的工程服务。拥有该工程访问权限的人都能够为该工程创建Shared Runner&lt;/li&gt;
-&lt;/ol&gt;
-&lt;ul&gt;
-&lt;li&gt;CI/CD Pipeline: 基于各个项目中的CICD配置文件（.gitlab-ci.yml）&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;2-基本概念&#34;&gt;2 基本概念&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;术语表&#34;&gt;术语表&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;left&#34;&gt;术语&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;简称&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;描述&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Continuous Integration&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;CI&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;持续集成，主要指在代码构建过程中持续地进行代码&lt;br&gt;的集成、构建、以及自动化测试等&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Continuous Deployment&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;CD&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;持续部署。在代码构建完毕后，可以方便地将新版本部&lt;br&gt;署上线,方便持续交付。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Continuous Delivery&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;CD&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;持续交付&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;GitLab-CICD&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;GitLab-CICD&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;配合GitLab使用的持续集成/部署系统&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;GitLab-Runner&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Runner&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;用来执行软件集成脚本的执行引擎&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;实现架构&#34;&gt;实现架构&lt;/h2&gt;
 </description>
     </item>
     
