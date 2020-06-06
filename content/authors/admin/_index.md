@@ -62,6 +62,6 @@ user_groups:
 - Visitors
 ---
 
-Ace Mei is a experts of devops. 
+Ace Mei is an experts of devops. 
 His research interests include distributed system, devops, aiops.
 
