@@ -61,6 +61,6 @@ There are two ways of constructing a software design: One way is to make it so s
 Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.
 - Brian Kernighan
 
-## Technology makes our lives better.
+
 
 ## Life goes on, exploration goes on.

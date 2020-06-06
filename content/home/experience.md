@@ -17,6 +17,7 @@ date_format = "Jan 2006"
 #   Required fields are `title`, `company`, and `date_start`.
 #   Leave `date_end` empty if it's your current employer.
 #   Begin/end multi-line descriptions with 3 quotes `"""`.
+
 [[experience]]
   title = "Architect"
   company = "XXX"
@@ -26,20 +27,24 @@ date_format = "Jan 2006"
   date_end = ""
   description = """
   Responsibilities include:
-
   * Project Management
   * Architecture Design
   * R & D
-
   """
+
 
 [[experience]]
   title = "Senior Engineer"
   company = "XXX"
   company_url = ""
   location = "BeiJin"
-  date_start = "2014-09-01"
-  date_end = "2016-10-01"
-  description = """Devops"""
+  date_start = "2011-09-01"
+  date_end = "2014-10-01"
+  description = """
+  Responsibilities include:
+  * Project Management
+  * Architecture Design
+  * R & D
+  """
 
 +++
