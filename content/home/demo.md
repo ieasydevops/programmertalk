@@ -67,4 +67,7 @@ The sooner you start to code, the longer the program will take.
 —— Roy Carlson
 
 
+Plagiarism is the sincerest form of flattery
+
+
 ## Life goes on, exploration goes on.
