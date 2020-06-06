@@ -55,10 +55,13 @@ subtitle = "Learning is a life long journey"
 
 ## Have an aim in life, or your energies will all be wasted.
 
+
 There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies. The first method is far more difficult.
 -C.A.R. Hoare
 
+
 Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it. - Brian Kernighan
+
 
 The sooner you start to code, the longer the program will take. 
 —— Roy Carlson
