@@ -17,7 +17,7 @@
       <link>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</link>
       <pubDate>Sun, 05 May 2019 00:00:00 +0100</pubDate>
       <guid>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</guid>
-      <description>&lt;h1 id=&#34;目标&#34;&gt;目标&lt;/h1&gt;
+      <description>&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
 &lt;p&gt;本文定义了研发效能，它指的是一个组织持续快速交付价值的能力，可以从流动效率、资源效率和质量三个方面来衡量。其中流动效率是改进研发效能的核心抓手，它带来系统和全局的改进。&lt;/p&gt;
 &lt;h2 id=&#34;研发效能质量度量&#34;&gt;研发效能质量度量&lt;/h2&gt;
 &lt;h3 id=&#34;衡量指标&#34;&gt;衡量指标&lt;/h3&gt;
@@ -28,13 +28,13 @@
 &lt;li&gt;交付过程质量&lt;/li&gt;
 &lt;li&gt;对外交付质量&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/programmertalk/ee/%E6%95%88%E8%83%BD%E8%A1%A1%E9%87%8F%E6%8C%87%E6%A0%87.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;../../engineeringefficiency/effectiveness_evaluation.png&#34; alt=&#34;研发效能度量&#34;&gt;&lt;/p&gt;
 &lt;h3 id=&#34;效能目标设定&#34;&gt;效能目标设定&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;部分团队的2-1-1愿景&lt;/li&gt;
+&lt;li&gt;部分团队的2-1-1 目标&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/programmertalk/ee/%E6%95%88%E8%83%BD%E7%9B%AE%E6%A0%87.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;解释&#34;&gt;解释&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;../../engineeringefficiency/effectiveness_objective.png&#34; alt=&#34;Objective&#34;&gt;&lt;/p&gt;
 </description>
     </item>
     

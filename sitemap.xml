@@ -38,11 +38,6 @@
   </url>
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</loc>
-    <lastmod>2019-05-05T00:00:00+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://meixinyun.github.io/programmertalk/containertechnology/dockerswarm/</loc>
     <lastmod>2018-09-09T00:00:00+00:00</lastmod>
   </url>
@@ -94,6 +89,11 @@
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/courses/</loc>
+    <lastmod>2019-05-05T00:00:00+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/ee/engineeringefficiency/%E7%A0%94%E5%8F%91%E6%95%88%E8%83%BD%E5%BA%A6%E9%87%8F/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
