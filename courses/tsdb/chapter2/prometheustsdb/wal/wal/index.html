@@ -27,7 +27,7 @@
   
     
   
-  <meta name="description" content="概览 WAL管理 WAL Reader/Writer Log File 格式 Record 文件格式 优势">
+  <meta name="description" content="目录 概览 WAL管理 WAL Read/Writer Log file 格式 Record 文件格式 格式的优缺点 WAL的">
 
   
   <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/wal/wal/">
@@ -238,7 +238,7 @@
   <meta property="og:site_name" content="ProgrammerTalk">
   <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/wal/wal/">
   <meta property="og:title" content="WAL | ProgrammerTalk">
-  <meta property="og:description" content="概览 WAL管理 WAL Reader/Writer Log File 格式 Record 文件格式 优势"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="og:description" content="目录 概览 WAL管理 WAL Read/Writer Log file 格式 Record 文件格式 格式的优缺点 WAL的"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
   <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
   
     
@@ -688,12 +688,28 @@
 
       <nav id="TableOfContents">
   <ul>
+    <li><a href="#目录">目录</a></li>
     <li><a href="#概览">概览</a></li>
     <li><a href="#wal管理">WAL管理</a></li>
     <li><a href="#wal-readerwriter">WAL Reader/Writer</a></li>
     <li><a href="#log-file-格式">Log File 格式</a></li>
-    <li><a href="#record-文件格式">Record 文件格式</a></li>
+    <li><a href="#record-文件格式">Record 文件格式</a>
+      <ul>
+        <li><a href="#the-legacy-record-format">The Legacy Record Format</a></li>
+        <li><a href="#recyclable-record-format">Recyclable Record Format</a></li>
+      </ul>
+    </li>
+    <li><a href="#record-format-details-for-legacy-format">Record Format Details For Legacy Format</a></li>
     <li><a href="#优势">优势</a></li>
+    <li><a href="#wal的实现">WAL的实现</a>
+      <ul>
+        <li><a href="#wla-文件格式">WLA 文件格式</a></li>
+        <li><a href="#记录的编码格式">记录的编码格式</a></li>
+        <li><a href="#wla-顶层接口设计">WLA 顶层接口设计</a></li>
+        <li><a href="#段-segment">段 Segment</a></li>
+        <li><a href="#页-page">页 Page</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
 
@@ -709,12 +725,256 @@
           <h1>WAL</h1>
 
           <div class="article-style">
-            <h2 id="概览">概览</h2>
+            <h2 id="目录">目录</h2>
+<ul>
+<li>概览</li>
+<li>WAL管理</li>
+<li>WAL Read/Writer</li>
+<li>Log file 格式</li>
+<li>Record 文件格式</li>
+<li>格式的优缺点</li>
+<li>WAL的实现</li>
+</ul>
+<h2 id="概览">概览</h2>
+<p>Write ahead log (WAL) 以日志文件的形式将内存表的操作顺序的持久化到存储介质上。在失败的时候，WAL文件 通过利用这些日志文件重建内存表，来恢复数据库到之前一致的状态。当一个内存表被安全的刷写到持久化介质后，对应的WLA日志会逐步的归档和淘汰，最终
+归档的日志经过一个时间后会从磁盘清理掉。</p>
 <h2 id="wal管理">WAL管理</h2>
+<p>WAL文件是有在WAL目录下递增的序列号生成，为了能恢复到database的状态，这些文件需要按照序列号来读。WAL管理器，
+提供了将WAL文件作为单个单元读取的抽象。在内部，它使用Reader或Writer抽象来打开和读取文件。</p>
 <h2 id="wal-readerwriter">WAL Reader/Writer</h2>
+<p>Writer 为向日志记录提供了一个抽象。存储媒介特定的内部细节，通过WriteableFile 接口屏蔽掉。
+类似地，Reader提供了 从特定日志文件中顺序读取日志记录的抽象。内部存储媒介的详细信息有 SequentailFile 接口处理。</p>
 <h2 id="log-file-格式">Log File 格式</h2>
+<p>日志文件有一系列可变长度的记录组成。记录按kBlockSize分组。如果某个记录无法放入剩余空间，则剩余空间将填充null数据。
+Writer 以kBlockSize为单位进行读/写</p>
+<pre><code>       +-----+-------------+--+----+----------+------+-- ... ----+
+ File  | r0  |        r1   |P | r2 |    r3    |  r4  |           |
+       +-----+-------------+--+----+----------+------+-- ... ----+
+       &lt;--- kBlockSize ------&gt;|&lt;-- kBlockSize ------&gt;|
+
+  rn = variable size records
+  P = Padding
+
+</code></pre>
 <h2 id="record-文件格式">Record 文件格式</h2>
+<p>Record 的布局格式有两种： Legacy 和 Recyclable</p>
+<h3 id="the-legacy-record-format">The Legacy Record Format</h3>
+<pre><code>+---------+-----------+-----------+--- ... ---+
+|CRC (4B) | Size (2B) | Type (1B) | Payload   |
++---------+-----------+-----------+--- ... ---+
+
+CRC = 32bit hash computed over the payload using CRC
+Size = Length of the payload data
+Type = Type of record
+       (kZeroType, kFullType, kFirstType, kLastType, kMiddleType )
+       The type is used to group a bunch of records together to represent
+       blocks that are larger than kBlockSize
+Payload = Byte stream as long as specified by the payload size
+
+</code></pre>
+<h3 id="recyclable-record-format">Recyclable Record Format</h3>
+<pre><code>+---------+-----------+-----------+----------------+--- ... ---+
+|CRC (4B) | Size (2B) | Type (1B) | Log number (4B)| Payload   |
++---------+-----------+-----------+----------------+--- ... ---+
+Same as above, with the addition of
+Log number = 32bit log file number, so that we can distinguish between
+records written by the most recent log writer vs a previous one.
+
+</code></pre>
+<h2 id="record-format-details-for-legacy-format">Record Format Details For Legacy Format</h2>
+<p>日志文件内容是一个32KB块的序列。唯一的例外是文件的尾部可能包含部分块。</p>
+<p>每一个block 包含一系列记录组成:</p>
+<pre><code>
+block := record* trailer?
+record :=
+  checksum: uint32	// crc32c of type and data[]
+  length: uint16
+  type: uint8		// One of FULL, FIRST, MIDDLE, LAST 
+  data: uint8[length]
+
+</code></pre>
+<p>记录永远不会在块的最后6个字节内开始（因为它不适合）。这里的任何剩余字节都构成了尾部，它必须完全由零字节组成，并且必须被读者跳过。</p>
+<blockquote>
+<p>如果当前的block 还剩下 7 个 bytes, 当新增一个非零长度的record时，写入的 writer 必须先发出一个记录(其中包含零字节
+的用户数据)以填充block 尾部的 7 个 bytes ,然后在后续的block 中，发出用户的所有数据</p>
+</blockquote>
+<p>用户的记录的数据类型如下：</p>
+<pre><code>FULL == 1
+FIRST == 2
+MIDDLE == 3
+LAST == 4
+
+</code></pre>
+<p>以后可以有更多的数据类型，一些 Readers 可能会跳过他们不理解的recored, 也有一些Readers 或报告 这些数据被忽略。</p>
+<p>Full record 或包含整个用户记录。</p>
+<p>FIRST, MIDDLE, LAST, 是用于用户记录的类型，这些类型被分割为多个片段（通常是因为block 的边界）。
+FIRST: user record 的第一个片段的类型
+LAST:  user record 的最后一个片段的类型
+MID: 是用户记录的所有内部片段的类型。</p>
+<p>举例:</p>
+<p>一序列用户的 records</p>
+<p>A: length 1000</p>
+<p>B: length  97270</p>
+<p>C: length 8000</p>
+<p>A 会作为完整记录存储在第一个block中
+B 会拆分成三个block. 第一个fragment 占据第一个block 剩余的部分
+第二个 fragment 会占据第二个block 的所有
+第三个 fragment 会占据第三个block 的前半部分，这将在第三个block中留下6个bytes  的空闲空间，该block 作为
+尾部留空
+C 作为完整的记录存在第四个block 中</p>
 <h2 id="优势">优势</h2>
+<ol>
+<li>
+<p>不需要任何启发式 resyncing  ， 只需要转到下一个block 边界 ，扫描。如果又损坏，请跳到
+下一个block。作为一个附带的好处，当一个日志文件的部分内容作为recode 潜入到另一个日志文件中时，我们
+不会感到困惑。</p>
+</li>
+<li>
+<p>Splitting at approximate boundaries (e.g., for mapreduce) is simple:</p>
+</li>
+</ol>
+<p>找到下一个block 并跳过记录，直到找到完整的或第一个记录为止。</p>
+<ol start="3">
+<li>对于大的记录，我们不需要额外的缓冲。</li>
+</ol>
+<p>缺点:</p>
+<ol>
+<li>不能打包小的 records. 这个可以通过添加新的类型来解决，这是当前实现的一个缺点</li>
+<li>不能压缩。同样，这个可以通过增加记录的类型来解决这个问题</li>
+</ol>
+<h2 id="wal的实现">WAL的实现</h2>
+<h3 id="wla-文件格式">WLA 文件格式</h3>
+<p>WAL  按编号和顺序的段操作</p>
+<p>·000000·
+·000001·
+·000002·
+·000003·</p>
+<p>默认最大128M，</p>
+<p>以32KB的页数写入一个段。只有最近一段的最后一页可能是不完整的。WAL记录是一个不透明的字节片，如果超过当前页面的剩余空间，
+,它被拆分成子记录。在 segment 边界，记录永远不会分开，如果单个记录超过默认段大小，则将创建更大尺寸的segment.</p>
+<p>Prometheus tsdb 的WAL格式如下：</p>
+<pre><code>┌───────────┬──────────┬────────────┬──────────────┐
+│ type &lt;1b&gt; │ len &lt;2b&gt; │ CRC32 &lt;4b&gt; │ data &lt;bytes&gt; │
+└───────────┴──────────┴────────────┴──────────────┘
+
+
+
+</code></pre>
+<p>类型标签又如下几种状态：</p>
+<ul>
+<li><code>0</code>: rest of page will be empty</li>
+<li><code>1</code>: a full record encoded in a single fragment</li>
+<li><code>2</code>: first fragment of a record</li>
+<li><code>3</code>: middle fragment of a record</li>
+<li><code>4</code>: final fragment of a record</li>
+</ul>
+<h3 id="记录的编码格式">记录的编码格式</h3>
+<p>分三种类型</p>
+<ul>
+<li>序列记录</li>
+<li>样本记录</li>
+<li>Tombstone 类型</li>
+</ul>
+<p>Series records encode the labels that identifies a series and its unique ID.</p>
+<h4 id="序列记录">序列记录</h4>
+<p>一个序列记录，会包含该序列的标签和唯一ID</p>
+<pre><code>┌────────────────────────────────────────────┐
+│ type = 1 &lt;1b&gt;                              │
+├────────────────────────────────────────────┤
+│ ┌─────────┬──────────────────────────────┐ │
+│ │ id &lt;8b&gt; │ n = len(labels) &lt;uvarint&gt;    │ │
+│ ├─────────┴────────────┬─────────────────┤ │
+│ │ len(str_1) &lt;uvarint&gt; │ str_1 &lt;bytes&gt;   │ │
+│ ├──────────────────────┴─────────────────┤ │
+│ │  ...                                   │ │
+│ ├───────────────────────┬────────────────┤ │
+│ │ len(str_2n) &lt;uvarint&gt; │ str_2n &lt;bytes&gt; │ │
+│ └───────────────────────┴────────────────┘ │
+│                  . . .                     │
+└────────────────────────────────────────────┘
+</code></pre>
+<h4 id="采集样本记录">采集样本记录</h4>
+<p>采样数据样本记录 主要包含了 三元组 <code>（序列ID，时间戳，序列值Value）</code>
+序列的索引ID和时间戳  被编码为 w.r.t
+第一个行存储了启始的ID 和启始的时间戳。</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────┐
+│ type = 2 &lt;1b&gt;                                                    │
+├──────────────────────────────────────────────────────────────────┤
+│ ┌────────────────────┬───────────────────────────┐               │
+│ │ id &lt;8b&gt;            │ timestamp &lt;8b&gt;            │               │
+│ └────────────────────┴───────────────────────────┘               │
+│ ┌────────────────────┬───────────────────────────┬─────────────┐ │
+│ │ id_delta &lt;uvarint&gt; │ timestamp_delta &lt;uvarint&gt; │ value &lt;8b&gt;  │ │
+│ └────────────────────┴───────────────────────────┴─────────────┘ │
+│                              . . .                               │
+└──────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h4 id="tombstone记录">Tombstone记录</h4>
+<p>Tombstone records encode tombstones as a list of triples <code>(series_id, min_time, max_time)</code>
+and specify an interval for which samples of a series got deleted.</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│ type = 3 &lt;1b&gt;                                       │
+├─────────────────────────────────────────────────────┤
+│ ┌─────────┬───────────────────┬───────────────────┐ │
+│ │ id &lt;8b&gt; │ min_time &lt;varint&gt; │ max_time &lt;varint&gt; │ │
+│ └─────────┴───────────────────┴───────────────────┘ │
+│                        . . .                        │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="wla-顶层接口设计">WLA 顶层接口设计</h3>
+<p>数据结构设计</p>
+<pre><code>
+// WAL is a write ahead log that stores records in segment files.
+// It must be read from start to end once before logging new data.
+// If an error occurs during read, the repair procedure must be called
+// before it's safe to do further writes.
+//
+// Segments are written to in pages of 32KB, with records possibly split
+// across page boundaries.
+// Records are never split across segments to allow full segments to be
+// safely truncated. It also ensures that torn writes never corrupt records
+// beyond the most recent segment.
+type WAL struct {
+	dir         string
+	logger      log.Logger
+	segmentSize int
+	mtx         sync.RWMutex
+	segment     *Segment // Active segment.
+	donePages   int      // Pages written to the segment.
+	page        *page    // Active page.
+	stopc       chan chan struct{}
+	actorc      chan func()
+	closed      bool // To allow calling Close() more than once without blocking.
+	compress    bool
+	snappyBuf   []byte
+
+	metrics *walMetrics
+}
+
+</code></pre>
+<h3 id="段-segment">段 Segment</h3>
+<p>默认128M，</p>
+<h3 id="页-page">页 Page</h3>
+<p>页是内存的buffer , 用来向磁盘批量刷数据。
+如果 Records 比一个页大，此记录会被分割，并单独的刷写到磁盘。</p>
+<p>磁盘的刷写动作在如下情况被触发：</p>
+<ol>
+<li>当一个记录不适合当前的page 大小</li>
+<li>或剩下的空间放不下下一个记录</li>
+</ol>
+<pre><code>
+// page is an in memory buffer used to batch disk writes.
+// Records bigger than the page size are split and flushed separately.
+// A flush is triggered when a single records doesn't fit the page size or
+// when the next record can't fit in the remaining free page space.
+type page struct {
+	alloc   int
+	flushed int
+	buf     [pageSize]byte
+}
+
+
+</code></pre>
 
           </div>
 
