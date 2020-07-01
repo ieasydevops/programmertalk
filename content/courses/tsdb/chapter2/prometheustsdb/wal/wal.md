@@ -343,5 +343,14 @@ type page struct {
 	buf     [pageSize]byte
 }
 
-
 ```
+
+### WAL 初始化
+
+1. 根据目录，获取segment列表
+2. 创建最后一个segment
+
+// New returns a new WAL over the given directory.
+func New(logger log.Logger, reg prometheus.Registerer, dir string, compress bool) (*WAL, error) {
+	return NewSize(logger, reg, dir, DefaultSegmentSize, compress)
+}
