@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Devops OverView | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/devops/setup/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/devops/setup/index.xml" rel="self" type="application/rss+xml" />
+    <description>Devops OverView</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 09 Sep 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>Devops OverView</title>
+      <link>https://meixinyun.github.io/programmertalk/devops/setup/</link>
+    </image>
+    
+    <item>
+      <title>云原生-容器化交付</title>
+      <link>https://meixinyun.github.io/programmertalk/devops/setup/%E5%AE%B9%E5%99%A8%E5%8C%96%E4%BA%A4%E4%BB%98/</link>
+      <pubDate>Sun, 05 May 2019 00:00:00 +0100</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/devops/setup/%E5%AE%B9%E5%99%A8%E5%8C%96%E4%BA%A4%E4%BB%98/</guid>
+      <description>&lt;h2 id=&#34;什么是云原生&#34;&gt;什么是云原生&lt;/h2&gt;
+&lt;h3 id=&#34;在云环境构建和运行&#34;&gt;在云环境构建和运行&lt;/h3&gt;
+&lt;p&gt;云环境包括：私有云，公有云，或混合云&lt;/p&gt;
+&lt;h3 id=&#34;技术点&#34;&gt;技术点&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;容器&lt;/li&gt;
+&lt;li&gt;服务网格&lt;/li&gt;
+&lt;li&gt;微服务&lt;/li&gt;
+&lt;li&gt;不可变基础设施&lt;/li&gt;
+&lt;li&gt;声明式API&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;目的&#34;&gt;目的&lt;/h3&gt;
+&lt;p&gt;构建&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;容错性好&lt;/li&gt;
+&lt;li&gt;易于管理&lt;/li&gt;
+&lt;li&gt;便于观测&lt;/li&gt;
+&lt;li&gt;松耦合
+的系统&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;云原需要关注的几个问题&#34;&gt;云原需要关注的几个问题&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;如何让应用能充分利用云计算基础设施&lt;/li&gt;
+&lt;li&gt;如何具有快平台的移植性&lt;/li&gt;
+&lt;li&gt;如何让应用更具有可预见性，更健壮&lt;/li&gt;
+&lt;li&gt;如何实现运维自动化&lt;/li&gt;
+&lt;li&gt;如何实现微服务化&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;持续交付&#34;&gt;持续交付&lt;/h2&gt;
+&lt;h3 id=&#34;交付的边界&#34;&gt;交付的边界&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;交付内容决定了最终交付的结果&lt;/li&gt;
+&lt;li&gt;交付动作决定了交付过程的可靠性，连续性，稳定性&lt;/li&gt;
+&lt;li&gt;一次交付过程，包含: 网络的变更，服务载体的变更，而发布策略就是保证交付过程&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://meixinyun.github.io/programmertalk/devops/setup/cdtools/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/devops/setup/cdtools/</guid>
+      <description>&lt;h1 id=&#34;开源框架&#34;&gt;开源框架&lt;/h1&gt;
+&lt;h2 id=&#34;derrick&#34;&gt;Derrick&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://meixinyun.github.io/programmertalk/devops/setup/cicdsetupfrom0to1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/devops/setup/cicdsetupfrom0to1/</guid>
+      <description>&lt;h1 id=&#34;从零搭建cicd系统标准化交付流程&#34;&gt;从零搭建CICD系统标准化交付流程&lt;/h1&gt;
+&lt;h2 id=&#34;基础背景知识&#34;&gt;基础背景知识&lt;/h2&gt;
+&lt;h3 id=&#34;jenkins-ci&#34;&gt;Jenkins CI&lt;/h3&gt;
+&lt;h2 id=&#34;选型及优势&#34;&gt;选型及优势&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;成熟度高，周边生态丰富，1000+ 插件体系&lt;/li&gt;
+&lt;li&gt;Java开发工具调查占比 60%，CI市场占比70%&lt;/li&gt;
+&lt;li&gt;社区活跃度高&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;基于jenkins-ci-构建自动化交付流程&#34;&gt;基于Jenkins CI 构建自动化交付流程&lt;/h2&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,1290 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="目标 通过学习蓝鲸体系架构及设计思想，扩展自己在运维体系建设领">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/">
+  <meta property="og:title" content="蓝鲸体系架构及设计思想学习笔记 | ProgrammerTalk">
+  <meta property="og:description" content="目标 通过学习蓝鲸体系架构及设计思想，扩展自己在运维体系建设领"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+    
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/"
+  },
+  "headline": "蓝鲸体系架构及设计思想学习笔记",
+  
+  "datePublished": "0001-01-01T00:00:00Z",
+  "dateModified": "0001-01-01T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ace Mei"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "ProgrammerTalk",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "目标 通过学习蓝鲸体系架构及设计思想，扩展自己在运维体系建设领"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>蓝鲸体系架构及设计思想学习笔记 | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>蓝鲸体系架构及设计思想学习笔记</h1>
+
+  
+  <p class="page-subtitle">运维体系建设</p>
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Jan 1, 0001
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    5 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">运维体系建设 学习笔记</a></span>
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <h1 id="目标">目标</h1>
+<pre><code>  通过学习蓝鲸体系架构及设计思想，扩展自己在运维体系建设领域的认知。
+</code></pre>
+<h1 id="学习重点">学习重点</h1>
+<pre><code>蓝鲸体系的背景，设计理念，和落地方式
+</code></pre>
+<h1 id="设计背景">设计背景</h1>
+<h2 id="运维转型历程">运维转型历程</h2>
+<p><strong>十年前</strong> ,需求驱动型的, 业务运维忙于:</p>
+<pre><code>   服务器、网络、OS、DB、发布、变更、监控、故障处理、运营环境信息维护提取等等。
+</code></pre>
+<p><strong>五年前</strong>, 使我们的运维团队从**“操作服务输出”**，转型为**“解决方案服务输出” **</p>
+<p><strong>三年前</strong>，2012年，作为落地承载运维转型方案的蓝鲸体系同时开始构建</p>
+<pre><code>     为什么要转型： 
+</code></pre>
+<p>原因1：业务红海化</p>
+<pre><code>     1. 行业竞争很激烈，精细化运营越来越重要，希望业能将务可用性保持在无限接近7*24
+     2. 产品策划运营等其它岗位提供各类运营工具以提高“产品运营”的效率，甚至能为运营决策提供准确的
+       数据依据
+</code></pre>
+<p>原因2：“传统运维”生存空间塌缩</p>
+<p>原因3：我们太累了</p>
+<h3 id="运维转型的长远目标">运维转型的长远目标</h3>
+<pre><code>    将基础运维服务（发布变更、监控处理、数值调整、数据提取等）尽可能做到运维无人
+    值守，运维提供解决方案（工具）
+    
+    同时负责随时调整解决方案，但不提供重复性的操作服务，由使用者自助或者外包团队操作
+</code></pre>
+<h1 id="设计理念">设计理念</h1>
+<h2 id="面临的挑战">面临的挑战</h2>
+<pre><code>      业务类型复杂
+      
+      技术框架多样
+      
+      发布变更、故障处理等运维操作场景和操作流程是没有直观规律
+      
+      服务器数量，操作单元量庞大，增长速度很快
+</code></pre>
+<h2 id="需求分析">需求分析</h2>
+<pre><code>      不能侵入业务架构，不能依赖业务架构，不能依赖业务所使用的技术，不能依赖
+      有统一的运维操作流程
+      
+      甚至，也最好别指望开发商为你做什么改造，还得支持海量场景（最好能支持十万
+      级操作单元并发）
+</code></pre>
+<p>总结出来的共同点是：</p>
+<p><strong>运维通过linux命令，可以搞定所有“发布变更故障处理等”运维操作流程。</strong></p>
+<pre><code> 虽然只有这一点，但也足够了，这至少说明，运维的基础服务，不论是发布变更还是告警处理，
+ 都是可以分步骤的，步骤可能是串行的，也可能有分支结构
+</code></pre>
+<h2 id="设计思路">设计思路</h2>
+<p>尽可能将单个步骤抽象为原子，再将原子自动化，而后通过任务引擎连接成“串”或者“树状分支结构”实现全自动化**</p>
+<pre><code> 设计思路的优点：不依赖业务类型，不依赖架构，不依赖场景，只要运维手工能做的，都可以做
+ 成无人值守
+</code></pre>
+<h1 id="落地方式">落地方式</h1>
+<h2 id="将原子自动化">将原子自动化</h2>
+<pre><code>运维通过命令可以做的步骤，在蓝鲸作业平台上封装个脚本，就变成了可集成的自动化原子，而运维
+通过其他运营系统页面操作的步骤，由蓝鲸集成平台中的ESB平台与其对接好接口之后，也变成了可
+集成的自动化原子
+</code></pre>
+<h2 id="将原子集成为工具">将原子集成为工具</h2>
+<p>运维/运营工具的开发对传统运维是有一定障碍的，蓝鲸通过几方面的工作来解决这个问题</p>
+<pre><code> 1. 在“蓝鲸集成平台”（蓝鲸体系目前有6个平台）中构建了一个PaaS模块，业务运维（devops）无需关
+    注找服务器、部署环境（各种包、mysql、nginx等）等步骤，只需要写好工具本身的逻辑代码上装
+    到PaaS容器就行了，同时还免除了工具的运维成本（高可用、故障修复等）。基于docker技术，工具
+    的部署也是一键式的
+
+ 2. 其次是开发了一套工具代码框架，内置了统一登录、权限、tag等通用功能，更重要的是，不需要一个一个
+ 去对接各个系统的接口（原子），因为ESB模块都封装好了，只要写个函数就可以调用这些原子
+ 
+ 3. 再有就是解决运维的前端开发难题——前端样例库。提供了“从各种页面元素到不同类型的运维工具的页面组合
+    套餐”，减少了运维消耗在前端开发上的时间
+    
+ 4. 最后，还为蓝鲸开发者提供培训，一般来说，新进毕业生在通过四周以内的培训之后，就可以独立在蓝鲸集
+    成平台中构建APP工具
+</code></pre>
+<p>通过以上方案，基本解决了运维构建工具高门槛的问题，而且可以随时低成本的根据业务变化（例如新增了模块，导致发布变更、告警处理流程都变了）调整工具</p>
+<h2 id="进化方向">进化方向</h2>
+<p>在这种设计模式下，蓝鲸团队的建设方向就很清晰了：</p>
+<pre><code>1. 继续降低工具本身的开发成本，提高PaaS模块的可靠性；
+
+2. 扩展原子服务，找出运维海量操作流程中，重复度最高的一些原子，构建成平台，封装接口提供给PaaS作
+   为自动化原子，让运维更轻松的调度更多节点，提升单个节点功能密度，升级拓展更多的流程，直到把流程升
+   级到运维无人值守，升级到对产品、策划等岗位的闭环服务为止。
+</code></pre>
+<h2 id="进化成果">进化成果</h2>
+<ul>
+<li>
+<p>蓝鲸集成平台：包含PaaS、ESB、开发框架、web样例等模块，是运维制作工具APP的平台。</p>
+</li>
+<li>
+<p>蓝鲸移动平台：蓝鲸体系的移动端操作入口。</p>
+</li>
+<li>
+<p>蓝鲸作业平台：各种大小文件传输，含参脚本执行类的动作，可以在蓝鲸作业平台封装，通过接口操控。</p>
+</li>
+<li>
+<p>蓝鲸配置平台：从业务的各层分级结构到子节点的各类属性，都可以直观的存储于蓝鲸配置平台，通过接口存取。</p>
+</li>
+<li>
+<p>蓝鲸管控平台：一套基于海量标准设计的管控系统，为作业平台提供文件管道和任务管道，为数据平台提供数据管
+道等，整个蓝鲸体系对OS及容器单元、大数据的所有管控，只依赖管控平台的一个智能agent。</p>
+</li>
+<li>
+<p>蓝鲸数据平台：基于kafka、storm构建的供应用运维使用的实时计算平台，为上层蓝鲸集成平台上的智能决策
+类工具族、数据视图类工具族、辅助决策类工具族提供大数据处理及实时计算能力</p>
+</li>
+</ul>
+<h2 id="运维团队的进化历程">运维团队的进化历程</h2>
+<h3 id="运维基础工作自动化">运维基础工作自动化</h3>
+<h3 id="辅助产品运营自动化">辅助产品运营自动化</h3>
+<h3 id="数据化运维">数据化运维</h3>
+<h2 id="蓝鲸服务">蓝鲸服务</h2>
+<p>蓝鲸的服务可以分成两类：PaaS和SaaS。</p>
+<p>对应用运维来说，PaaS服务是万能的，几乎没有场景限制，只要是原子能覆盖的流程，都能做得出来，非常灵活</p>
+<p>蓝鲸大力发展PaaS服务，也印证了运维发展的理念：</p>
+<p><strong>依靠运维，武装运维，使其能提供更高维度的服务，而不是取代运维</strong></p>
+<h2 id="蓝鲸平台系统架构">蓝鲸平台系统架构</h2>
+<p><img src="https://bkdocs-1252002024.file.myqcloud.com/ZH/5.1/%E8%93%9D%E9%B2%B8%E4%BD%93%E7%B3%BB/assets/allView.jpg" alt=""></p>
+<p>腾讯蓝鲸智云体系由原子平台和通用的一级 SaaS 服务组成，平台包括 管控平台、配置平台、作业平台、数据平台、容器管理、PaaS 平台、移动平台 等，通用 SaaS 包括节点管理、标准运维、日志检索、蓝鲸监控、故障自愈等，为各种云（公有云、私有云、混合云）的用户提供不同场景、不同需求的一站式技术运营解决方案。</p>
+<h2 id="参考文章">参考文章</h2>
+<p>
+<a href="http://www.greatops.net/?id=3" target="_blank" rel="noopener">腾讯蓝鲸体系架构及设计思想</a></p>
+<p>
+<a href="https://bk.tencent.com/docs/document/5.1/18/560" target="_blank" rel="noopener">蓝鲸文档中心 &gt; 蓝鲸体系 &gt; 体系架构</a></p>
+
+    </div>
+
+    
+
+
+
+
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/&amp;text=%e8%93%9d%e9%b2%b8%e4%bd%93%e7%b3%bb%e6%9e%b6%e6%9e%84%e5%8f%8a%e8%ae%be%e8%ae%a1%e6%80%9d%e6%83%b3%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/&amp;t=%e8%93%9d%e9%b2%b8%e4%bd%93%e7%b3%bb%e6%9e%b6%e6%9e%84%e5%8f%8a%e8%ae%be%e8%ae%a1%e6%80%9d%e6%83%b3%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=%e8%93%9d%e9%b2%b8%e4%bd%93%e7%b3%bb%e6%9e%b6%e6%9e%84%e5%8f%8a%e8%ae%be%e8%ae%a1%e6%80%9d%e6%83%b3%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0&amp;body=https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/&amp;title=%e8%93%9d%e9%b2%b8%e4%bd%93%e7%b3%bb%e6%9e%b6%e6%9e%84%e5%8f%8a%e8%ae%be%e8%ae%a1%e6%80%9d%e6%83%b3%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=%e8%93%9d%e9%b2%b8%e4%bd%93%e7%b3%bb%e6%9e%b6%e6%9e%84%e5%8f%8a%e8%ae%be%e8%ae%a1%e6%80%9d%e6%83%b3%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0%20https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/&amp;title=%e8%93%9d%e9%b2%b8%e4%bd%93%e7%b3%bb%e6%9e%b6%e6%9e%84%e5%8f%8a%e8%ae%be%e8%ae%a1%e6%80%9d%e6%83%b3%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+  
+    
+    
+    
+      
+    
+    
+    
+    <div class="media author-card content-widget-hr">
+      
+        
+        <img class="avatar mr-3 avatar-circle" src="/programmertalk/author/ace-mei/avatar_hu7ea759340714ca719e04e403f7d71e1a_212219_270x270_fill_q90_lanczos_center.jpg" alt="Ace Mei">
+      
+
+      <div class="media-body">
+        <h5 class="card-title"><a href="https://meixinyun.github.io/programmertalk/">Ace Mei</a></h5>
+        <h6 class="card-subtitle">Experts of Devops</h6>
+        <p class="card-text">My research interests include distributed System, Devops and Container technology</p>
+        <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/programmertalk/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://twitter.com/firebir73898392" target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/meixinyun" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+</ul>
+
+      </div>
+    </div>
+  
+
+
+
+
+
+
+
+
+
+
+<div class="article-widget">
+  
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Next</div>
+    <a href="/programmertalk/post/2019/2019-11-01-%E7%9B%91%E6%8E%A7%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E8%BF%9B%E5%8C%96%E5%8E%86%E7%A8%8B/" rel="next">监控体系建设-演化历程及标准化</a>
+  </div>
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Previous</div>
+    <a href="/programmertalk/post/2016/2016-06-01-%E8%B0%83%E5%BA%A6%E5%99%A8%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" rel="prev">进程，线程，协程详解</a>
+  </div>
+  
+</div>
+
+</div>
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>Related</h3>
+    <ul>
+      
+      <li><a href="/programmertalk/post/2019/2019-04-14-%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B/">有效构建海量运营的持续反馈能力</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

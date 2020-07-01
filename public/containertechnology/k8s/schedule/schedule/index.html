@@ -1,0 +1,1280 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="目录 Kubernetes 的调度过程； Kubernetes 的基础调度能力（资源调度、关系调度）； Kubernetes">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/containertechnology/k8s/schedule/schedule/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/containertechnology/k8s/schedule/schedule/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/containertechnology/k8s/schedule/schedule/">
+  <meta property="og:title" content="Kubernetes调度和资源管理 | ProgrammerTalk">
+  <meta property="og:description" content="目录 Kubernetes 的调度过程； Kubernetes 的基础调度能力（资源调度、关系调度）； Kubernetes"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2019-05-05T00:00:00&#43;01:00">
+    
+    <meta property="article:modified_time" content="2019-05-05T00:00:00&#43;01:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Kubernetes调度和资源管理 | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/">Overview</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/cncfoverview/cncfoverview/">云原生技术概览</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/fundamentals/fundamentals/">K8S体系架构</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/fundamentals/fundamentals/">K8S 体系架构</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/schedule/schedule/">Kubernetes调度和资源管理</a>
+    <ul class="nav docs-sidenav">
+      
+      <li class="active">
+        <a href="/programmertalk/containertechnology/k8s/schedule/schedule/">k8sSchedule</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/schedulealgorithem/schedulealgo/">调度器流程和算法</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/job/job/">作业管控系统</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/job/job/">作业任务系统</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/network/network01/">容器网络模型</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network01/">网络模型基础</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network02/">网络模型进阶</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network03/">理解CNI和CNI插件</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/pv/pv/">应用持久化</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/pv/pv/">PV/PVC/Storage</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/appobserver/appobserver/">应用监控</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/appobserver/appobserver/">AppObservability</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/appconf/appconf/">应用配管</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/appconf/appconf/">基本概念</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#目录">目录</a></li>
+    <li><a href="#kubernetes-调度过程">Kubernetes 调度过程</a>
+      <ul>
+        <li><a href="#调度过程概览">调度过程概览</a></li>
+        <li><a href="#调度过程解析">调度过程解析</a></li>
+        <li><a href="#调度的关键点">调度的关键点</a></li>
+      </ul>
+    </li>
+    <li><a href="#kubernetes基础调度力">Kubernetes基础调度力</a>
+      <ul>
+        <li><a href="#调度能力划分">调度能力划分</a></li>
+      </ul>
+    </li>
+    <li><a href="#如何满足pod资源要求">如何满足Pod资源要求</a>
+      <ul>
+        <li><a href="#资源配置方法">资源配置方法</a></li>
+        <li><a href="#资源qos类型">资源QoS类型</a></li>
+        <li><a href="#资源qos用法">资源QoS用法</a></li>
+        <li><a href="#资源和qos-关系">资源和QoS 关系</a></li>
+        <li><a href="#资源-quota">资源 Quota</a></li>
+        <li><a href="#小结">小结</a></li>
+      </ul>
+    </li>
+    <li><a href="#如何满足podnode-特殊关系条件要求">如何满足Pod/Node 特殊关系/条件要求</a>
+      <ul>
+        <li><a href="#如何满足pod-与pod-关系要求">如何满足Pod 与Pod 关系要求</a></li>
+        <li><a href="#如何满足pod-与node-关系要求">如何满足Pod 与Node 关系要求</a></li>
+        <li><a href="#小结-1">小结</a></li>
+      </ul>
+    </li>
+    <li><a href="#kubernetes-高级调度能力">Kubernetes 高级调度能力</a>
+      <ul>
+        <li><a href="#优先级调度目的">优先级调度目的</a></li>
+        <li><a href="#优先级调度设置">优先级调度设置</a></li>
+        <li><a href="#优先级调度过程">优先级调度过程</a></li>
+        <li><a href="#优先级抢占策略">优先级抢占策略</a></li>
+        <li><a href="#小结-2">小结</a></li>
+      </ul>
+    </li>
+    <li><a href="#参考阅读">参考阅读</a></li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>Kubernetes调度和资源管理</h1>
+
+          <div class="article-style">
+            <h2 id="目录">目录</h2>
+<ol>
+<li>Kubernetes 的调度过程；</li>
+<li>Kubernetes 的基础调度能力（资源调度、关系调度）；</li>
+<li>Kubernetes 高级调度能力（优先级、抢占）。</li>
+</ol>
+<h2 id="kubernetes-调度过程">Kubernetes 调度过程</h2>
+<h3 id="调度过程概览">调度过程概览</h3>
+<p><img src="../../../k8s/schedule/scheduledef.png" alt="scheduledef"></p>
+<h3 id="调度过程解析">调度过程解析</h3>
+<ol>
+<li>用户通过 kube-ApiServer 提交描述Pod的yaml <br></li>
+<li>ApiServer 会先把这个待创建的请求路由给我们的 webhooks 的 Controlles 进行校验<br></li>
+<li>ApiServer 会在集群里面生成一个 pod，但此时生成的 pod，它的 nodeName 是空的，并且它的 phase 是 Pending 状态<br></li>
+<li>kube-Scheduler 以及 kubelet 都能 watch 到这个 pod 的生成事件，kube-Scheduler 发现这个 pod 的 nodeName 是空的之后，会认为这个 pod 是处于未调度状态<br></li>
+<li>kube-Scheduler 把这个 pod 拿到自己里面进行调度，通过一系列的调度算法，包括一系列的过滤和打分的算法后，Schedule 会选出一台最合适的节点，并且把这一台节点的名称绑定在这个 pod 的 spec 上，完成一次调度的过程<br></li>
+<li>更新完 nodeName 之后，在 Node1 上的这台 kubelet 会 watch 到这个 pod 是属于自己节点上的一个 pod。它会把这个 pod 拿到节点上进行操作，包括创建一些容器 storage 以及 network，最后等所有的资源都准备完成，kubelet 会把状态更新为 Running<br></li>
+</ol>
+<h3 id="调度的关键点">调度的关键点</h3>
+<p>调度的核心：就是把 pod 放到<strong>合适</strong>的 node 上。
+何为合适？</p>
+<p>1、首先要满足 pod 的资源要求;<br>
+2、其次要满足 pod 的一些特殊关系的要求;<br>
+3、再次要满足 node 的一些限制条件的要求;<br>
+4、最后还要做到整个集群资源的合理利用。<br></p>
+<p>Kubernetes 是怎么做到满足这些 pod 和 node 的要求的？</p>
+<h2 id="kubernetes基础调度力">Kubernetes基础调度力</h2>
+<h3 id="调度能力划分">调度能力划分</h3>
+<ol>
+<li>
+<p>资源调度<br>
+Kubernetes 基本的一些 Resources 的配置方式，还有 Qos 的概念，以及 Resource Quota 的概念和使用方式</p>
+</li>
+<li>
+<p>关系调度<br>
+在关系调度上，介绍两种关系场景:<br>
+2.1 pod 和 pod 之间的关系场景，包括怎么去亲和一个 pod，怎么去互斥一个 pod? <br>
+2.2 pod 和 node 之间的关系场景，包括怎么去亲和一个 node，以及有一些 node 怎么去限制 pod 调度上来。</p>
+</li>
+</ol>
+<h2 id="如何满足pod资源要求">如何满足Pod资源要求</h2>
+<h3 id="资源配置方法">资源配置方法</h3>
+<p><img src="../../../k8s/schedule/resourceconf.png" alt="scheduledef"></p>
+<h4 id="pod资源类型">Pod资源类型</h4>
+<ul>
+<li>cpu</li>
+<li>memory</li>
+<li>ephemeral-storage</li>
+<li>extended-resource: nvidia.com/gpu</li>
+</ul>
+<h4 id="resources">resources</h4>
+<ul>
+<li>request: 对这个 pod 基本保底的一些资源要求</li>
+<li>limit: 代表的是对这个 pod 可用能力上限的一种限制</li>
+</ul>
+<p>由 request/limit 来引出 Qos概念</p>
+<h3 id="资源qos类型">资源QoS类型</h3>
+<h4 id="qos-quality-of-service">Qos: Quality of Service</h4>
+<p>其实是 Kubernetes 用来表达一个 pod 在资源能力上的服务质量的标准,Kubernetes 提供了三类的 Qos Class:</p>
+<ol>
+<li>第一类是 Guaranteed:它是一类高的 Qos Class，一般用 Guaranteed 来为一些需要资源保障能力的 pod 进行配置</li>
+<li>第二类是 Burstable，它其实是中等的一个 Qos label，一般会为一些希望有弹性能力的 pod 来配置 Burstable；</li>
+<li>第三类是 BestEffort，通过名字我们也知道，它是一种尽力而为式的服务质量。</li>
+</ol>
+<p>问题：K8s中用户没法指定自己的 pod 是属于哪一类 Qos，而是通过 request 和 limit 的组合来自动地映射上 Qos Class</p>
+<h4 id="pod-qos配置">Pod QoS配置</h4>
+<p>如何通过 request 和 limit 的组合来确定我们想要的 QoS Level</p>
+<ul>
+<li>Guaranteed: CPU/Memory 必须 request==limit，其他的资源可以不相等</li>
+<li>Burstable: CPU/Memory request 和 limit 不相等</li>
+<li>BestEffort: 所有资源request/limit 必须都不填</li>
+</ul>
+<h3 id="资源qos用法">资源QoS用法</h3>
+<p><img src="../../../k8s/schedule/podguaranteed.png" alt="podguaranteed">
+<img src="../../../k8s/schedule/podburstable.png" alt="podburstable">
+<img src="../../../k8s/schedule/podbesteffort.png" alt="podbesteffort"></p>
+<h3 id="资源和qos-关系">资源和QoS 关系</h3>
+<p><img src="../../../k8s/schedule/resourceandqos.png" alt="resourceandqos"></p>
+<ul>
+<li>调度器只会使用 request 进行调度</li>
+<li>不同的 QoS 表现不相同,</li>
+<li>开启 kubelet cpu-manager-policy=static 特性时，
+如果它的 request 是一个整数，它会对 Guaranteed Pod 进行绑核</li>
+<li>非整数的 Guaranteed/Burstable/BestEffort，它们的 CPU 会放在一块，组成一个 CPU share pool，然后它们会根据不同的权重划分时间片来使用</li>
+</ul>
+<p>另外，memory 上也会按照不同的 Qos 进行划分:OOMScore</p>
+<ul>
+<li>Guaranteed，它会配置默认的 -998 的 OOMScore</li>
+<li>Burstable,会根据内存设计的大小和节点的关系来分配 2-999 的 OOMScore</li>
+<li>BestEffort 会固定分配 1000 的 OOMScore</li>
+</ul>
+<p>OOMScore 得分越高的话，在物理机出现 OOM 的时候会优先被 kill 掉</p>
+<p>eviction:</p>
+<ul>
+<li>会优先考虑驱逐 BestEffort 的 pod</li>
+</ul>
+<h3 id="资源-quota">资源 Quota</h3>
+<p>假如集群是由多个人同时提交的，或者是多个业务同时在使用，我们肯定要限制某个业务或某个人提交的总量，防止整个集群的资源都会被使用掉，导致另一个业务没有资源使用</p>
+<p><img src="../../../k8s/schedule/resourcequota.png" alt="resourcequota"></p>
+<h4 id="解析">解析</h4>
+<p>ResourceQuota: 限制 namespace 资源用量
+上图右侧的 yaml 所示,spec 包括了一个 hard 和 scopeSelector<br>
+hard: 和 Resourcelist 很像,比 ResourceList 更丰富一点,可以填写一些 Pod，这样可以限制 Pod 数量能力<br>
+scopeSelector:为这个 Resource 方法定义更丰富的索引能力,
+比如上面的例子中，索引出非 BestEffort 的 pod，限制的 cpu 是 1000 个，memory 是 200G，Pod 是 10 个，然后 Scope 除了提供 NotBestEffort，它还提供了更丰富的索引范围，包括 Terminating/Not Terminating，BestEffort/NotBestEffort，PriorityClass。</p>
+<ul>
+<li>用 ResourceQuota 方法来做到限制每一个 namespace 的资源用量，从而保证其他用户的资源使用</li>
+</ul>
+<h3 id="小结">小结</h3>
+<p>基础资源的使用方式，做到了如何满足 Pod 资源要求。下面做一个小结：</p>
+<ul>
+<li>Pod 要配置合理的资源要求</li>
+<li>CPU/Memory/EphemeralStorage/GPU</li>
+</ul>
+<p>通过 Request 和 Limit 来为不同业务特点的 Pod 选择不同的 QoS</p>
+<ul>
+<li>Guaranteed：敏感型，需要业务保障</li>
+<li>Burstable：次敏感型，需要弹性业务</li>
+<li>BestEffort：可容忍性业务</li>
+</ul>
+<p>为每个 NS 配置 ResourceQuota 来防止过量使用，保障其他人的资源可用</p>
+<h2 id="如何满足podnode-特殊关系条件要求">如何满足Pod/Node 特殊关系/条件要求</h2>
+<h3 id="如何满足pod-与pod-关系要求">如何满足Pod 与Pod 关系要求</h3>
+<ul>
+<li>podAffinity/podAntiAffinity</li>
+<li>required /preferred</li>
+</ul>
+<h3 id="如何满足pod-与node-关系要求">如何满足Pod 与Node 关系要求</h3>
+<p>主要又两类:</p>
+<ol>
+<li>NodeSelector: 举例：必须要调度 Pod 到带了 k1: v1 标签的 Node 上，这时可以在 Pod 的 spec 中填写一个 nodeSelector 要求，比如 k1: v1。这样我的 Pod 就会强制调度到带了 k1: v1 标签的 Node 上</li>
+<li>NodeAffinity:</li>
+</ol>
+<h3 id="小结-1">小结</h3>
+<p>首先假如有需求是处理 Pod 与 Pod 的时候，比如 Pod 和另一个 Pod 有亲和的关系或者是互斥的关系，可以给它们配置下面的参数：</p>
+<p>PodAffinity<br>
+PodAntiAffinity</p>
+<p>假如存在 Pod 和 Node 有亲和关系，可以配置下面的参数：</p>
+<p>NodeSelector<br>
+NodeAffinity</p>
+<p>假如有些 Node 是限制某些 Pod 调度的，比如说一些故障的 Node，或者说是一些特殊业务的 Node，可以配置下面的参数：</p>
+<p>Node &ndash; Taints<br>
+Pod &ndash; Tolerations</p>
+<h2 id="kubernetes-高级调度能力">Kubernetes 高级调度能力</h2>
+<h3 id="优先级调度目的">优先级调度目的</h3>
+<h4 id="在资源不够情况下我们怎么做到集群的合理利用呢">在<strong>资源不够情况下，我们怎么做到集群的合理利用呢？</strong></h4>
+<ul>
+<li>先到先得策略 (FIFO) -简单、相对公平，上手快</li>
+<li>优先级策略 (Priority) - 符合日常公司业务特点</li>
+</ul>
+<p>因为公司业务里面肯定是有高优先级的业务和低优先级的业务，所以优先级策略会比先到先得策略更能够符合日常公司业务特点</p>
+<h4 id="priority-和-preemption">Priority 和 Preemption</h4>
+<ul>
+<li>v 1.14 -stable</li>
+<li>Priority &amp; Preemption default is On</li>
+</ul>
+<h3 id="优先级调度设置">优先级调度设置</h3>
+<p><img src="../../../k8s/schedule/podprioritysetting.png" alt="podprioritysetting"></p>
+<h4 id="设置解析">设置解析</h4>
+<ol>
+<li>需要创建一个 priorityClass<br>
+1.1 是创建名为 high 的 priorityClass，它是高优先级，得分为 10000；<br>
+1.2 然后还创建了一个 low 的 priorityClass，它的得分是 100。<br></li>
+<li>为每个 Pod 配置上不同的 priorityClassName<br>
+2.1 给 Pod1 配置上了 high，Pod2 上配置了 low priorityClassName</li>
+</ol>
+<h4 id="内置优先级配置">内置优先级配置</h4>
+<ul>
+<li>Kubernetes 内置了默认的优先级,DefaultpriorityWhenNoDefaultClassExistis,默认所有Pod此项均为0</li>
+<li>用户可配置最大优先级限制：HighestUserDefinablePriority = 10000000000(10 亿)</li>
+<li>系统级别优先级：SystemCriticalPriority = 20000000000(20 亿)</li>
+</ul>
+<h3 id="优先级调度过程">优先级调度过程</h3>
+<h4 id="只触发优先级调度但是没有触发抢占调度的流程">只触发优先级调度但是没有触发抢占调度的流程</h4>
+<p><img src="../../../k8s/schedule/podschedulewithoutpreemption.png" alt="podschedulewithoutpreemption"></p>
+<h4 id="优先级抢占过程">优先级抢占过程</h4>
+<p><img src="../../../k8s/schedule/podpreemption.png" alt="podpreemption"></p>
+<h3 id="优先级抢占策略">优先级抢占策略</h3>
+<p><img src="../../../k8s/schedule/preemptionstrategy.png" alt="preemptionstrategy"></p>
+<ol>
+<li>
+<p>一个 Pod 进入抢占的时候，会判断 Pod 是否拥有抢占的资格，有可能上次已经抢占过一次，如果符合抢占资格，它会先对所有的节点进行一次过滤，过滤出符合这次抢占要求的节点，如果不符合就过滤掉这批节点</p>
+</li>
+<li>
+<p>从过滤剩下的节点中，挑选出合适的节点进行抢占。这次抢占的过程会模拟一次调度，也就是把上面优先级低的 Pod 先移除出去，再把待抢占的 Pod 尝试能否放置到此节点上。然后通过这个过程选出一批节点，进入下一个过程叫 ProcessPreemptionWithExtenders。这是一个扩展的钩子，用户可以在这里加一些自己抢占节点的策略，如果没有扩展的钩子，这里面是不做任何动作的</p>
+</li>
+<li>
+<p>接下来的流程叫做 PickOneNodeForPreemption，就是从上面 selectNodeForPreemption list 里面挑选出最合适的一个节点，这是有一定的策略的<br>
+3.1 优先选择打破 PDB 最少的节点；<br>
+3.2 其次选择待抢占 Pods 中最大优先级最小的节点；<br>
+3.3 再次选择待抢占 Pods 优先级加和最小的节点；<br>
+3.4 接下来选择待抢占 Pods 数目最小的节点；<br>
+3.5 最后选择拥有最晚启动 Pod 的节点<br></p>
+</li>
+</ol>
+<h3 id="小结-2">小结</h3>
+<p>调度的高级策略，在集群资源紧张的时候也能合理调度资源</p>
+<ol>
+<li>创建自定义的一些优先级类别 (PriorityClass)；</li>
+<li>给不同类型 Pods 配置不同的优先级 (PriorityClassName)；</li>
+<li>通过组合不同类型 Pods 运行和优先级抢占让集群资源和调度弹性起来。</li>
+</ol>
+<h2 id="参考阅读">参考阅读</h2>
+<p>
+<a href="https://edu.aliyun.com/lesson_1651_17068?spm=5176.10731542.0.0.7b1920bemydBcn#_17068" target="_blank" rel="noopener">ALi云原生课堂</a></p>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Previous</div>
+    <a href="/programmertalk/containertechnology/k8s/appobserver/appobserver/" rel="next">应用可观测性</a>
+  </div>
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Next</div>
+    <a href="/programmertalk/containertechnology/k8s/schedulealgorithem/schedulealgo/" rel="prev">Kubernetes调度和资源管理</a>
+  </div>
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on May 5, 2019</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/containertechnology/k8s/schedule/schedule.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

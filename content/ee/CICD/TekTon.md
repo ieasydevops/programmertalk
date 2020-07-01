@@ -17,10 +17,9 @@ type: docs  # Do not modify.
 # - weight: Position of link in menu.
 menu:
   CICD:
-    name: TekTon
+    name: CI/CD构建框架TekTon的深入剖析
     weight: 4
 ---
-
 
 
 ## 目标

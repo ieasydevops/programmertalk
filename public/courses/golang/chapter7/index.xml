@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>内存管理 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/courses/golang/chapter7/index.xml" rel="self" type="application/rss+xml" />
+    <description>内存管理</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Sun, 09 Sep 2018 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>内存管理</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/</link>
+    </image>
+    
+    <item>
+      <title>概览</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/overview/</link>
+      <pubDate>Sun, 09 Sep 2018 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/overview/</guid>
+      <description>&lt;h2 id=&#34;概览&#34;&gt;概览&lt;/h2&gt;
+&lt;p&gt;程序中的数据和变量都会被分配到程序所在的虚拟内存中，内存空间包含两个重要区域 — 栈区（Stack）和堆区（Heap）&lt;/p&gt;
+&lt;p&gt;函数调用的参数、返回值以及局部变量大都会被分配到栈上，这部分内存会由编译器进行管理；&lt;/p&gt;
+&lt;p&gt;堆中的对象由内存分配器分配并由垃圾收集器回收。&lt;/p&gt;
+&lt;h2 id=&#34;设计原理&#34;&gt;设计原理&lt;/h2&gt;
+&lt;p&gt;内存管理一般包含三个不同的组件，分别是用户程序（Mutator）、分配器（Allocator）和收集器（Collector）
+&lt;a href=&#34;##%e5%8f%82%e8%80%83%e6%96%87%e7%8c%ae&#34;&gt;1&lt;/a&gt;,当用户程序申请内存时，它会通过内存分配器申请新的内存，而分配器会负责从堆中初始化相应的内存区域。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;stateDiagram
+
+Mutator --&amp;gt; Allocator
+Allocator --&amp;gt; Heap
+Collector --&amp;gt; Heap
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
+&lt;p&gt;了解内存分配器的分配方法以及Go语言内存分配器的分级分配方法，虚拟内存布局和地址空间&lt;/p&gt;
+&lt;h3 id=&#34;分配方法&#34;&gt;分配方法&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;graph TD
+
+内存分配 --&amp;gt; C{分配方法}
+C --&amp;gt;|线性分配| D[Sequential Allocator/Bump Allocator]
+C --&amp;gt;|链表分配| E[Free-List Allocator]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;参考文献&#34;&gt;参考文献&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://dmitrysoshnikov.com/compilers/writing-a-memory-allocator/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;1. Dmitry Soshnikov. Feb 2019. “Writing a Memory Allocator”&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>内存分配器</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/allocator/</link>
+      <pubDate>Sun, 09 Sep 2018 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/allocator/</guid>
+      <description>&lt;h2 id=&#34;内存分配器&#34;&gt;内存分配器&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/collector/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/collector/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/mutator/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/golang/chapter7/mutator/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

@@ -17,7 +17,7 @@ type: docs  # Do not modify.
 # - weight: Position of link in menu.
 menu:
   CICD:
-    name: GitOps
+    name: 基于GitOps的实现
     weight: 3
 ---
 

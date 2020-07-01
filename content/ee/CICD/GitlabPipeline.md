@@ -1,6 +1,6 @@
 ---
 # Course title, summary, and position.
-linktitle: GitlabPipeline
+linktitle: GitlabCI
 summary: GitlabPipeline
 weight: 1
 
@@ -17,7 +17,7 @@ type: docs  # Do not modify.
 # - weight: Position of link in menu.
 menu:
   CICD:
-    name: GitlabPipeline
+    name: 基于GitlabPipeline实现CI/CD
     weight: 2
 ---
 

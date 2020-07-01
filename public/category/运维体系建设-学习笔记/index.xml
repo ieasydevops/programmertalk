@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>运维体系建设 学习笔记 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.xml" rel="self" type="application/rss+xml" />
+    <description>运维体系建设 学习笔记</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>运维体系建设 学习笔记</title>
+      <link>https://meixinyun.github.io/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+    </image>
+    
+    <item>
+      <title>有效构建海量运营的持续反馈能力</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2019/2019-04-14-%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2019/2019-04-14-%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B/</guid>
+      <description>&lt;h1 id=&#34;有效构建海量运营的持续反馈能力&#34;&gt;有效构建海量运营的持续反馈能力&lt;/h1&gt;
+&lt;p&gt;本文来自对大梁先生[DevOps最后一棒，有效构建海量运营的持续反馈能力]一文的学习和理解。&lt;/p&gt;
+&lt;h2 id=&#34;本文的思路梳理&#34;&gt;本文的思路梳理&lt;/h2&gt;
+&lt;p&gt;服务的产品螺旋式升级和快速迭代，离不开Devops 体系的支撑。在Devops 体系的最后一个环节，包含两个维度：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;      1. 运维活动的质量运营与终结
+      
+      2. 产品的技术运营和生命周期的终结
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;本文的讨论的焦点是：在产品生命周期结束前，如何通过在技术运营阶段构建的质量体系，来实现（对服务的）持续反馈和优化。&lt;/p&gt;
+&lt;p&gt;首先，对 Devops 体系定义（计划，需求，设计，开发，测试，部署，运营，EOL）；
+通过监控，告警，运营来做持续反馈。&lt;/p&gt;
+&lt;p&gt;其次：提出来监控，告警，运营完成质量体系的核心要素；
+通过做立体监控+ 舆情监控实现360无死角监控；&lt;/p&gt;
+&lt;p&gt;再次，立体监控带来的海量的报警，需要解决告警泛滥问题&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 1. “理清监控对象与指标的关系”，通过指标分类（低层次，高层次），监控的数据归一化（将采集和
+     计算的数据）转换为值和率 后，通过表报和告警的形式输出，达到分析状态和发现异常的目标。
+ 2. 提出了通过三种技巧（溯源，根源，优先）来实现对海量告警事件分析处理
+ 3. 介绍了常用的动态算法和告警收敛算法来对监控告警收敛
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最后： 介绍了织云监控的指标体系，和织云监控的质量体系&lt;/p&gt;
+&lt;h2 id=&#34;背景介绍&#34;&gt;背景介绍&lt;/h2&gt;
+&lt;h3 id=&#34;devops体系介绍&#34;&gt;Devops体系介绍&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-bbea08db80becdeb.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;DevOps的体系，它最后的一个环节，就是做运营和终结的环节,它应该包含两个纬度:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 一是这次运维活动的质量运营与终结；
+ 二是产品的技术运营和生命周期的终结
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;本文讨论的焦点：
+在产品生命周期结束前，我们在技术运营阶段构建的质量体系，以实现持续反馈和优化的目标&lt;/p&gt;
+&lt;h3 id=&#34;运维如何对产品做持续反馈&#34;&gt;运维如何对产品做持续反馈？&lt;/h3&gt;
+&lt;p&gt;通过监控，告警，运营实现（对服务的）持续反馈和优化 。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-29eacf1880009f0c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;监控告警运营-核心要素&#34;&gt;监控，告警，运营 核心要素&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;监控——覆盖率、状态反馈、指标度量&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;监控要做到360度无死角，业务出现了什么问题都能发现，有了监控的反馈，可以看到实时监控的状态，同时，当指标发生变化的时候也需要看到一些反馈&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;告警——时效性、准确性、触及率&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;业务越来越复杂，层次越来越多，每一个监控点都会产生数据指标、状态异常，会收到越来越多的告警。未看到或者看到未处理都需要承担责任，因为收到的并非都是误告警。最重要还要有触及率，告警由谁发现与处理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;运营——RCA、事件管理、报表/考核&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;问题再三出现、必须从根源优化。通过事件管理机制保证 RCA 可以落地，最后通过报表和考核去给运维赋予权利推动相关优化活动的开展，包括架构和代码的优化等等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;如何构建360无死角立体监控&#34;&gt;如何构建360无死角立体监控&lt;/h2&gt;
+&lt;p&gt;立体监控  +  舆情监控&lt;/p&gt;
+&lt;h3 id=&#34;立体监控&#34;&gt;立体监控&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-cb8ce8cc2d079c3a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;业务按照不同的层级进行管理，从下向上，有服务器层、数据库、逻辑层、中间计算的这一层，有接入层、负载
+均衡，有我们的机房，DNS服务、客户端、用户端，为了做到无死角，我们规划与建设了很多监控点，美其名曰
+立体化监控。
+ 在2014年实现用户舆情监控能力后，我们的监控点做到了100%的覆盖
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;舆情监控&#34;&gt;舆情监控&lt;/h3&gt;
+&lt;h4 id=&#34;舆情监控-实现原理图&#34;&gt;舆情监控 实现原理图&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-72c50ed144241622.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;用户舆情监控顾名思义就是监控用户的声音和反馈。用户的意见反馈来源可以分几部分，一是appstore的入口，另一个是app内嵌的反馈入口，还有的就是腾讯的用户反馈论坛，所有的数据都会被汇集到织云舆情监控平台上，然后通过机器学习实现自动分类。系统会把类似“QQ空间打不开”、“QQ空间不用好”等这些词汇进行语意分析和归类，然后统一告警成“QQ空间异常”，时间间隔是15分钟颗粒度。（技术细节可以参考我在2016年在北京TOP100大会上的分享主题。）&lt;/p&gt;
+&lt;p&gt;这套监控先天就有门槛，因为要基于用户的主动反馈行为，同时需要较多的用户反馈数据量，因为腾讯的用户量基数很大，用户主动反馈的量也很大。同时，舆情监控可以用于监控技术上的质量问题，也能用于监控产品的体验或交互问题&lt;/p&gt;
+&lt;h2 id=&#34;持续运营阶段面临的挑战和解决方案&#34;&gt;持续运营阶段面临的挑战和解决方案&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;（监控全面覆盖后，必然带来海量的告警压力，如何解决告警泛滥，是下面的主要议题）
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;运营阶段解决的难题&#34;&gt;运营阶段解决的难题&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-cf88374c74c5f4a6.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;繁——简&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在具体生产过程中会产生运维的事件或者是故障，经常会有死机，以及各层监控告警，这些繁琐的告警、故障，改如何简单化？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;泛——精&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;举个案例，在一台核心的交换机下，假设其下联有1000台的机器分布到数据层、逻辑层、接入层等等，当这台交换机故障不可用时，由于有立体化监控的存在，每个监控点都会产生大量的告警信息，我们要如何发现这些告警是由于这台核心交换机故障引起的呢？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;乱——序&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;由于指标采集方式和计数据量的不同，直接导致了监控的流处理效率是不一样的，告警收到的次序不一样，我们要如何排序，如何有效识别优先级？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;解决方案&#34;&gt;解决方案&lt;/h3&gt;
+&lt;h4 id=&#34;理清监控对象与指标的关系&#34;&gt;理清监控对象与指标的关系&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-0c0a98e7947f7873.png&#34; alt=&#34;&#34;&gt;
+腾讯业务要监控的对象如图，按照业务逻辑从下往上，下面是通用的监控层面，网络、服务器、虚拟化还有应用，应用包括了组件的一些监控。&lt;/p&gt;
+&lt;p&gt;基于立体化的监控，假设用组件的监控，无论是QQ还是QQ空间、QQ音乐，都有一些通用的指标可以衡量。如，打开的内存是多少？长连接数是多少？用户进程、吞吐量、流量、CPU，业务层面返回码的分别是什么？省市连接的成功率、请求量的分布是什么？这都与具体的业务逻辑无关&lt;/p&gt;
+&lt;p&gt;为了理清海量的监控数据，我们把指标划分成两大类&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;指标划分两大类&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;低层次指标&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;把公共的、基础设施等在业务逻辑之下的指标称之为低层次的指标，网络、硬件、虚拟化等。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;高层次指标&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;高层次的指标要能更直接的反馈业务可用性的情况，如成功率、延时、请求率等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;遵循的原则&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在规划监控处理或者优化监控策略时，要尽量把低层次的指标自动化处理或收敛掉，尽量以高纬度的指标来告警&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;高层次的指标，是要能够实时反馈业务的真实状况的，在海量规模的业务运维场景下，靠人没办法看到单机的层面，必须要看到集群的层面&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在高层次指标中，还要有效的区分开单服务的高层次的指标，和业务功能的高层次的指标&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;善用这些低层次的指标能够帮助运维快速的定位高层次指标的故障原因&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;可靠性和可用性&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;可靠性是指单个服务失败的次数&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;微服务自身有失败重试的逻辑，需要在可靠性和可用性之间做出一定取舍&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;监控的本质（指标的归一化处理）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-8fa2686f534d7a79.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;收集和计算得到一些值和率，通过一定的分析策略或算法，然后把结论以不同的形式展现，最终达到分析状态和发现异常的目标&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;海量运营监控需要强调信息的有效性&#34;&gt;海量运营监控需要强调信息的有效性&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;原因：立体化的监控，会带来监控指标的爆炸，更有可能带来告警数据的失控&lt;/li&gt;
+&lt;li&gt;如何解决：有效的解决告警多、误告警多
+&lt;ul&gt;
+&lt;li&gt;关联分析
+&lt;ul&gt;
+&lt;li&gt;把一些真正重要的，需要通过事件、活动、指标提取出来。希望不要把什么事情都告警出来，而过多的消耗告警的诚信&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;无误告警
+&lt;ul&gt;
+&lt;li&gt;怎么样把收敛策略、屏蔽的策略用到极致，必要时可以将两者组合，以达到更强化的效果&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;持续运营
+&lt;ul&gt;
+&lt;li&gt;做好持续运营就是做好跟进，为了保证重要的事情有人跟、有人度量，防止问题再三出现，要在流程上有保障的机制&lt;/li&gt;
+&lt;li&gt;质量体系来闭环管理
+&lt;ul&gt;
+&lt;li&gt;当监控发现业务架构不合理、代码不合理等问题，能够通过该质量体系，推动业务、开发、运维去将优化措施落地，这也是为了最终的商业价值&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;海量数据收敛的手段&#34;&gt;海量数据收敛的手段&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-0741f32a43d76bdc.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;溯源、根因、优选&lt;/p&gt;
+&lt;h4 id=&#34;溯源分析实践简介&#34;&gt;溯源分析实践简介&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-b264a7187472d4f0.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;高纬与降维打击&lt;/strong&gt;。高维与降维打击，把一个指标的结果值或率以不同的纬度展开，要把每一个纬度的指标组合的状态异常都变成告警，这是很不现实的，因为压根处理不过来。反而多维度的指标异常能通过日常的报表汇总分析就能发现的异常，然后通过考核去持续的推动，把异常指标给理顺、优化掉，这是就是高维、降维的打击。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**级联分析。**网络有一个词叫微突发，网络突然拥塞了，导致一大波低层次和高层次的告警产生。举个案例，一个交换机异常，引发下联的服务器爆炸式的告警，当此类情况发生，我们的统一告警平台全部不理，做好全局的收敛，以保证监控告警的有效性不受影响。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**逆向思维。**意思是不能只看结果数据，要回到原始数据来看。如果要做到逆向思维可生效，那流处理集群在真正加工完，存储的结果数据之前要做最基础的清晰，把那部分日志备份到大数据平台做离线的计算，然后结果数据再走正常的流，去做告警也好，异常波动也好，因为很多异常的东西必须要看到原始数据。我们曾经深入分析相册的日上传照片流水日志，找到了大量异常的用户照片，从而节省了大量的运营成本，这些都是结果数据无法做到的效果。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;根因分析实践简介&#34;&gt;根因分析实践简介&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-99775648e7217d47.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;**用高层次的告警收敛低层次的告警。**同一个集群下既产生了低层次的告警，又产生了高层次的告警，低层次的告警不用发。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;用主调的告警收敛被调的告警&lt;/strong&gt;。模块A调用模块B，B挂了，A受不受影响？从保障业务可用性的角度，如果A没有产生告警，证明该场景只是B的可靠性告警，告警通知开发而不是运维。但如果B挂了，A也产生了告警，运维就应该收到A的告警，B还是告警给开发。推进告警分级（分值、分级、分人、分通道）的机制，其实是慢慢把一些运维要做的事情分给开发，运维只看核心的，软件可靠性这些开发来看，可靠性是开发的问题，可用性是运营质量的问题。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**用原因告警收敛现象告警。**在业务逻辑的调用联调中，用原因告警收敛掉现象告警。（具体可参考2016年3月深圳运维大会上，我关于监控的分享PPT）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**用主动触发的活动去屏蔽一个对象的告警。**有些告警是由于变更的行为引起的，要收敛掉。如正在做升级引发了告警，运维系统要能关联这些事件与告警。有高层次的告警、低层次的告警，还有运维的活动事件，都把这些集中在一起，通过权重的算法，有一个排序决策说告警应该是告这条链路，而不是每一个对象都重复的告警。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;优选指标实践简介&#34;&gt;优选指标实践简介&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-07cb0e211b59e8a1.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;**核心指标论。**腾讯内部的系统代号叫DLP，是一种通过人工来筛选核心指标的方法。举例，一个模块可能有300－400个指标，这300－400个指标中，包含有低层次的指标，高层次的指标，但当这个模块出问题的时候，这300－400个指标可能都会产生告警，那么应该怎么样收敛呢？倘若我们提前已经对该模块进行过核心指标的人工筛选，这个指标能代表模块最真实的指标。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**监控的相关性。**监控与监控之间是相关的，例如300个指标告警了，最核心的那个也会告警，最核心的告警了这300个指标可以不告警，只看核心的就可以了，为什么要人手选核心指标，因为暂时没有办法人工识别。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;告警分级管理。&lt;/strong&gt; 可以基于核心的指标对告警做分级，非核心的开发自己收，核心的运维收，高规格保障。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;降低流试监控的计算量。&lt;/strong&gt; 监控点越多，流的数据越大，整个监控流处理集群规模很大，10万台机器光是流处理的集群都是接近1500台，当运营成本压力大时，我们也可以重点的保障DLP的指标的优先计算资源，保证优先给予容量的支持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;常用动态阈值算法与策略简介&#34;&gt;常用（动态阈值）算法与策略简介&lt;/h3&gt;
+&lt;p&gt;在定义指标状态异常时，我们的经验是尽量不要用固定阀值，要用也是动态阀值，否则在监控对象的阀值管理上就会有大量的人工管理的成本。其他的推荐策略如图。
+&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-669ab17f686fd404.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;常用收敛算法简介&#34;&gt;常用收敛算法简介&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-3e799866e8ae8cbe.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;毛刺收敛
+&lt;ul&gt;
+&lt;li&gt;持续多长时间报警，一般建议采集周期的2～3倍&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;同类收敛
+&lt;ul&gt;
+&lt;li&gt;一个模块有300个监控实力，产生了300条的告警，只要有一条告给运维，对于运维同类收敛掉了。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;时间收敛
+&lt;ul&gt;
+&lt;li&gt;生产环境中有很多定时的任务，如定时跑批会引起I/O的陡增等异常，这种可以针对性的收敛掉。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;昼夜收敛
+&lt;ul&gt;
+&lt;li&gt;有一些告警，在分布式服务的高可用架构下，晚上不需要告警出来，可以等白天才告警，更人性化的管理。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;变更收敛
+&lt;ul&gt;
+&lt;li&gt;如果告警的时间点有运维的活动，就要收敛掉它。怎么做到的？取决于要把运维的活动都收口在标准化运维的平台，运维平台对生产环节都要将变更日志写入在变更记录中心那里，然后统一告警系统能够关联变更记录来决策是收敛还是发出告警&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;织云监控指标体系及质量体系&#34;&gt;织云监控指标体系及质量体系&lt;/h2&gt;
+&lt;h3 id=&#34;织云监控的指标体系&#34;&gt;织云监控的指标体系&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-3700a74f352d1423.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;织云监控构建的质量体系，分成用户端、客户端、服务端、基础端，定义核心指标 DLP，并且善用分级告警、分渠道告警，结合短信、QQ、微信和电话等渠道实现告警通知，整个质量监控体系都是围绕预警、自愈、分析、排障碍的能力构建&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;织云监控的质量体系&#34;&gt;织云监控的质量体系&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-9eedbcc265097a8b.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;小结织云监控的质量体系，我们希望打造一个闭环，能够实现持续反馈、度量、优化，让团队间能够有效的协同工作，更高效更有效。&lt;/p&gt;
+&lt;p&gt;监控能力。全局的看、需要什么样的监控能力和监控点，同时要理清指标是怎么分层的，哪些指标是重要的？最终把它转成业务看得懂的高层次指标。&lt;/p&gt;
+&lt;p&gt;业务可用性。运维要看什么，要看可靠性还是可用性，如果规模不大看可靠性可以，但是在海量的场景下可靠性要太细，要抽象核心指标来度量，用于衡量可用性。可靠性则可以通过考核体系去度量与管理，结合QA和老板的力量来推动开发团队的投入与优化。&lt;/p&gt;
+&lt;p&gt;用户体验。做技术运营会有视角的盲点，会经常迷恋可用性的数据是4个9、5个9，但这并不完全代表了我们服务质量好，当用户连接不上我们的服务端时，几个9的意义都不大。这是一个很现实的问题，因此用户体验监控一定要做，因为内部的可用性再高都不代表用户用得好。&lt;/p&gt;
+&lt;p&gt;技术解决。要有技术解决的方案，要有自动化的工具，有协助用户排障的工具，有根因分析的算法平台等等。&lt;/p&gt;
+&lt;p&gt;统计分析。最终形成可度量的指标、可考核的、可展示的，最好是DIY展示的，监控数据的统计/报表能力服务化，应发挥更多的角色来使用监控数据，而非仅限于运维角色。&lt;/p&gt;
+&lt;p&gt;持续改进。最终持续的改进无论是架构的问题、代码的问题，还是因为标准化的问题或非功能落地推进不了的问题，都是需要数字来度量和推动。最好，这个数字要能间接的反馈商业的价值，也就是DevOps提倡的思路。&lt;/p&gt;
+&lt;h2 id=&#34;相关链接&#34;&gt;相关链接&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://www.jianshu.com/p/4b7c88f491be&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;IT大咖说&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>蓝鲸体系架构及设计思想学习笔记</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/</guid>
+      <description>&lt;h1 id=&#34;目标&#34;&gt;目标&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;  通过学习蓝鲸体系架构及设计思想，扩展自己在运维体系建设领域的认知。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;学习重点&#34;&gt;学习重点&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;蓝鲸体系的背景，设计理念，和落地方式
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;设计背景&#34;&gt;设计背景&lt;/h1&gt;
+&lt;h2 id=&#34;运维转型历程&#34;&gt;运维转型历程&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;十年前&lt;/strong&gt; ,需求驱动型的, 业务运维忙于:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;   服务器、网络、OS、DB、发布、变更、监控、故障处理、运营环境信息维护提取等等。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;五年前&lt;/strong&gt;, 使我们的运维团队从**“操作服务输出”**，转型为**“解决方案服务输出” **&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;三年前&lt;/strong&gt;，2012年，作为落地承载运维转型方案的蓝鲸体系同时开始构建&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;     为什么要转型： 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;原因1：业务红海化&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;     1. 行业竞争很激烈，精细化运营越来越重要，希望业能将务可用性保持在无限接近7*24
+     2. 产品策划运营等其它岗位提供各类运营工具以提高“产品运营”的效率，甚至能为运营决策提供准确的
+       数据依据
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;原因2：“传统运维”生存空间塌缩&lt;/p&gt;
+&lt;p&gt;原因3：我们太累了&lt;/p&gt;
+&lt;h3 id=&#34;运维转型的长远目标&#34;&gt;运维转型的长远目标&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;    将基础运维服务（发布变更、监控处理、数值调整、数据提取等）尽可能做到运维无人
+    值守，运维提供解决方案（工具）
+    
+    同时负责随时调整解决方案，但不提供重复性的操作服务，由使用者自助或者外包团队操作
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;设计理念&#34;&gt;设计理念&lt;/h1&gt;
+&lt;h2 id=&#34;面临的挑战&#34;&gt;面临的挑战&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;      业务类型复杂
+      
+      技术框架多样
+      
+      发布变更、故障处理等运维操作场景和操作流程是没有直观规律
+      
+      服务器数量，操作单元量庞大，增长速度很快
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;需求分析&#34;&gt;需求分析&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;      不能侵入业务架构，不能依赖业务架构，不能依赖业务所使用的技术，不能依赖
+      有统一的运维操作流程
+      
+      甚至，也最好别指望开发商为你做什么改造，还得支持海量场景（最好能支持十万
+      级操作单元并发）
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;总结出来的共同点是：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;运维通过linux命令，可以搞定所有“发布变更故障处理等”运维操作流程。&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 虽然只有这一点，但也足够了，这至少说明，运维的基础服务，不论是发布变更还是告警处理，
+ 都是可以分步骤的，步骤可能是串行的，也可能有分支结构
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;设计思路&#34;&gt;设计思路&lt;/h2&gt;
+&lt;p&gt;尽可能将单个步骤抽象为原子，再将原子自动化，而后通过任务引擎连接成“串”或者“树状分支结构”实现全自动化**&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 设计思路的优点：不依赖业务类型，不依赖架构，不依赖场景，只要运维手工能做的，都可以做
+ 成无人值守
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;落地方式&#34;&gt;落地方式&lt;/h1&gt;
+&lt;h2 id=&#34;将原子自动化&#34;&gt;将原子自动化&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;运维通过命令可以做的步骤，在蓝鲸作业平台上封装个脚本，就变成了可集成的自动化原子，而运维
+通过其他运营系统页面操作的步骤，由蓝鲸集成平台中的ESB平台与其对接好接口之后，也变成了可
+集成的自动化原子
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;将原子集成为工具&#34;&gt;将原子集成为工具&lt;/h2&gt;
+&lt;p&gt;运维/运营工具的开发对传统运维是有一定障碍的，蓝鲸通过几方面的工作来解决这个问题&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 1. 在“蓝鲸集成平台”（蓝鲸体系目前有6个平台）中构建了一个PaaS模块，业务运维（devops）无需关
+    注找服务器、部署环境（各种包、mysql、nginx等）等步骤，只需要写好工具本身的逻辑代码上装
+    到PaaS容器就行了，同时还免除了工具的运维成本（高可用、故障修复等）。基于docker技术，工具
+    的部署也是一键式的
+
+ 2. 其次是开发了一套工具代码框架，内置了统一登录、权限、tag等通用功能，更重要的是，不需要一个一个
+ 去对接各个系统的接口（原子），因为ESB模块都封装好了，只要写个函数就可以调用这些原子
+ 
+ 3. 再有就是解决运维的前端开发难题——前端样例库。提供了“从各种页面元素到不同类型的运维工具的页面组合
+    套餐”，减少了运维消耗在前端开发上的时间
+    
+ 4. 最后，还为蓝鲸开发者提供培训，一般来说，新进毕业生在通过四周以内的培训之后，就可以独立在蓝鲸集
+    成平台中构建APP工具
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;通过以上方案，基本解决了运维构建工具高门槛的问题，而且可以随时低成本的根据业务变化（例如新增了模块，导致发布变更、告警处理流程都变了）调整工具&lt;/p&gt;
+&lt;h2 id=&#34;进化方向&#34;&gt;进化方向&lt;/h2&gt;
+&lt;p&gt;在这种设计模式下，蓝鲸团队的建设方向就很清晰了：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1. 继续降低工具本身的开发成本，提高PaaS模块的可靠性；
+
+2. 扩展原子服务，找出运维海量操作流程中，重复度最高的一些原子，构建成平台，封装接口提供给PaaS作
+   为自动化原子，让运维更轻松的调度更多节点，提升单个节点功能密度，升级拓展更多的流程，直到把流程升
+   级到运维无人值守，升级到对产品、策划等岗位的闭环服务为止。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;进化成果&#34;&gt;进化成果&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸集成平台：包含PaaS、ESB、开发框架、web样例等模块，是运维制作工具APP的平台。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸移动平台：蓝鲸体系的移动端操作入口。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸作业平台：各种大小文件传输，含参脚本执行类的动作，可以在蓝鲸作业平台封装，通过接口操控。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸配置平台：从业务的各层分级结构到子节点的各类属性，都可以直观的存储于蓝鲸配置平台，通过接口存取。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸管控平台：一套基于海量标准设计的管控系统，为作业平台提供文件管道和任务管道，为数据平台提供数据管
+道等，整个蓝鲸体系对OS及容器单元、大数据的所有管控，只依赖管控平台的一个智能agent。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸数据平台：基于kafka、storm构建的供应用运维使用的实时计算平台，为上层蓝鲸集成平台上的智能决策
+类工具族、数据视图类工具族、辅助决策类工具族提供大数据处理及实时计算能力&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;运维团队的进化历程&#34;&gt;运维团队的进化历程&lt;/h2&gt;
+&lt;h3 id=&#34;运维基础工作自动化&#34;&gt;运维基础工作自动化&lt;/h3&gt;
+&lt;h3 id=&#34;辅助产品运营自动化&#34;&gt;辅助产品运营自动化&lt;/h3&gt;
+&lt;h3 id=&#34;数据化运维&#34;&gt;数据化运维&lt;/h3&gt;
+&lt;h2 id=&#34;蓝鲸服务&#34;&gt;蓝鲸服务&lt;/h2&gt;
+&lt;p&gt;蓝鲸的服务可以分成两类：PaaS和SaaS。&lt;/p&gt;
+&lt;p&gt;对应用运维来说，PaaS服务是万能的，几乎没有场景限制，只要是原子能覆盖的流程，都能做得出来，非常灵活&lt;/p&gt;
+&lt;p&gt;蓝鲸大力发展PaaS服务，也印证了运维发展的理念：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;依靠运维，武装运维，使其能提供更高维度的服务，而不是取代运维&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;蓝鲸平台系统架构&#34;&gt;蓝鲸平台系统架构&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://bkdocs-1252002024.file.myqcloud.com/ZH/5.1/%E8%93%9D%E9%B2%B8%E4%BD%93%E7%B3%BB/assets/allView.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;腾讯蓝鲸智云体系由原子平台和通用的一级 SaaS 服务组成，平台包括 管控平台、配置平台、作业平台、数据平台、容器管理、PaaS 平台、移动平台 等，通用 SaaS 包括节点管理、标准运维、日志检索、蓝鲸监控、故障自愈等，为各种云（公有云、私有云、混合云）的用户提供不同场景、不同需求的一站式技术运营解决方案。&lt;/p&gt;
+&lt;h2 id=&#34;参考文章&#34;&gt;参考文章&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.greatops.net/?id=3&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;腾讯蓝鲸体系架构及设计思想&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://bk.tencent.com/docs/document/5.1/18/560&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;蓝鲸文档中心 &amp;gt; 蓝鲸体系 &amp;gt; 体系架构&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

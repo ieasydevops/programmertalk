@@ -34,8 +34,13 @@
   weight = 50
 
 [[main]]
-  name = "Engineering Efficiency"
+  name = "EngineeringEfficiency"
   url = "ee/"
+  weight = 50
+
+[[main]]
+  name = "Devops"
+  url = "devops/"
   weight = 50
 
 [[main]]

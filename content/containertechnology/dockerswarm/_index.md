@@ -24,7 +24,7 @@ menu:
 ## DockerSwarm 系统架构
 
 
-![系统架构](../dockerswarm/dockerswarm-arch.png)
+![系统架构](../dockerswarm/images/dockerswarm-arch.png)
 
 ## Feature highlights
 

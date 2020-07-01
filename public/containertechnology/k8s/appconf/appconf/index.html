@@ -1,0 +1,1171 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="问题的背景 依托镜像定义运行的Container，Pod，还需">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/containertechnology/k8s/appconf/appconf/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/containertechnology/k8s/appconf/appconf/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/containertechnology/k8s/appconf/appconf/">
+  <meta property="og:title" content="应用配管 | ProgrammerTalk">
+  <meta property="og:description" content="问题的背景 依托镜像定义运行的Container，Pod，还需"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2019-05-05T00:00:00&#43;01:00">
+    
+    <meta property="article:modified_time" content="2019-05-05T00:00:00&#43;01:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>应用配管 | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/">Overview</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/cncfoverview/cncfoverview/">云原生技术概览</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/fundamentals/fundamentals/">K8S体系架构</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/fundamentals/fundamentals/">K8S 体系架构</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/schedule/schedule/">Kubernetes调度和资源管理</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/schedule/schedule/">k8sSchedule</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/schedulealgorithem/schedulealgo/">调度器流程和算法</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/job/job/">作业管控系统</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/job/job/">作业任务系统</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/network/network01/">容器网络模型</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network01/">网络模型基础</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network02/">网络模型进阶</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network03/">理解CNI和CNI插件</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/pv/pv/">应用持久化</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/pv/pv/">PV/PVC/Storage</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/appobserver/appobserver/">应用监控</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/appobserver/appobserver/">AppObservability</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/appconf/appconf/">应用配管</a>
+    <ul class="nav docs-sidenav">
+      
+      <li class="active">
+        <a href="/programmertalk/containertechnology/k8s/appconf/appconf/">基本概念</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#问题的背景">问题的背景</a>
+      <ul>
+        <li><a href="#pod的配置管理">POD的配置管理</a></li>
+      </ul>
+    </li>
+    <li><a href="#配置文件详解">配置文件详解</a></li>
+    <li><a href="#configmap">ConfigMap</a>
+      <ul>
+        <li><a href="#configmap-介绍">ConfigMap 介绍</a></li>
+        <li><a href="#configmap-创建">ConfigMap 创建</a></li>
+        <li><a href="#configmap-使用">ConfigMap 使用</a></li>
+        <li><a href="#configmap-使用的注意事项">ConfigMap 使用的注意事项</a></li>
+      </ul>
+    </li>
+    <li><a href="#secrete">Secrete</a>
+      <ul>
+        <li><a href="#secrete-介绍">Secrete 介绍</a></li>
+        <li><a href="#secrete-创建">Secrete 创建</a></li>
+        <li><a href="#secrete-使用">Secrete 使用</a></li>
+        <li><a href="#secrete-注意事项">Secrete 注意事项</a></li>
+      </ul>
+    </li>
+    <li><a href="#serviceaccount">ServiceAccount</a>
+      <ul>
+        <li><a href="#应用场景">应用场景</a></li>
+        <li><a href="#案例分析">案例分析</a></li>
+      </ul>
+    </li>
+    <li><a href="#resource">Resource</a>
+      <ul>
+        <li><a href="#容器资源管理">容器资源管理</a></li>
+        <li><a href="#podqos配置">Pod(QoS)配置</a></li>
+      </ul>
+    </li>
+    <li><a href="#security-context">Security Context</a></li>
+    <li><a href="#initcontainer">InitContainer</a>
+      <ul>
+        <li><a href="#initcontainer介绍">InitContainer介绍</a></li>
+        <li><a href="#initcontainer-用途">InitContainer 用途</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>应用配管</h1>
+
+          <div class="article-style">
+            <h2 id="问题的背景">问题的背景</h2>
+<p>依托镜像定义运行的Container，Pod，还需要解决如下问题：</p>
+<ol>
+<li>不可变基础设施（容器）的可变配置</li>
+<li>敏感信息的存储和使用（如秘密，Token）</li>
+<li>集群中Pod自我的身份认证</li>
+<li>容器的运行安全管控</li>
+<li>容器启动前置条件校验</li>
+</ol>
+<pre><code class="language-mermaid">stateDiagram
+
+资源配置 --&gt; 容器
+安全管控 --&gt; 容器
+前置校验 --&gt; 容器
+
+容器 --&gt; 可变配置
+容器 --&gt; 铭感信息
+容器 --&gt; 身份认证
+
+</code></pre>
+<h3 id="pod的配置管理">POD的配置管理</h3>
+<p><img src="../../../k8s/appconf/podconf.png" alt="k8s-work"></p>
+<h2 id="配置文件详解">配置文件详解</h2>
+<h2 id="configmap">ConfigMap</h2>
+<h3 id="configmap-介绍">ConfigMap 介绍</h3>
+<p>管理容器运行所需要的：
+配置文件
+环境变量
+命令行参数
+用于解耦，容器镜像和可变配置
+保障 工作负载的可移植性</p>
+<pre><code>apiVersion: v1
+kind ConfigMap
+metadata:
+    labels:
+      app: flannel
+      tier: node
+    name: kube-flannel-cfg
+    namespace: kube-system
+data:
+  cni-conf.json: {
+    &quot;name&quot;: &quot;cbr0&quot;,
+    &quot;type&quot;: &quot;flannel&quot;,
+    &quot;delegate&quot;: {
+      &quot;isDefaultGateway&quot;: true
+    }
+  }
+  net-conf.json: {
+    &quot;Network&quot;:&quot;172.27.0.0/16&quot;,
+    &quot;Backend&quot;: {
+      &quot;Type&quot;: &quot;vxlan&quot;
+    }
+  }
+</code></pre>
+<p><img src="../../../k8s/appconf/configmapintruducton.png" alt="k8s-work"></p>
+<h3 id="configmap-创建">ConfigMap 创建</h3>
+<p>创建命令： kubectl create configmap [NAME][DATA]</p>
+<pre><code> kubectl create configmap kube-flannel-cfg --from-file=config-prod-container/configmap/cni-conf.json -n kube-system
+</code></pre>
+<p><img src="../../../k8s/appconf/configmapcreate.png" alt="k8s-configmap"></p>
+<h3 id="configmap-使用">ConfigMap 使用</h3>
+<p><img src="../../../k8s/appconf/configmapuse.png" alt="k8s-configmap"></p>
+<h3 id="configmap-使用的注意事项">ConfigMap 使用的注意事项</h3>
+<p><img src="../../../k8s/appconf/confattention.png" alt="k8s-configmap"></p>
+<h2 id="secrete">Secrete</h2>
+<h3 id="secrete-介绍">Secrete 介绍</h3>
+<p><img src="../../../k8s/appconf/secrete.png" alt="k8s-configmap"></p>
+<h3 id="secrete-创建">Secrete 创建</h3>
+<p><img src="../../../k8s/appconf/secretecreate.png" alt="k8s-configmap"></p>
+<h3 id="secrete-使用">Secrete 使用</h3>
+<p><img src="../../../k8s/appconf/secreteused.png" alt="k8s-configmap"></p>
+<h3 id="secrete-注意事项">Secrete 注意事项</h3>
+<p><img src="../../../k8s/appconf/secreteattantion.png" alt="k8s-configmap"></p>
+<h2 id="serviceaccount">ServiceAccount</h2>
+<h3 id="应用场景">应用场景</h3>
+<p><img src="../../../k8s/appconf/serviceaccount.png" alt="k8s-configmap"></p>
+<h3 id="案例分析">案例分析</h3>
+<p><img src="../../../k8s/appconf/serviceaccountexample.png" alt="k8s-configmap"></p>
+<h2 id="resource">Resource</h2>
+<h3 id="容器资源管理">容器资源管理</h3>
+<p><img src="../../../k8s/appconf/resouce.png" alt="k8s-configmap"></p>
+<h3 id="podqos配置">Pod(QoS)配置</h3>
+<p><img src="../../../k8s/appconf/podQos.png" alt="k8s-configmap"></p>
+<h2 id="security-context">Security Context</h2>
+<p><img src="../../../k8s/appconf/securecontext.png" alt="k8s-configmap"></p>
+<h2 id="initcontainer">InitContainer</h2>
+<h3 id="initcontainer介绍">InitContainer介绍</h3>
+<p>InitContainer 和普通 container 的区别：</p>
+<ol>
+<li>InitContainer 首先会比普通 container 先启动，并且直到所有的 InitContainer 执行成功后，普通 container 才会被启动</li>
+<li>InitContainer 之间是按定义的次序去启动执行的，执行成功一个之后再执行第二个，而普通的 container 是并发启动的</li>
+<li>InitContainer 执行成功后就结束退出，而普通容器可能会一直在执行。它可能是一个 longtime 的，或者说失败了会重启，这个也是 InitContainer 和普通 container 不同的地方</li>
+</ol>
+<h3 id="initcontainer-用途">InitContainer 用途</h3>
+<p>用于普通Container启动前的初始化(如配置文件准备)或普通Container启动的前置条件检验</p>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Previous</div>
+    <a href="/programmertalk/containertechnology/k8s/cncfoverview/cncfoverview/" rel="next">云原生技术概览</a>
+  </div>
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Next</div>
+    <a href="/programmertalk/containertechnology/k8s/pv/pv/" rel="prev">应用持久化</a>
+  </div>
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on May 5, 2019</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/containertechnology/k8s/appconf/appconf.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

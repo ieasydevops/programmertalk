@@ -1,0 +1,1450 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="目标 核心类图 设计思路分析 客户端视角-数据的写入流程 DB初始化">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout/">
+  <meta property="og:title" content="内存模型 | ProgrammerTalk">
+  <meta property="og:description" content="目标 核心类图 设计思路分析 客户端视角-数据的写入流程 DB初始化"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2019-05-05T00:00:00&#43;01:00">
+    
+    <meta property="article:modified_time" content="2019-05-05T00:00:00&#43;01:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>内存模型 | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/courses/tsdb/">时间序列数据库</a>
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/promethesutsdb/">TSDB</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/promethesutsdb/">Prometheus tsdb</a>
+      </li>
+      
+      <li class="active">
+        <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout/">内存模型</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/">磁盘存储模型</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/wal/wal/">WAL</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#目标">目标</a></li>
+    <li><a href="#核心类图">核心类图</a></li>
+    <li><a href="#设计思路分析">设计思路分析</a></li>
+    <li><a href="#客户端视角-数据的写入流程">客户端视角-数据的写入流程</a></li>
+    <li><a href="#服务端视角-db初始化">服务端视角-DB初始化</a></li>
+    <li><a href="#关键内存对象分析">关键内存对象分析</a>
+      <ul>
+        <li><a href="#内存序列对象-memseries">内存序列对象 memSeries</a></li>
+        <li><a href="#内存序列对象-chunk">内存序列对象 chunk</a></li>
+        <li><a href="#内存序列对象-head">内存序列对象 Head</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>内存模型</h1>
+
+          <div class="article-style">
+            <h2 id="目标">目标</h2>
+<ul>
+<li>核心类图</li>
+<li>设计思路分析</li>
+<li>客户端视角-数据的写入流程</li>
+<li>DB初始化流程</li>
+<li>关键内存对象分析</li>
+<li>总结</li>
+</ul>
+<h2 id="核心类图">核心类图</h2>
+<pre><code class="language-mermaid">classDiagram
+Appender &lt;|-- headerAppender : Implementation
+
+&lt;&lt;interface&gt;&gt; Appender
+Appender : Add(l labels.Labels, t int64, v float64) (uint64, error)
+Appender : AddFast(ref uint64, t int64, v float64) error
+Appender : Commit() error
+Appender : Rollback() error
+
+
+class DB {
+  &lt;&lt;class&gt;&gt;
+  ...
+	lockf fileutil.Releaser
+	metrics   *dbMetrics
+	opts      *Options
+  ...
+  compactor Compactor
+  blocks []*Block
+	head *Head
+  ...
+}
+
+
+class Head {
+  &lt;&lt;class&gt;&gt;
+  ...
+	wal        *wal.WAL
+	series     *stripeSeries
+  ...
+	symbols    map[string]struct
+  ...
+  ref          uint64
+	lset         labels.Labels
+  ...
+}
+
+
+class memSeries {
+  &lt;&lt;class&gt;&gt;
+  ...
+	chunks       []*memChunk
+	headChunk    *memChunk
+  ...
+	app    chunkenc.Appender
+  ...
+  postings *index.MemPostings
+  ...
+}
+
+
+
+class dbAppender {
+  &lt;&lt;service&gt;&gt;
+  Appender
+  db *DB
+}
+
+
+class  stripeSeries {
+  &lt;&lt;class&gt;&gt;
+  series [stripeSize]map[uint64]*memSeries
+	hashes [stripeSize]seriesHashmap
+	locks  [stripeSize]stripeLock
+}
+
+
+
+class  Block {
+  &lt;&lt;class&gt;&gt;
+  ...
+  meta BlockMeta
+	chunkr     ChunkReader
+	indexr     IndexReader
+	tombstones TombstoneReader
+  ...
+}
+
+
+memSeries --* stripeSeries
+
+stripeSeries --* Head
+
+Block --* DB
+Head --* DB
+Appender --* dbAppender
+DB --* dbAppender
+
+</code></pre>
+<h2 id="设计思路分析">设计思路分析</h2>
+<p>Appender 实现对时间序列采样数据写操作的抽象和封装，提供Add/AddFast/Commit/Rollback的核心能力</p>
+<p>通过DB 这个类，实现对落在某个时间窗口内的时间序列数据的读写操作。
+通过 DB + Appender 的组合，就能提供时序数据库的写入逻辑，
+可以通过 BD + Query 的组合，完成时间序列数据库的读逻辑。
+可以看到，系统的顶层设计非常优秀，秉持了高内聚，低耦合的原则。</p>
+<p>DB内部通过Head,Block,Compactor 等关键几个抽象类，完成数据内存模型的的封装。
+Head 及其相关的类，实现了时间序列数据在内存中的读写，存储。
+Block实现了数据块和磁盘文件目录的映射，而Compactor抽象了数据写入磁盘的逻辑，包括，写入计划，写操作，以及压缩合并。具体是通过 leavelCompactor 实现。</p>
+<p>headerAppender 是数据写入内存的主要承担者，通过 stripeSeries 来构建全局序列缓存，通过类似分段Hash 的方式，降低读写锁竞争，提升效率。
+单个序列的内存模型是memSeries, 单个序列的数据最终是要落盘的，对应了时间序列数据的真实data的存储，
+通过chunk，以及mmapchunk的抽象，实现内存chunk和磁盘chunk的映射，并通过 mmap的机制，实现chunk
+数据的懒加载。
+对于chunk 的写入，抽象出了 chunk appender ,并通过 XOR chunkappend 的实现类，实现了 gorilla 的
+delta of delta 的压缩算法，完成对数据的压缩存储。而且这部分也是低耦合的，只要我们轻易的增加一个
+新的 chunkappend 实现累，就可以做到灵活的切换到其它的压缩算法上去。</p>
+<p>数据采样点，在写入内存的同时，会创建一个全局唯一的ID，作为正排索引，提高我们数据查询效率。序列写入的同时，会构建全局的标签键值对的符号表，每个标签对应那些Value，以及 倒排索引。核心的倒排索引数据结构是
+*index.MemPostings, 核心的Map结构是一个大的二层Map，</p>
+<pre><code>Map &lt;LabelKey, Map &lt;LabelValue,[]IDs&gt;&gt;
+</code></pre>
+<p>第一层Map的键是序列中的标签名称，第二层的Map 的键是 第一层标签对应的Value，而值则是有该标签键，值对
+对应的所有的序列ID列表，而且每次更新时，都会保持ID是有序的。</p>
+<p>Head 的另一个核心对象是WAL，通过WAL解决了当数据尚未写入磁盘时，宕机引发的数据丢失问题。WAL在appedner Commit的时候被触发，实现了对Append的序列和采样数据的WAL.</p>
+<h2 id="客户端视角-数据的写入流程">客户端视角-数据的写入流程</h2>
+<ol>
+<li>流程图</li>
+</ol>
+<pre><code class="language-mermaid">graph TD
+
+A[DBInit] --&gt;|new dbAppender| B(Appender)
+
+B2(数据采集器) --&gt;|DataSamples InComming| B
+
+B --&gt; C{Has ID}
+
+C --&gt;|No| D[Add]
+
+D --&gt;|Return ID| C
+
+C --&gt;|Yes| E[AddFast]
+
+E --&gt; F{Commit}
+
+F--&gt;|Yes|G[appender Commit]
+
+G --&gt; |失败|G1(Rollback) 
+
+</code></pre>
+<ol start="2">
+<li>代码实现</li>
+</ol>
+<p>2.1 DB 初始化</p>
+<pre><code>
+storage, err := tsdb.Open(dir, l, nil, &amp;tsdb.Options{
+		RetentionDuration: 15 * 24 * 60 * 60 * 1000, // 15 days in milliseconds
+		BlockRanges:       tsdb.ExponentialBlockRanges(2*60*60*1000, 5, 3),
+	})
+
+storage 即一个DB的实例
+
+</code></pre>
+<p>2.2 数据摄入完成，创建一个新的Appender</p>
+<pre><code>实例化一个 Appender
+app := storage.Appender()
+
+// Appender 创建一个新的Appender 实例，这个实例和给定的db 是绑定的
+func (db *DB) Appender() Appender {
+	return dbAppender{db: db, Appender: db.head.Appender()}
+}
+
+</code></pre>
+<p>2.3 写入数据</p>
+<p>对于一个新的序列调用 Add, 对于已知的序列，调用AddFast</p>
+<pre><code>if s.ref == nil {
+
+	  ref, err := app.Add(s.labels, ts, float64(s.value))
+         s.ref = &amp;ref
+
+	...
+} else {
+
+    app.AddFast(*s.ref, ts, float64(s.value)
+
+    ...
+
+}
+</code></pre>
+<p>2.4 提交/回滚</p>
+<pre><code>app.Commit() Or  app.Rollback()
+
+</code></pre>
+<h2 id="服务端视角-db初始化">服务端视角-DB初始化</h2>
+<pre><code>caller=db.go:571 msg=&quot;DBInit 1,打开文件，初始化存储目录,log,Block Ragne等，修复坏的索引版本&quot;
+caller=db.go:573 msg=&quot;DBInit 2,初始化DB实例&quot;
+caller=db.go:575 msg=&quot;DBInit 3,监控指标初始化&quot;
+caller=db.go:586 msg=&quot;DBInit 4,DB 文件加锁&quot;
+caller=db.go:599 msg=&quot;DBInit 5,创建一个LeveledCompactor&quot;
+caller=db.go:609 msg=&quot;DBInit 6,Wal Log初始化&quot;
+caller=db.go:626 msg=&quot;DBInit 7,创建 Head&quot;
+caller=db.go:633 msg=&quot;DBInit 8,db reload&quot;
+caller=db.go:640 msg=&quot;DBInit 9,db blocks 初始化，获取最小的有效时间&quot;
+caller=db.go:650 msg=&quot;DBInit 10,db 核心内存结构Head 初始化&quot;
+caller=db.go:660 msg=&quot;DBInit 11,启动db主线程&quot;
+</code></pre>
+<p>其中，步骤10 最为核心，10中完成了时间序列内存正排，倒排索引数据结构的初始化，让我们进入其中，</p>
+<pre><code>caller=head.go:646 msg=&quot;HeadInit 1，重放磁盘的WAL和磁盘内存可映射chunk（如果有的话)&quot;
+caller=head.go:659 msg=&quot;HeadInit 1.1，获取WAL的最后一个checkpoint&quot;
+caller=head.go:686 msg=&quot;HeadInit 1.2，获取WAL的最后一个Segment&quot;
+caller=head.go:693 msg=&quot;HeadInit 1.3，从最近的checkpoint 回填segment&quot;
+caller=head.go:702 msg=&quot;HeadInit 1.4，加载WAL&quot;
+caller=head.go:713 msg=&quot;WAL replay completed&quot; duration=744.825µs
+
+</code></pre>
+<h2 id="关键内存对象分析">关键内存对象分析</h2>
+<p>内存数据对象主要关注两个维度：</p>
+<ul>
+<li>单个时间序列的数据如何存储和查找？</li>
+<li>多个数据序列数据如何缓存，倒排索引如何构建？</li>
+</ul>
+<p>先看单个时间序列数据模型</p>
+<h3 id="内存序列对象-memseries">内存序列对象 memSeries</h3>
+<pre><code class="language-mermaid">classDiagram
+
+class memSeries {
+  &lt;&lt;class&gt;&gt;
+  sync.Mutex
+  
+  ref          uint64         //全局唯一ID
+  lset         labels.Labels  //标签集合
+  chunks       []*memChunk    //chunk 的映射集合
+  headChunk    *memChunk    
+  chunkRange   int64
+  firstChunkID int
+  nextAt        int64  // 生成下一个chunk 的切割时间点
+  sampleBuf     [4]sample
+  app chunkenc.Appender
+
+  appendable(t int64, v float64) error 
+  append(t int64, v float64) (success, chunkCreated bool)
+  cut(mint int64) *memChunk
+
+  chunk(id int) *memChunk
+  truncateChunksBefore(mint int64) (removed int) 
+}
+
+</code></pre>
+<p>内存序列的，数据模型如上图，核心的概念是chunk, 提供的append 和 cut 等操作，新的时间采样点数据来后，会append,
+等到一定的时间戳口就被cut 或 truncate 。chunk之间通过位数固定的步长，chunkRange,通过chunkID 和chunkRange 可以
+非常快速的定位到所需查询的chunk。</p>
+<h3 id="内存序列对象-chunk">内存序列对象 chunk</h3>
+<pre><code class="language-mermaid">classDiagram
+Appender &lt;|-- xorAppender : 实现
+&lt;&lt;interface&gt;&gt; Appender
+Appender : Append(t int64, v float64)
+
+Iterator &lt;|-- xorIterator : 实现
+&lt;&lt;interface&gt;&gt; Iterator
+Iterator : At() (int64, float64)
+Iterator : Err() error
+Iterator : Next() bool
+
+
+
+Chunk &lt;|-- XORChunk : 实现
+&lt;&lt;interface&gt;&gt; Chunk
+Chunk : Bytes() []byte
+Chunk : Encoding() Encoding
+Chunk : Appender() (Appender, error)
+Chunk : Iterator(Iterator) Iterator
+Chunk : NumSamples() int
+
+class XORChunk {
+  &lt;&lt;service&gt;&gt;
+  b bstream
+  Encoding()
+  Appender()
+  Iterator(it Iterator)
+}
+
+XORChunk --&gt; xorIterator
+XORChunk --&gt; xorAppender
+
+</code></pre>
+<p>chunk 是对单个序列，在段的时间维度上数据模型的抽象。提供的核心功能是Append 和  Iterator. 其中，XORChunk 实现了
+gorila 的数据压缩算法。</p>
+<p>在看多个时间序列数据模型</p>
+<h3 id="内存序列对象-head">内存序列对象 Head</h3>
+<h4 id="head-的类图结构">Head 的类图结构</h4>
+<pre><code class="language-mermaid">classDiagram
+
+class Head {
+  &lt;&lt;class&gt;&gt;
+  ...
+	wal        *wal.WAL 
+  ...
+  series *stripeSeries
+  ...
+  symbols map[string]struct
+  values  map[string]stringset // Label names to possible values.
+  ...
+  postings *index.MemPostings // Postings lists for terms.
+  tombstones *tombstones.MemTombstones
+  ...
+  chunkDiskMapper *chunks.ChunkDiskMapper
+
+  Appender() storage.Appender // 初始化hadderAppender 并返回
+  appender() *headAppender
+  Chunks() (ChunkReader, error) // returns a ChunkReader against the block
+  getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool, error)
+
+}
+
+
+</code></pre>
+<h4 id="head-的核心对象及其关系">Head 的核心对象及其关系</h4>
+<pre><code class="language-mermaid">classDiagram
+
+class Head {
+    &lt;&lt;class&gt;&gt;
+   
+}
+
+
+class headAppender {
+    &lt;&lt;class&gt;&gt;
+    head         *Head
+    sampleSeries []*memSeries
+    series       []record.RefSeries
+   	samples      []record.RefSample
+
+}
+
+
+
+
+class WAL
+class stripeSeries
+class MemPostings
+class MemTombstones
+class ChunkDiskMapper
+
+
+
+
+Head --|&gt; stripeSeries
+Head --|&gt; MemPostings
+Head --|&gt; MemTombstones
+Head --|&gt; ChunkDiskMapper
+
+
+Head --* headAppender
+memSeries --* headAppender
+
+</code></pre>
+<h4 id="各个主要对象的功能分析">各个主要对象的功能分析</h4>
+<p>headAppender 组合了 内存序列对象(memSeries) 和 Head 对象，并实现了 Appender 接口，是时间序列数据写入逻辑
+的核心承载者。
+Head 通过 stripeSeries,MemPosting,MemTomstones，以及ChunkDiskMapper 完成以下子功能：</p>
+<ul>
+<li>全局有序的正排索引 -  stripeSeries</li>
+</ul>
+<pre><code class="language-mermaid">classDiagram
+
+class stripeSeries {
+    &lt;&lt;class&gt;&gt;
+    size                    int   //默认 2^14 个段
+    series                  []map[uint64]*memSeries // 全局内存序列hash 表
+    hashes                  []seriesHashmap  // 序列标签hash 值为Key，[]memSeries为Value,为了防止hash冲突
+    locks                   []stripeLock  // 分段锁
+    ...
+}
+</code></pre>
+<p>stripeSeries 顾名思义，将序列分成了很多条带，降低锁竞争。 初始化时，默认将序列划分为 2^14 个条带。</p>
+<p>对于新增一个数据点，如何将该数据写入到内存中的呢？</p>
+<p>根据序列标签集计算Hash -&gt; 根据Hash值到全局Hash表中 (stripeSeries) 获取对应的序列 -&gt; 将数据写入单个
+序列内存对象 memSeries 中。</p>
+<p>根据序列标签集获取Hash值的计算逻辑如下：</p>
+<pre><code>// lset.Hash(),基于采样点的所有标签构建Hash值
+func (ls Labels) Hash() uint64 {
+    b := make([]byte, 0, 1024)
+    for _, v := range ls {
+        b = append(b, v.Name...)
+        b = append(b, sep)
+        b = append(b, v.Value...)
+        b = append(b, sep)
+    }
+    return xxhash.Sum64(b)
+}
+
+</code></pre>
+<p>根据hash值，获取内存序列</p>
+<pre><code>
+s, created, err := a.head.getOrCreate(lset.Hash(), lset)
+// 从全局分段序列中获取内存序列
+func (h *Head) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool, error) {
+            ...
+        s := h.series.getByHash(hash, lset)
+            ...
+}
+
+从分段的HashMap中获取对应的内存序列
+
+func (s *stripeSeries) getByHash(hash uint64, lset labels.Labels) *memSeries {
+
+    i := hash &amp; uint64(s.size-1)  // 获取对应stripe位置
+    s.locks[i].RLock()  
+    series := s.hashes[i].get(hash, lset)
+    s.locks[i].RUnlock()
+
+    return series
+}
+
+
+</code></pre>
+<p>由于我们内存的序列范围可能非常大，为了提升效率，降低锁的竞争，将该序列分段，通过一次hash 可以定位到一个较小的区间，为了解决hash 冲突，维护了一个小的hashmap。</p>
+<ul>
+<li>倒排索引 - MemPostings</li>
+</ul>
+<p>倒排索引 MemPostings,是个大的二层Map,标签名称Key，为第一层Map的Key，Value为第二层Map的Key，第二层Map的Value则为包含次标签的序列 ID的一个数组。</p>
+<p>简化的数据结构描述:  Map&lt;LabelKey,Map&lt;LabelValue,[]Ids&gt;</p>
+<p>正是该倒排索引，解决了组合标签过滤查询时查询效率问题，查询性能从 O（M^N） - &gt;  O( M*N ) 。</p>
+<pre><code>// MemPostings holds postings list for series ID per label pair.
+// They may be written to out of order.
+type MemPostings struct {
+    mtx     sync.RWMutex
+    m       map[string]map[string][]uint64  // 标签名称Key，为第一层Map的Key，Value为第二层Map的Key，第二层Map的Value则为包含次标签的序列 ID的一个数组。
+    ordered bool
+}
+
+</code></pre>
+<p>为了提升查询效率，数据在写入时，会时刻保持某个标签键值对所在的序列列表 IDs 是有序的。其实现逻辑也很简单，如下：</p>
+<pre><code>
+ ...
+    // id is the given ID
+    list :=append(list,id)
+    ...
+    for i := len(list) - 1; i &gt;= 1; i-- {
+        if list[i] &gt;= list[i-1] {
+            break
+        }
+        list[i], list[i-1] = list[i-1], list[i]
+}
+
+</code></pre>
+<ul>
+<li>
+<p>预写日志组件 WAL</p>
+<p>新增的序列，首先会写入内存对象，之后，当 append.Commit 时，会触发WAL写入。后面会有单独章节来分析WAL的实现。
+值得一提的是，WAL针对 head 中的 Series 和 Sample 写Log</p>
+</li>
+<li>
+<p>磁盘到内存的 chunk 映射 - chunkDiskMapper</p>
+<p>chunkDiskMapper 基于 mmap 的技术，实现来磁盘chunk到内存chunk  的映射. Head 的</p>
+<pre><code>
+loadMmappedChunks() (map[uint64][]*mmappedChunk, error)
+
+</code></pre>
+<p>方法，实现来数据的初始化。</p>
+</li>
+</ul>
+<h2 id="总结">总结</h2>
+<p>本文，从相对宏观的视角分析了 prometheus tsdb 的内存数据模型。</p>
+<p>1 . 整体的设计遵循高内聚，低耦合的方式原则。</p>
+<p>基于核心的三大领域模型，DB，Appender ,Query 实现。DB是对数据层封装，Appender 是对数据写入操作抽象，
+Query是对数据查询操作抽象。Appender + DB 构成了tsdb 的总体写入框架</p>
+<ol start="2">
+<li>
+<p>内存模型从两个角度看，单个序列数据存储模型由 memSeries 承载，多个序列存储模型有Head ,Block ,TomStone等承载。</p>
+</li>
+<li>
+<p>数据采样写入时候，构建了正排，索引。</p>
+<p>正向索引基于分段hash 的原理，减少锁竞争，通过二次 hashmap 解决hash冲突。
+每个采样数据写入时，会判断是否为新增，若新增则会为期分配全局唯一的ID</p>
+</li>
+<li>
+<p>数据采样写入时候，同时构建了全局的倒排索引，以及符号表</p>
+</li>
+</ol>
+<p>倒排索引是一个二层Map表, 结构为 &lt;序列标签名称，&lt;序列标签Value，此标签键值对所在的序列ID列表&raquo;, 其中每个标签键值对对应的ID列表为有序的</p>
+<p>也就录了每个标签可能对应那些Value值。</p>
+<ol start="4">
+<li>
+<p>通过 chunkDiskMapper 实现内存chunk 到磁盘chunk的映射</p>
+</li>
+<li>
+<p>通过WAL 的技术解决在服务宕机时，部分尚未落入磁盘数据的恢复。</p>
+</li>
+</ol>
+<p>在后面的章节将分析，数据在磁盘的存储布局，以及内存数据到磁盘存的迁移过程。</p>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Previous</div>
+    <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/promethesutsdb/" rel="next">Prometheus Tsdb 分析</a>
+  </div>
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Next</div>
+    <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/" rel="prev">磁盘存储模型</a>
+  </div>
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on May 5, 2019</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>并发编程 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter3/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/index.xml" rel="self" type="application/rss+xml" />
+    <description>并发编程</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Sun, 09 Sep 2018 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>并发编程</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter3/</link>
+    </image>
+    
+    <item>
+      <title>Contex详解</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter3/context/context/</link>
+      <pubDate>Sun, 09 Sep 2018 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/golang/chapter3/context/context/</guid>
+      <description>&lt;h2 id=&#34;context-的设计背景及原则&#34;&gt;Context 的设计背景及原则&lt;/h2&gt;
+&lt;h3 id=&#34;服务端处理请求逻辑&#34;&gt;服务端处理请求逻辑&lt;/h3&gt;
+&lt;p&gt;在Go服务端，每个传入的请求被一个自己的goroutine 处理。 请求处理器通常会开启额外的 goroutine 来访问后端服务
+比如 database 或 RPC服务。每个请求的 goroutine 集合通常需要访问该请求特定的信息，比如用户的ID，授权token
+以及 请求的 deadline. 当请求被取消或超时时，这个请求对应的goroutine 集能快速退出，系统可以回收它们使用的所有资源。&lt;/p&gt;
+&lt;h3 id=&#34;流水线工作模式&#34;&gt;流水线工作模式&lt;/h3&gt;
+&lt;h3 id=&#34;使用原则&#34;&gt;使用原则&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;不要将Context 存储到一个结构体中，而应该是通过函数传参的方式传递。Context 应该当作第一个参数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;不要传递一个空的 context 。当你不知道该传递何种Context时候，可以用 context.TODO&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;仅对传输进程和API的请求范围的数据使用上下文值，而不是将可选参数传递给函数。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;相同的Context 可以传递给不同 goroutine中的函数，Context 对于多个goroutine同时使用是安全的。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;context-实现&#34;&gt;Context 实现&lt;/h2&gt;
+&lt;h3 id=&#34;context-的类图结构&#34;&gt;Context 的类图结构&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;classDiagram
+Context &amp;lt;|-- emptyCtx : Implementation
+Context &amp;lt;|-- cancelCtx : Implementation
+Context &amp;lt;|-- timerCtx : Implementation
+Context &amp;lt;|-- valueCtx : Implementation
+
+
+&amp;lt;&amp;lt;interface&amp;gt;&amp;gt; Context
+Context : Deadline() (deadline time.Time, ok bool)
+Context : Done() &amp;lt;-chan struct{}
+Context : Err() error
+Context : Value(key interface{}) interface{}
+
+
+
+class CancelFunc{
+   &amp;lt;&amp;lt;func&amp;gt;&amp;gt; 
+  CancelFunc func()
+}
+
+
+CancelFunc --* WithCancel
+Context    --* WithCancel
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;context-接口申明&#34;&gt;Context 接口申明&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;// A Context carries a deadline, a cancellation signal, and other values across
+// API boundaries.
+//
+// Context&#39;s methods may be called by multiple goroutines simultaneously.
+type Context interface {
+	// Deadline returns the time when work done on behalf of this context
+	// should be canceled. 
+  // Deadline returns ok==false when no deadline is set. 
+  // Successive calls to Deadline return the same results.
+	Deadline() (deadline time.Time, ok bool)
+
+	// Done returns a channel that&#39;s closed when work done on behalf of this
+	// context should be canceled. Done may return nil if this context can
+	// never be canceled. Successive calls to Done return the same value.
+	// The close of the Done channel may happen asynchronously,
+	// after the cancel function returns.
+	//
+	// WithCancel arranges for Done to be closed when cancel is called;
+	// WithDeadline arranges for Done to be closed when the deadline expires; 
+  // WithTimeout arranges for Done to be closed when the timeout elapses.
+
+	// Done is provided for use in select statements:
+	Done() &amp;lt;-chan struct{}
+
+	// If Done is not yet closed, Err returns nil.
+	// If Done is closed, Err returns a non-nil error explaining why:
+	// Canceled if the context was canceled
+	// or DeadlineExceeded if the context&#39;s deadline passed.
+	// After Err returns a non-nil error, successive calls to Err return the same error.
+	Err() error
+
+	// Value returns the value associated with this context for key, or nil
+	// if no value is associated with key. Successive calls to Value with
+	// the same key returns the same result.
+	Value(key interface{}) interface{}
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;接口分析&#34;&gt;接口分析&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;// Done is provided for use in select statements:
+Done() &amp;lt;-chan struct{}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Done 方法返回一个 struct{} chan , 该 channel 扮演了一个代表 context 运行函数的取消信号。
+当该channel 关闭时，相应的函数应该放弃对应的工作并返回。&lt;/p&gt;
+&lt;p&gt;Context 并不提供Cancel 方法，这和Done channel 只能被动接受的原因相同。 接受取消信号的函数，通常并不是
+发送 cancel 信号 函数。尤其是,当一个父操作为子操作开启新的 goroutine 时，子操作不能取消父操作。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Err() error
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Err 函数会返回一个错误提示，为什么当前的context 被取消。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Deadline() (deadline time.Time, ok bool)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Deadline 方法允许函数判断，是否值得开始工作。如果所剩的时间比较少，就不值得开启工作。在编码中，
+也可以用用于设置I/O操作的超时时间&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Value(key interface{}) interface{}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Value  函数，允许上下文携带请求范围的数据。这些数据可以被多个子 goroutine 线程安全的访问。&lt;/p&gt;
+&lt;h3 id=&#34;context-的派生接口介绍&#34;&gt;Context 的派生接口介绍&lt;/h3&gt;
+&lt;p&gt;为了便于使用，Context 包提供了几个派生的Context，他们提供了Context语意，和一个 CancelFunc的回调函数。
+当上下文被取消时，从它派生的所有上下文也将被取消。 函数原型如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+// A CancelFunc tells an operation to abandon its work.
+// A CancelFunc does not wait for the work to stop.
+// A CancelFunc may be called by multiple goroutines simultaneously.
+type CancelFunc func()
+
+
+WithCancel(parent Context) (ctx Context, cancel CancelFunc)
+
+WithDeadline(parent Context, d time.Time) (Context, CancelFunc)
+
+WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这几个函数，都接受一个上下文（parent Context)，并返回一个派生的上下文，和一个CancelFunc。调用CancelFunc将
+触发以下操作：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;取消输入context 派生的子context，以及该子context 派生的子孙 context&lt;/li&gt;
+&lt;li&gt;删除父对象对子对象的引用&lt;/li&gt;
+&lt;li&gt;停止任何关联的计时器。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;context-实现原理分析&#34;&gt;Context 实现原理分析&lt;/h2&gt;
+&lt;h2 id=&#34;context-典型的使用场景举例分析&#34;&gt;Context 典型的使用场景，举例分析&lt;/h2&gt;
+&lt;h3 id=&#34;http-请求的场景&#34;&gt;Http 请求的场景&lt;/h3&gt;
+&lt;p&gt;如下代码，模拟了一个一个HTTP Server 服务，处理客户端请求需要2秒时间，若在两秒内，用户取消了请求，
+该请求应该立刻被返回。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+func main() {
+	// Create an HTTP server that listens on port 8000
+	http.ListenAndServe(&amp;quot;:8000&amp;quot;, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		// This prints to STDOUT to show that processing has started
+		fmt.Fprint(os.Stdout, &amp;quot;processing request\n&amp;quot;)
+		// We use `select` to execute a peice of code depending on which
+		// channel receives a message first
+		select {
+		case &amp;lt;-time.After(2 * time.Second):
+			// If we receive a message after 2 seconds
+			// that means the request has been processed
+			// We then write this as the response
+			w.Write([]byte(&amp;quot;request processed&amp;quot;))
+		case &amp;lt;-ctx.Done():
+			// If the request gets cancelled, log it
+			// to STDERR
+			fmt.Fprint(os.Stderr, &amp;quot;request cancelled\n&amp;quot;)
+		}
+	}))
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以通过在2秒内关闭浏览器模拟取消请求，在控制台上就能看到 request cancelled 的输出。完整的代码在
+&lt;a href=&#34;https://github.com/sohamkamani/blog-example-go-context-cancellation&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;这里&lt;/a&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;主动提交一个取消事件&#34;&gt;主动提交一个取消事件&lt;/h3&gt;
+&lt;p&gt;在某些场景下，如果我们希望在满足特定条件下取消一个任务，可以通过提交一个cancel事件来实现。
+下面的例子，展示这种场景&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+func operation1(ctx context.Context) error {
+	time.Sleep(100 * time.Millisecond)
+	return errors.New(&amp;quot;failed&amp;quot;)
+}
+
+func operation2(ctx context.Context) {
+	select {
+	case &amp;lt;-time.After(500 * time.Millisecond):
+		fmt.Println(&amp;quot;done&amp;quot;)
+	case &amp;lt;-ctx.Done():
+		fmt.Println(&amp;quot;halted operation2&amp;quot;)
+	}
+}
+
+func main() {
+  ctx :=context.Background()
+  ctx, cancel :=context.WithCancel(ctx)
+  go func(){
+    err :=Operation1(ctx)
+    if err != nil {
+      cancel()
+    }
+  }()
+  operation2(ctx)
+}
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;例子2，带有超时时间的context。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	go handle(ctx, 500*time.Millisecond)
+	select {
+	case &amp;lt;-ctx.Done():
+		fmt.Println(&amp;quot;main&amp;quot;, ctx.Err())
+	}
+}
+
+func handle(ctx context.Context, duration time.Duration) {
+	select {
+	case &amp;lt;-ctx.Done():
+		fmt.Println(&amp;quot;handle&amp;quot;, ctx.Err())
+	case &amp;lt;-time.After(duration):
+		fmt.Println(&amp;quot;process request with&amp;quot;, duration)
+	}
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;一个容易犯错的例子&#34;&gt;一个容易犯错的例子&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;
+func doSomething() {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	someArg := &amp;quot;loremipsum&amp;quot;
+	go doSomethingElse(context.Background(), someArg)
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;doSomething 函数退出时，就会调用cancel(),此时，doSomething 会被迫终止，
+在函数中调用另一个子进程时，应创建一个新的context&lt;/p&gt;
+&lt;h3 id=&#34;pipline-的场景&#34;&gt;Pipline 的场景&lt;/h3&gt;
+&lt;p&gt;所谓的Pipline 可以理解为： 通过channel 连在一起的一系列的状态，每个状态都有
+一组goroutine 执行相同的函数。在每个阶段，这些 goroutine 执行如下操作：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;从上游接受channel 获取值&lt;/li&gt;
+&lt;li&gt;对获取的数据执行一些操作，&lt;/li&gt;
+&lt;li&gt;将数据通过传出 channels下发&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;通过一个例子来说明：&lt;/p&gt;
+&lt;p&gt;生成函数&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;func gen(nums ...int) &amp;lt;-chan int {
+    out := make(chan int)
+    go func() {
+        for _, n := range nums {
+            out &amp;lt;- n
+        }
+        close(out)
+    }()
+    return out
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;context-总结&#34;&gt;Context 总结&lt;/h2&gt;
+&lt;h2 id=&#34;扩展阅读&#34;&gt;扩展阅读&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://blog.golang.org/pipelines&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Go Concurrency Patterns: Pipelines and cancellation&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Channel</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/golang/chapter3/channel/</link>
+      <pubDate>Sun, 09 Sep 2018 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/golang/chapter3/channel/</guid>
+      <description>&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;channel 的设计目标和设计原则&lt;/li&gt;
+&lt;li&gt;channel 的数据结构&lt;/li&gt;
+&lt;li&gt;channel 的数据收发逻辑&lt;/li&gt;
+&lt;li&gt;总结&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;channel-的设计目标和设计原则&#34;&gt;channel 的设计目标和设计原则&lt;/h2&gt;
+&lt;h3 id=&#34;设计目标&#34;&gt;设计目标&lt;/h3&gt;
+&lt;p&gt;channel 本质上是一个高性能的无锁缓存管道。通过通信的方式，解决多个goroutine 之间的数据共享问题。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  不要通过共享内存的方式进行通信，而是应该通过通信的方式共享内存
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;既然是内存channel，需要解决如下的问题：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;数据的有序性，FIFO&lt;/li&gt;
+&lt;li&gt;性能，多个Goroutine 向同一个channel 收发数据时&lt;strong&gt;锁和调度的优化&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;设计原则--fifo&#34;&gt;设计原则 -FIFO&lt;/h3&gt;
+&lt;p&gt;多个Goroutine 向同一个channel 收发数据的原则&lt;strong&gt;先进先出&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;先从 Channel 读取数据的 Goroutine 会先接收到数据；&lt;/li&gt;
+&lt;li&gt;先向 Channel 发送数据的 Goroutine 会得到先发送数据的权利；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;但是 Go 语言稍早版本的实现却不是严格遵循这一语义的，
+&lt;a href=&#34;https://github.com/golang/go/issues/11506&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;runtime: make sure blocked channels run operations in FIFO order&lt;/a&gt;,中提出了有缓冲区的 Channel 在执行收发操作时没有遵循 FIFO 的规则,带缓冲区的channel 读写机制，&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;发送方会向缓冲区中写入数据，然后唤醒接收方，多个接收方会尝试从缓冲区中读取数据，如果没有读取到就会重新陷入休眠；&lt;/li&gt;
+&lt;li&gt;接收方会从缓冲区中读取数据，然后唤醒发送方，发送方会尝试向缓冲区写入数据，如果缓冲区已满就会重新陷入休眠；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这种基于重试的机制会导致 Channel 的处理不会遵循 FIFO 的原则。经过 
+&lt;a href=&#34;https://github.com/golang/go/commit/8e496f1d6923172291658f0a785bdb47cc152325&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;runtime: simplify buffered channels&lt;/a&gt; 和 
+&lt;a href=&#34;https://github.com/golang/go/commit/e410a527b208e0a9acd0cded3775b302d8f2b00a&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;runtime: simplify chan ops, take 2&lt;/a&gt; 两个提交的修改，带缓冲区和不带缓冲区的 Channel 都会遵循先入先出对数据进行接收和发送3 4。&lt;/p&gt;
+&lt;h3 id=&#34;设计原则-锁优化&#34;&gt;设计原则-锁优化&lt;/h3&gt;
+&lt;p&gt;一般来说，会通过 CAS(compare-and-swap 或者 compare-and-set)自旋锁的操作,来实现无锁队列。&lt;/p&gt;
+&lt;p&gt;从本质上来说，Channel 是一个用于同步和通信的有锁队列，使用互斥锁解决程序中可能存在的线程竞争问题是很常见的，我们能很容易地实现有锁队列。但锁导致的休眠和唤醒会带来额外的上下文切换。&lt;/p&gt;
+&lt;p&gt;1994 年的论文 
+&lt;a href=&#34;http://people.cs.pitt.edu/~jacklange/teaching/cs2510-f12/papers/implementing_lock_free.pdf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Implementing lock-free queues&lt;/a&gt; 就研究了如何使用无锁的数据结构实现先进先出队列，而 Go 语言社区也在2014 年提出了无锁 Channel 的实现方案，该方案将 Channel 分成了以下三种类型8：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;同步 Channel — 不需要缓冲区，发送方会直接将数据交给（Handoff）接收方；&lt;/li&gt;
+&lt;li&gt;异步 Channel — 基于环形缓存的传统生产者消费者模型；&lt;/li&gt;
+&lt;li&gt;chan struct{} 类型的异步 Channel — struct{} 类型不占用内存空间，不需要实现缓冲区和直接发送（Handoff）的语义；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这个提案的目的也不是实现完全无锁的队列，只是在一些关键路径上通过无锁提升 Channel 的性能。社区中已经有无锁 Channel 的实现9，但是在实际的基准测试中，无锁队列在多核测试中的表现还需要进一步的改进10。&lt;/p&gt;
+&lt;p&gt;因为目前通过 CAS 实现11的无锁 Channel 没有提供 FIFO 的特性，所以该提案暂时也被搁浅了12。&lt;/p&gt;
+&lt;h2 id=&#34;channel-的数据结构&#34;&gt;channel 的数据结构&lt;/h2&gt;
+&lt;h3 id=&#34;channel-数据结构&#34;&gt;channel 数据结构&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;classDiagram
+class hchan {
+  &amp;lt;&amp;lt;service&amp;gt;&amp;gt;
+  ...
+  uint qcount  // Channel 中的元素个数
+  uint dataqsiz //  Channel 中的循环队列的长度
+  buf      unsafe.Pointer // Channel 的缓冲区数据指针
+  sendx    uint   // Channel 的发送操作处理到的位置
+	recvx    uint   // 接收操作处理的位置
+	recvq    waitq  // 由于缓冲区空间不足而阻塞的 Goroutine 列表
+	sendq    waitq  // list of send waiters
+  ...
+}
+
+class sudog {
+   &amp;lt;&amp;lt;class&amp;gt;&amp;gt;
+
+
+}
+
+
+class waitq {
+  &amp;lt;&amp;lt;class&amp;gt;&amp;gt;
+  first *sudog
+	last  *sudog
+}
+
+
+
+waitq --* hchan
+sudog --* waitq
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;type hchan struct {
+	qcount   uint           // total data in the queue
+	dataqsiz uint           // size of the circular queue
+	buf      unsafe.Pointer // points to an array of dataqsiz elements
+	elemsize uint16 //当前 Channel 能够收发的元素的大小
+	elemtype *_type // element type  //当前 Channel 能够收发的元素的类型
+	sendx    uint   // send index
+	recvx    uint   // receive index
+	recvq    waitq  // list of recv waiters
+	sendq    waitq  // list of send waiters
+      closed   uint32
+
+	// lock protects all fields in hchan, as well as several
+	// fields in sudogs blocked on this channel.
+	//
+	// Do not change another G&#39;s status while holding this lock
+	// (in particular, do not ready a G), as this can deadlock
+	// with stack shrinking.
+	lock mutex
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;hchan 是实现channel 的数据结构，包括一个环形buffer队列，该buffer 大小，收发元素对应的操作位置，以及channel的
+元素类型和大小。
+sendq 和 recvq 存储了当前 Channel 由于缓冲区空间不足而阻塞的 Goroutine 列表，这些等待队列使用双向链表 runtime.waitq 表示,&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;type waitq struct {
+	first *sudog
+	last  *sudog
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;sudog 代表了在某个channel 上收发数据而处于等待的goroutine。&lt;/p&gt;
+&lt;p&gt;sudog 是为了解决 goroutine 和 同步对象之间多对多的关系，而抽象出的概念。 一个因此一个goroutine可能在多个等待列表中，
+因此一个goroutine 对应多个 sudogs, 多个goroutine 可能等待同一个同步对象，因此，也会存在多个 sudog 对应
+一个对象。
+sudog 通过一个特殊池来分配. 通过 acquireSudog 和 releaseSudog 来分配和释放。&lt;/p&gt;
+&lt;h3 id=&#34;channel-初始化&#34;&gt;channel 初始化&lt;/h3&gt;
+&lt;p&gt;Channel 的创建都会使用 make 关键字，编译器会将 make(chan int, 10) 表达式被转换成 OMAKE 类型的节点，并在类型检查阶段将 OMAKE 类型的节点转换成 OMAKECHAN 类型
+根据 Channel 中收发元素的类型和缓冲区的大小初始化 runtime.hchan 结构体和缓冲区：&lt;/p&gt;
+&lt;p&gt;上述代码根据 Channel 中收发元素的类型和缓冲区的大小初始化 runtime.hchan 结构体和缓冲区：&lt;/p&gt;
+&lt;p&gt;如果当前 Channel 中不存在缓冲区，那么就只会为 runtime.hchan 分配一段内存空间；
+如果当前 Channel 中存储的类型不是指针类型，就会为当前的 Channel 和底层的数组分配一块连续的内存空间；
+在默认情况下会单独为 runtime.hchan 和缓冲区分配内存；
+在函数的最后会统一更新 runtime.hchan 的 elemsize、elemtype 和 dataqsiz 几个字段&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;graph TD
+A[make] --&amp;gt;|编译器| B(OMAKECHAN)
+B --&amp;gt; C{是否带缓冲}
+C --&amp;gt;|带缓冲区的异步 Channel| D[-]
+C --&amp;gt;|不带缓冲区的同步 Channel| E[-]
+D --&amp;gt; F[runtime.makechan]
+E --&amp;gt; F[runtime.makechan]
+F --&amp;gt; G[ 根据 Channel 中收发元素的类型和缓冲区的大小初始化 runtime.hchan 结构体和缓冲区]
+G --&amp;gt;H{发送类型和缓冲区}
+H --&amp;gt; |Channel 不存在缓冲区| I1[为hchan 分配一段内存空间]
+H --&amp;gt; |Channel 中存储的类型不是指针类型| I2[为hchan 和底层数组分配一块连续的内存空间]
+H --&amp;gt; |默认| I3[为hchan 和缓冲区分配内存]
+I1 --&amp;gt; J[统一更新elemsize,elemtype 和 dataqsiz ]
+I2 --&amp;gt; J[统一更新elemsize,elemtype 和 dataqsiz]
+I3 --&amp;gt; J[统一更新elemsize,elemtype 和 dataqsiz ]
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;channel-的数据发送&#34;&gt;channel 的数据发送&lt;/h2&gt;
+&lt;p&gt;使用 ch &amp;lt;- i 语句，编译器会将它解析成 OSEND 节点并在 
+&lt;a href=&#34;&#34;&gt;cmd/compile/internal/gc.walkexpr&lt;/a&gt; 函数中转换成
+runtime.chansend1：&lt;/p&gt;
+&lt;p&gt;chansend1 会调用runtime.chansend 并传入Channel 和需要发送的数据。runtime.chansend 是向 Channel 中发送数据时最终会调用的函数，这个函数负责了发送数据的全部逻辑，如果我们在调用时将 block 参数设置成 true，那么就表示当前发送操作是一个阻塞操作：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
+	lock(&amp;amp;c.lock)
+
+	if c.closed != 0 {
+		unlock(&amp;amp;c.lock)
+		panic(plainError(&amp;quot;send on closed channel&amp;quot;))
+	}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在发送数据的逻辑执行之前会先为当前 Channel 加锁，防止发生竞争条件。如果 Channel 已经关闭，那么向该 Channel 发送数据时就会报&amp;quot;send on closed channel&amp;rdquo; 错误并中止程序。&lt;/p&gt;
+&lt;h3 id=&#34;直接发送&#34;&gt;直接发送&lt;/h3&gt;
+&lt;p&gt;如果目标 Channel 没有被关闭并且已经有处于读等待的 Goroutine，那么 runtime.chansend 函数会从接收队列 recvq 中取出最先陷入等待的 Goroutine 并直接向它发送数据：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;if sg := c.recvq.dequeue(); sg != nil {
+		send(c, sg, ep, func() { unlock(&amp;amp;c.lock) }, 3)
+		return true
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;发送数据时会调用 runtime.send，该函数的执行可以分成两个部分：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;调用 runtime.sendDirect 函数将发送的数据直接拷贝到 x = &amp;lt;-c 表达式中变量 x 所在的内存地址上；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;调用 runtime.goready 将等待接收数据的 Goroutine 标记成可运行状态 Grunnable 并把该 Goroutine 放到发送方所在的处理器的 runnext 上等待执行，该处理器在下一次调度时就会立刻唤醒数据的接收方；&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code&gt;// send processes a send operation on an empty channel c.
+// The value ep sent by the sender is copied to the receiver sg.
+// The receiver is then woken up to go on its merry way.
+// Channel c must be empty and locked.  send unlocks c with unlockf.
+// sg must already be dequeued from c.
+// ep must be non-nil and point to the heap or the caller&#39;s stack.
+func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
+	...
+	if sg.elem != nil {
+		sendDirect(c.elemtype, sg, ep)  
+		sg.elem = nil
+	}
+	gp := sg.g
+	unlockf()
+	gp.param = unsafe.Pointer(sg)
+	if sg.releasetime != 0 {
+		sg.releasetime = cputicks()
+	}
+	goready(gp, skip+1)
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;缓冲区&#34;&gt;缓冲区&lt;/h3&gt;
+&lt;p&gt;如果创建的 Channel 包含缓冲区并且 Channel 中的数据没有装满，就会执行下面这段代码&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+...
+if c.qcount &amp;lt; c.dataqsiz {
+		// Space is available in the channel buffer. Enqueue the element to send.
+		qp := chanbuf(c, c.sendx)
+		if raceenabled {
+			raceacquire(qp)
+			racerelease(qp)
+		}
+
+		typedmemmove(c.elemtype, qp, ep)
+
+		c.sendx++
+
+    // 如果发送处理位置到达达到处理元素的最大值，就置为零，环形Buffer
+		if c.sendx == c.dataqsiz {
+			c.sendx = 0
+		}
+
+		c.qcount++
+
+		unlock(&amp;amp;c.lock)
+		return true
+	}
+
+...
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;首先会使用 chanbuf 计算出下一个可以存储数据的位置，然后通过 runtime.typedmemmove 将发送的数据拷贝到缓冲区中并增加 sendx 索引和 qcount 计数器。&lt;/p&gt;
+&lt;h3 id=&#34;阻塞发送&#34;&gt;阻塞发送&lt;/h3&gt;
+&lt;p&gt;当 Channel 没有接收者能够处理数据时，向 Channel 发送数据就会被下游阻塞，当然使用 select 关键字可以向 Channel 非阻塞地发送消息。向 Channel 阻塞地发送数据会执行下面的代码，我们可以简单梳理一下这段代码的逻辑：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
+	...
+	if !block {
+		unlock(&amp;amp;c.lock)
+		return false
+	}
+  //调用 runtime.getg 获取发送数据使用的 Goroutine；
+	gp := getg()
+
+	mysg := acquireSudog()
+	mysg.elem = ep
+	mysg.g = gp
+	mysg.c = c
+	gp.waiting = mysg
+	c.sendq.enqueue(mysg)
+	goparkunlock(&amp;amp;c.lock, waitReasonChanSend, traceEvGoBlockSend, 3)
+
+	gp.waiting = nil
+	gp.param = nil
+	mysg.c = nil
+	releaseSudog(mysg)
+	return true
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;小结&#34;&gt;小结&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;调用时将 block 参数设置成 true，那么就表示当前发送操作是一个阻塞操作&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在发送数据的逻辑执行之前会先为当前 Channel 加锁，防止发生竞争条件,
+如果 Channel 已经关闭，那么向该 Channel 发送数据时就会报&amp;quot;send on closed channel&amp;rdquo; 错误并中止程序&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果当前 Channel 的 recvq 上存在已经被阻塞的 Goroutine，那么会直接将数据发送给当前的 Goroutine 并将其设置成下一个运行的 Goroutine；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果 Channel 存在缓冲区并且其中还有空闲的容量，我们就会直接将数据直接存储到当前缓冲区 sendx 所在的位置上；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果不满足上面的两种情况，就会创建一个 runtime.sudog 结构并将其加入 Channel 的 sendq 队列中，当前 Goroutine 也会陷入阻塞等待其他的协程从 Channel 接收数据；&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;发送数据的过程中包含几个会触发 Goroutine 调度的时机：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;发送数据时发现 Channel 上存在等待接收数据的 Goroutine，立刻设置处理器的 runnext 属性，但是并不会立刻触发调度；&lt;/li&gt;
+&lt;li&gt;发送数据时并没有找到接收方并且缓冲区已经满了，这时就会将自己加入 Channel 的 sendq 队列并调用 runtime.goparkunlock 触发 Goroutine 的调度让出处理器的使用权；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;channel-的数据接收逻辑&#34;&gt;channel 的数据接收逻辑&lt;/h2&gt;
+&lt;p&gt;Go 语言中可以使用两种不同的方式去接收 Channel 中的数据：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;i &amp;lt;- ch
+i, ok &amp;lt;- ch
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这两种不同的方法经过编译器的处理都会变成 ORECV 类型的节点，后者会在类型检查阶段被转换成 OAS2RECV 类型。数据的接收操作遵循以下的路线图：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;stateDiagram
+[*] --&amp;gt; ch
+ch --&amp;gt; ORECV
+ORECV --&amp;gt; OAS2RECV
+
+ORECV --&amp;gt; chanrecv1
+OAS2RECV --&amp;gt; chanrecv2
+
+chanrecv1 --&amp;gt; chanrecv
+chanrecv2 --&amp;gt; chanrecv
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;虽然不同的接收方式会被转换成 runtime.chanrecv1 和 runtime.chanrecv2 两种不同函数的调用，但是这两个函数最终还是会调用 runtime.chanrecv。&lt;/p&gt;
+&lt;h3 id=&#34;小结-1&#34;&gt;小结&lt;/h3&gt;
+&lt;p&gt;我们梳理一下从 Channel 中接收数据时可能会发生的五种情况：&lt;/p&gt;
+&lt;p&gt;如果 Channel 为空，那么就会直接调用 runtime.gopark 挂起当前 Goroutine；
+如果 Channel 已经关闭并且缓冲区没有任何数据，runtime.chanrecv 函数会直接返回；
+如果 Channel 的 sendq 队列中存在挂起的 Goroutine，就会将 recvx 索引所在的数据拷贝到接收变量所在的内存空间上并将 sendq 队列中 Goroutine 的数据拷贝到缓冲区；
+如果 Channel 的缓冲区中包含数据就会直接读取 recvx 索引对应的数据；
+在默认情况下会挂起当前的 Goroutine，将 runtime.sudog 结构加入 recvq 队列并陷入休眠等待调度器的唤醒；&lt;/p&gt;
+&lt;p&gt;我们总结一下从 Channel 接收数据时，会触发 Goroutine 调度的两个时机：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;当 Channel 为空时；&lt;/li&gt;
+&lt;li&gt;当缓冲区中不存在数据并且也不存在数据的发送者时；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+&lt;h2 id=&#34;参考文献&#34;&gt;参考文献&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Dmitry Vyukov. Jan, 2014. “Go channels on steroids” &lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/OneOfOne/lfchan/blob/master/lfchan.go&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Ahmed W. A scalable lock-free channel.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;8 Dmitry Vyukov. Jan, 2014. “Go channels on steroids”&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/OneOfOne/lfchan/blob/master/lfchan.go&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;9 Ahmed W. A scalable lock-free channel.&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

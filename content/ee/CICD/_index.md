@@ -23,9 +23,9 @@ menu:
 
 # CI/CD
 
-## 基于GitlabPipeline的CI/CD实现方案
+## [基于GitlabPipeline的CI/CD实现方案](../cicd/gitlabpipeline/)
 
-## 基于GitOps的DevOps系统优化设计
+## [基于GitOps的DevOps系统优化设计](../cicd/gitops/)
 
-## CI/CD构建框架TekTon的深入剖析
+## [CI/CD构建框架TekTon的深入剖析](../cicd/tekton/)
 
