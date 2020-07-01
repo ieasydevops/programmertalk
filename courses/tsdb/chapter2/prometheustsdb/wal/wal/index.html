@@ -708,6 +708,7 @@
         <li><a href="#wla-顶层接口设计">WLA 顶层接口设计</a></li>
         <li><a href="#段-segment">段 Segment</a></li>
         <li><a href="#页-page">页 Page</a></li>
+        <li><a href="#wal-初始化">WAL 初始化</a></li>
       </ul>
     </li>
   </ul>
@@ -973,8 +974,16 @@ type page struct {
 	buf     [pageSize]byte
 }
 
-
 </code></pre>
+<h3 id="wal-初始化">WAL 初始化</h3>
+<ol>
+<li>根据目录，获取segment列表</li>
+<li>创建最后一个segment</li>
+</ol>
+<p>// New returns a new WAL over the given directory.
+func New(logger log.Logger, reg prometheus.Registerer, dir string, compress bool) (*WAL, error) {
+return NewSize(logger, reg, dir, DefaultSegmentSize, compress)
+}</p>
 
           </div>
 
