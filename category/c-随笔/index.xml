@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>c&#43;&#43; 随笔 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/category/c-%E9%9A%8F%E7%AC%94/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/category/c-%E9%9A%8F%E7%AC%94/index.xml" rel="self" type="application/rss+xml" />
+    <description>c&#43;&#43; 随笔</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>c&#43;&#43; 随笔</title>
+      <link>https://meixinyun.github.io/programmertalk/category/c-%E9%9A%8F%E7%AC%94/</link>
+    </image>
+    
+    <item>
+      <title>LibApr 阅读笔记</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2016/2016-02-23-apr-note/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2016/2016-02-23-apr-note/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;apr&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;apr-是什么&#34;&gt;APR 是什么&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;   apr 运行时库目标是： 提供一个可移植的运行时支持库，是Apache HTTP服务器的支持库，提供了一组映射到下层操作系统的API。
+   可以屏蔽平台相关性，使程序员可以叫方便的写出在不同平台上移植的程序。	  
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;功能特性&#34;&gt;功能特性&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;1. 内存管理和内存池功能
+2. 原子操作（Linearizability）
+3. 动态库处理
+4. 文件I/O
+5. 命令参数解析
+6. 锁机制（Locking）
+7. 散列表和数组
+8. Mmap（mmap）功能
+9. 网络套接字和协议
+10.  线程，进程和互斥锁功能
+11.  共享内存功能
+12. 时间子程序
+13.  用户和组ID服务
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;应用背景&#34;&gt;应用背景&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt; 由于公司的设备品种繁多，staragent 作为运维工具的基础设施，广泛部署在公司的各个服务器上，考虑代码的维护性，和可移植性，我们考虑采用 apr 运行库来实现staragent的客户端的核心功能。其中主要涉及APR 库的 1, 5, 6, 9 10,11 等功能。本次我们重点了解如何搭建 apr 库的基本环境，编译构建；项目集成。以及其网络库存，进程间处理库。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-运行环境搭建&#34;&gt;apr 运行环境搭建&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt; 为方便工程测试，我们将依赖的源码包编译为静态连接库，在项目中设置依赖变量，可以保证只用编译
+一次apr库；
+ 
+1. 下载源码包： 
+
+    https://apr.apache.org/	 
+
+2.  执行构建
+
+    为了方便测试，我创建了一个编译目录，
+    如下 是创建的目录结构：
+    
+    ├── build_dep.sh
+    ├── build.sh
+    ├── CMakeLists.txt
+    ├── depend
+    │   └── compiled
+    ├── log
+    └── src
+        ├── apr-1.5.2
+        ├── common
+        └── proc
+    
+    
+    下载的源码，解压后，放在src/apr-1.5.2目录下；
+    在当前路径下执行，buil_dep.sh 脚本，会将apr库编译安装在 depend/compiled/ubuntu_64/目录下。
+   
+    以下时编译安装脚本。
+        
+    #!/bin/sh
+    set -x
+    curDir=`pwd`
+    mkdir -p depend/compiled/ubuntu_64/
+    echo &amp;quot;build apr-1.5.2&amp;quot;
+    cd src/apr-1.5.2/
+    ./configure --prefix=${curDir}/depend/compiled/ubuntu_64
+    make &amp;amp;&amp;amp; make install
+    
+    
+
+3. 设置项目依赖路径
+
+   编译安装完毕后，可以设置路径依赖，我们采用cmake 构建项目工程；
+   需要在构建是指定依赖路径：
+   -DDEP_ROOT=/XXX/depend/compiled/ubuntu_64
+
+4. 添加引用
+
+    需要在项目中设置apr 引用和依赖
+    
+    include_directories(${DEP_ROOT}/include/apr-1)
+    link_direcoteries(${DEP_ROOT}/lib)
+    target_link_libraries(xxx apr-1)
+
+5. 执行构建
+   mkdir -p build &amp;amp;&amp;amp; cd build &amp;amp;&amp;amp; cmake .. &amp;amp;&amp;amp; make
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-库使用的基本结构及编程风格&#34;&gt;apr 库使用的基本结构及编程风格&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;apr 并不是一个框架库，优点是 可以很方便的和其它库联合使用
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr库-编程的代码基本结构skeleton-code&#34;&gt;apr库 编程的代码基本结构（skeleton code）&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt; 一个基本的apr库骨架代码如下： 会调用apr_initialize（） 初始化， 调研apr_terminate() 终结。
+/*   pseudo code of libapr. error checks omitted  */  
+apr_status_t rv;
+apr_foo_t *foo;
+rv = apr_foo_create(&amp;amp;foo, args...);/* create a @foo object by @args */
+rv = apr_foo_do_something(foo, args...); /* do something with @foo */
+apr_foo_destroy(foo); /* destroy the @foo object. Sometimes, this is done implicitly by 
+                       * destroying related memory pool. Please see below */
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr-的编程风格&#34;&gt;apr 的编程风格&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;  ＊ 命名规则很简单，清晰
+  ＊ 数据类型大部分对用户隐藏，（可通过API操作属性；未实现完全的类型）
+  ＊ 大部分的返回结果为 apr_status_t. 返回结果会作为参数适用。
+  ＊ 基于内存池
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-内存池&#34;&gt;apr 内存池&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;大部分的libapr API 依赖于内存池。通过内存池，可以很方便的管理内存块。 如果你有很多内存快，需要申请和释放，管理起来就会比较麻烦，可能导致内存泄漏。apr 的内存池库可以解决此问题。apr  所有的内存申请，都是有内存池负责申请，调用 apr_pool_destroy() 即可释放掉所有的内存。好处有二：
+  其一： 预防内存泄漏
+  其二： 分配内存块的开销相对降低。
+  
+  内存池迫使我们基于会话编程；一个内存池，可以看成一个会话上下文，一些具有相同生命周期的对象集合。你可以使用一个会话上下文来管理一个对象集合。
+  基本思想是： 在会话开始的时候，创建一个内存池； 你不需要关心他们的生命周期，最后，会话结束的时候，释放掉内存池即可。
+
+ 备注：
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;内存池操作的基本api&#34;&gt;内存池操作的基本API&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt; /* excerpted from apr_pools.h */
+ 
+ /* 内存创建 */
+ APR_DECLARE(apr_status_t) apr_pool_create(apr_pool_t **newpool,
+                                      apr_pool_t *parent);
+
+  /* 内存申请 */                                      
+ APR_DECLARE(void *) apr_palloc(apr_pool_t *p, apr_size_t size);
+ 
+ 
+ /* 内存池销毁 */ 
+ APR_DECLARE(void) apr_pool_destroy(apr_pool_t *p);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;申请释放-一块内存空间&#34;&gt;申请，释放 一块内存空间&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;  /* excerpted from mp-sample.c */
+       apr_pool_t *mp;
+      /* create a memory pool. */
+      apr_pool_create(&amp;amp;mp, NULL);
+      
+      /* allocate memory chunks from the memory pool */
+      char *buf1;
+      buf1 = apr_palloc(mp, MEM_ALLOC_SIZE);    
+
+     /* destroy the memory pool. These chunks above are freed by this */
+      apr_pool_destroy(mp);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;几个内存池使用建议&#34;&gt;几个内存池使用建议：&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt; 1. apr_palloc() 并没有最大的内存限制，内存池主要是基与小的内存块设计的，初始化的大小是 8kbyte; 若需要使用较大的内存块，比如几M ，建议不要使用内存池。
+ 2. 默认，内存池管理 不会主动将申请的内存返回给操作系统，如果程序长时间运行，可能会有问题。建议限定内存池的上限。
+ 
+     #define YOUR_POOL_MAX_FREE_SIZE 32 
+
+     apr_pool_t *mp;
+     apr_pool_create(&amp;amp;mp, NULL);
+     apr_allocator_t* pa = apr_pool_allocator_get(mp); 
+     if（pa）｛
+             apr_allocator_max_free_set(pa, YOUR_POOL_MAX_FREE_SIZE);  
+      
+     ｝
+     
+ 3. 以上例子 给出了如何申请和释放内存；libapr 封装了内存的申请和释放实现逻辑。
+   apr_pool_create（）／ apr_pool_destroy(mp); 成对出现。
+   rv = apr_initialize();／ apr_terminate(); 成对出现。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;内存池的清理及销毁相关api&#34;&gt;内存池的清理及销毁相关API&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;  场景1:
+  
+  apr_pool_clear()
+  与apr_pool_destroy()类似，但内存池依然可以使用；一个典型的场景如下：
+
+  /* sample code about apr_pool_clear() */
+  apr_pool_t *mp;
+  apr_pool_create(&amp;amp;mp, NULL);
+  for (i = 0; i &amp;lt; n; ++i) {
+       do_operation(..., mp);
+       apr_pool_clear(mp);
+   }
+   
+
+   场景2:  我们需要在内存池 clear/destroy 时执行特定的操作，可以通过注册callback函数实现。在回调函数里，你可以实现任何收尾处理代码。
+ 
+   apr_pool_cleanup_register()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr内存池构建结构&#34;&gt;apr内存池构建结构&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;  apr的内存池，是基于树结构的。每个内存池拥有一个父的内存池，
+  apr_pool_create() API，第二个参数，是其父内存池的地址，传递为NLL，则当前的内存池，最为根节点。
+  当调用apr_pool_destroy()时，内存池的子节点也会被销毁， 当调用apr_pool_clear() 时，内存池可用，但其子节点的内存池被销毁。当一个内存池的子节点
+  销毁时，其 cleanup 函数会被调用。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;使用建议&#34;&gt;使用建议&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;  传递 NULL 作为内存池的 cleanup 回调函数 （ BUG ）
+   
+  应 像下面的代码 传递  apr_pool_cleanup_null 
+  
+  /* pseudo code about memory pool typical bug */
+  
+  /* apr_pool_cleanup_register(mp, ANY_CONTEXT_OF_YOUR_CODE, ANY_CALLBACK_OF_YOUR_CODE, NULL); THIS IS A BUG */
+
+  /* FIXED */
+  apr_pool_cleanup_register(mp, ANY_CONTEXT_OF_YOUR_CODE, ANY_CALLBACK_OF_YOUR_CODE, apr_pool_cleanup_null);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-进程处理库&#34;&gt;apr 进程处理库&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt; 为了便于理解，我们基于一个功能来学习apr 进程库。
+ 我们的任务是： 通过apr进程库，创建一个子进程，在子进程中执行一个shell命令，然后 在父进程中，将该子进程执行的结果，在终端输出。
+ 
+ 我们需要学习的知识：
+ 
+ 如何利用apr 库 创建一个子进程；
+ 
+ 子进程执行完毕后，父进程如何获取子进程执行的结果。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr-进程库&#34;&gt;apr 进程库：&lt;/h3&gt;
+&lt;h4 id=&#34;进程属性对象&#34;&gt;进程属性对象&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;   /* excerpted from apr_thread_proc.h */
+   
+    APR_DECLARE(apr_status_t) apr_procattr_create(apr_procattr_t **new_attr, apr_pool_t *cont);
+
+    第一个参数： 结果参数；
+    第二个参数： 进程使用的内存池对象 
+
+    apr_procattr_t 结构比较复杂，提供了get/set方法； 在 apr_thread_proc.h 中定义；
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;detach-api&#34;&gt;detach API&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;    APR_DECLARE(apr_status_t) apr_threadattr_detach_set(apr_threadattr_t *attr, apr_int32_t on);
+    通过此API，可以设置子进程为分离的进程（detached） ; 不同的操作系统(detached)的含义不同；
+    在windows 系统里，当子进程为命令行应用，并且不需要看控制台的时候，设置为分离模式；在 linux 操作系统里，如果子进程为一个服务进程则建议设置为分离模式。
+    默认的模式是： non-detachable;
+    
+    typedef enum {
+      APR_SHELLCMD,           /**&amp;lt; use the shell to invoke the program */
+      APR_PROGRAM,            /**&amp;lt; invoke the program directly, no copied env */
+      APR_PROGRAM_ENV,        /**&amp;lt; invoke the program, replicating our environment */
+      APR_PROGRAM_PATH,       /**&amp;lt; find program on PATH, use our environment */
+      APR_SHELLCMD_ENV        /**&amp;lt; use the shell to invoke the program,  replicating our environment
+                               */
+    } apr_cmdtype_e;
+
+     apr_cmdtype_e  主要作用：
+     
+      （1）设置执行进程是否是使用shell; 
+     
+               APR_SHELLCMD 和 APR_SHELLCMD_ENV 两种模式，是使用 shell 来 创建一个进程；可与system(3)做比较。
+               与system(3) 和 fork 或 exec 比较，有时被认为一种容易的交互方式；
+               在 libapr 建议 不用 shell 来执行一个进程。理由是： 虽然利用 shell 来执行任务 好像是易于扩展，但实际存在安全漏洞。 除非       
+               你很清楚自己在执行什么，否则不要用 APR_SHELLCMD 或 APR_SHELLCMD_ENV。
+      
+       （2）另一个不同 主要是，环境变量。
+            传递环境变量有两种方式： 
+           （a）使用 APR_PROGRAM_ENV 或 APR_SHELLCMD_ENV. 
+               子进程会获得父进程环境变量的一个副本；子进程修改任务环境变量的值并不会影响父进程。
+           （b）通过设置 apr_proc_create() 函数的 参数来传递。
+           
+        （3）最后一个不同主要是和 PATH 环境变量有关。
+             APR_PROGRAM_PATH 是唯一的，只用通过使用 APR_PROGRAM_PATH 这种模式，才可以用一个 程序的名称 代替 程序的路径。
+             比如： 可以使用 &amp;quot;ls&amp;quot; 启动一个子进程。libapr 会 从PATH的环境变量里搜索 其确切的路径。否则我们就传递一个绝对路径，如 &amp;quot;/bin/ls&amp;quot; ;
+             作者不推荐使用 可能会存在安全隐患。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;进程创建api&#34;&gt;进程创建API&lt;/h4&gt;
+&lt;h5 id=&#34;创建进程函数&#34;&gt;创建进程函数&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt; /* excerpted from apr_thread_proc.h */
+ APR_DECLARE(apr_status_t) apr_proc_create(apr_proc_t *new_proc,
+                                      const char *progname,
+                                      const char * const *args,
+                                      const char * const *env, 
+                                      apr_procattr_t *attr, 
+                                      apr_pool_t *pool);
+
+
+ 函数说明：
+ 第一个参数： 子进程返回值，内存由apr 库创建；
+ 第二个参数： 子进程程序的名称，建议传递绝对路径。
+ 第三个参数： 子进程运行的参数列表；构造子进程参数列表方法如下：
+ 
+    /* pseudo code of args to apr_proc_create() */
+       int argc = 0;
+       const char* argv[32];    /* 32 is a magic number. enough size for the number of arguments list */
+       argv[argc++] = progname; /* program path of the command to run */
+       argv[argc++] = &amp;quot;-i&amp;quot;;
+       argv[argc++] = &amp;quot;foo&amp;quot;;
+       argv[argc++] = &amp;quot;--longopt&amp;quot;;
+       argv[argc++] = &amp;quot;bar&amp;quot;;
+       argv[argc++] = NULL;    /* The final element should be NULL as sentinel */
+       
+       该参数列表，第一个参数 为 程序运行的路径，最后一个参数最为哨兵，传递NULL。
+ 
+ 第四个参数： 传递给子进程环境变量列表，
+             和第三个参数类似，参数列表的最后一个值为NULL，最为哨兵。
+ 第五个参数： apr_procattr_t; 进程属性对象，在1中介绍；通过apr_proattr_create()API创建
+ 第六个参数： 内存池地址；
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;获取子进程执行状态&#34;&gt;获取子进程执行状态。&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt; /* excerpted from apr_thread_proc.h */
+ APR_DECLARE(apr_status_t) apr_proc_wait(apr_proc_t *proc,
+                                    int *exitcode, apr_exit_why_e *exitwhy,
+                                    apr_wait_how_e waithow);
+
+函数说明：
+第一个参数： 之前通过apr_proc_create()创建的进程属性对象；
+第二，三个参数： 结果参数；
+第四个参数：等待子进程的方式：
+         APR_WAIT  当前进程会阻塞，直到子进程终止；
+         APR_NOWAIT 非阻塞；    
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;父子进程间通信的一种方式-pipe&#34;&gt;父子进程间通信的一种方式 pipe&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;管道时一种内部进程通信的方式。在父子进程间通信，比较方便。通过管道，父进程可以传递字符流到子进程的标准输入；同样，父进程也可以通过管道收到子进程发的字符流。子进程可以将输出结果写入标准输出或标准错误。子进程可以不 care 管道，只需要从标准 输入／输出／错误里读写； 相对的，从父进程的视角来看，管道就像一个文件对象。父进程只需要调用 apr_file_read() 或  apr_file_write() 从其管道 来发送或接收 数据 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;管道处理函数&#34;&gt;管道处理函数&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;/* excerpted from apr_thread_proc.h */
+APR_DECLARE(apr_status_t) apr_procattr_io_set(apr_procattr_t *attr, 
+                                         apr_int32_t in, apr_int32_t out,
+                                         apr_int32_t err);
+函数参数说明：
+第一个参数：进程属性对象；
+第2，3，4 参数 分别对应改进程的标准  输入/输出/错误。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;后记&#34;&gt;后记&lt;/h3&gt;
+&lt;p&gt;apr库 涉及内容比较多，是一个循序渐进的过程。我是刚入门学习，水平有限，欢迎大家交流指证。&lt;/p&gt;
+&lt;p&gt;我的计划如下：
+熟悉apr库的使用方法 -&amp;gt; 应用实战 －&amp;gt; 研究其源代码 －&amp;gt; 自己编写类似的工具箱&lt;/p&gt;
+&lt;p&gt;有兴趣的同学欢迎加我，相互交流。&lt;/p&gt;
+&lt;p&gt;未完待续。。。。&lt;/p&gt;
+&lt;h3 id=&#34;相关链接&#34;&gt;相关链接：&lt;/h3&gt;
+&lt;p&gt;［1］
+&lt;a href=&#34;&#34;&gt;apr官网&lt;/a&gt;
+［2］
+&lt;a href=&#34;http://dev.ariel-networks.com/apr/apr-tutorial&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;apr 使用教程&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,1267 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="并发编程 Channel">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/channel/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/channel/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/channel/">
+  <meta property="og:title" content="Channel | ProgrammerTalk">
+  <meta property="og:description" content="并发编程 Channel"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2018-09-09T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2018-09-09T00:00:00&#43;00:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Channel | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/courses/golang/chapter3/">运行时</a>
+
+  </div>
+  
+  <div class="docs-toc-item active">
+    <a class="docs-toc-link" href="/programmertalk/courses/golang/chapter3/channel/">channel</a>
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#目标">目标</a></li>
+    <li><a href="#channel-的设计目标和设计原则">channel 的设计目标和设计原则</a>
+      <ul>
+        <li><a href="#设计目标">设计目标</a></li>
+        <li><a href="#设计原则--fifo">设计原则 -FIFO</a></li>
+        <li><a href="#设计原则-锁优化">设计原则-锁优化</a></li>
+      </ul>
+    </li>
+    <li><a href="#channel-的数据结构">channel 的数据结构</a>
+      <ul>
+        <li><a href="#channel-数据结构">channel 数据结构</a></li>
+        <li><a href="#channel-初始化">channel 初始化</a></li>
+      </ul>
+    </li>
+    <li><a href="#channel-的数据发送">channel 的数据发送</a>
+      <ul>
+        <li><a href="#直接发送">直接发送</a></li>
+        <li><a href="#缓冲区">缓冲区</a></li>
+        <li><a href="#阻塞发送">阻塞发送</a></li>
+        <li><a href="#小结">小结</a></li>
+      </ul>
+    </li>
+    <li><a href="#channel-的数据接收逻辑">channel 的数据接收逻辑</a>
+      <ul>
+        <li><a href="#小结-1">小结</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+    <li><a href="#参考文献">参考文献</a></li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>Channel</h1>
+
+          <div class="article-style">
+            <h2 id="目标">目标</h2>
+<ul>
+<li>channel 的设计目标和设计原则</li>
+<li>channel 的数据结构</li>
+<li>channel 的数据收发逻辑</li>
+<li>总结</li>
+</ul>
+<h2 id="channel-的设计目标和设计原则">channel 的设计目标和设计原则</h2>
+<h3 id="设计目标">设计目标</h3>
+<p>channel 本质上是一个高性能的无锁缓存管道。通过通信的方式，解决多个goroutine 之间的数据共享问题。</p>
+<pre><code>  不要通过共享内存的方式进行通信，而是应该通过通信的方式共享内存
+</code></pre>
+<p>既然是内存channel，需要解决如下的问题：</p>
+<ul>
+<li>数据的有序性，FIFO</li>
+<li>性能，多个Goroutine 向同一个channel 收发数据时<strong>锁和调度的优化</strong></li>
+</ul>
+<h3 id="设计原则--fifo">设计原则 -FIFO</h3>
+<p>多个Goroutine 向同一个channel 收发数据的原则<strong>先进先出</strong></p>
+<ul>
+<li>先从 Channel 读取数据的 Goroutine 会先接收到数据；</li>
+<li>先向 Channel 发送数据的 Goroutine 会得到先发送数据的权利；</li>
+</ul>
+<p>但是 Go 语言稍早版本的实现却不是严格遵循这一语义的，
+<a href="https://github.com/golang/go/issues/11506" target="_blank" rel="noopener">runtime: make sure blocked channels run operations in FIFO order</a>,中提出了有缓冲区的 Channel 在执行收发操作时没有遵循 FIFO 的规则,带缓冲区的channel 读写机制，</p>
+<ul>
+<li>发送方会向缓冲区中写入数据，然后唤醒接收方，多个接收方会尝试从缓冲区中读取数据，如果没有读取到就会重新陷入休眠；</li>
+<li>接收方会从缓冲区中读取数据，然后唤醒发送方，发送方会尝试向缓冲区写入数据，如果缓冲区已满就会重新陷入休眠；</li>
+</ul>
+<p>这种基于重试的机制会导致 Channel 的处理不会遵循 FIFO 的原则。经过 
+<a href="https://github.com/golang/go/commit/8e496f1d6923172291658f0a785bdb47cc152325" target="_blank" rel="noopener">runtime: simplify buffered channels</a> 和 
+<a href="https://github.com/golang/go/commit/e410a527b208e0a9acd0cded3775b302d8f2b00a" target="_blank" rel="noopener">runtime: simplify chan ops, take 2</a> 两个提交的修改，带缓冲区和不带缓冲区的 Channel 都会遵循先入先出对数据进行接收和发送3 4。</p>
+<h3 id="设计原则-锁优化">设计原则-锁优化</h3>
+<p>一般来说，会通过 CAS(compare-and-swap 或者 compare-and-set)自旋锁的操作,来实现无锁队列。</p>
+<p>从本质上来说，Channel 是一个用于同步和通信的有锁队列，使用互斥锁解决程序中可能存在的线程竞争问题是很常见的，我们能很容易地实现有锁队列。但锁导致的休眠和唤醒会带来额外的上下文切换。</p>
+<p>1994 年的论文 
+<a href="http://people.cs.pitt.edu/~jacklange/teaching/cs2510-f12/papers/implementing_lock_free.pdf" target="_blank" rel="noopener">Implementing lock-free queues</a> 就研究了如何使用无锁的数据结构实现先进先出队列，而 Go 语言社区也在2014 年提出了无锁 Channel 的实现方案，该方案将 Channel 分成了以下三种类型8：</p>
+<ul>
+<li>同步 Channel — 不需要缓冲区，发送方会直接将数据交给（Handoff）接收方；</li>
+<li>异步 Channel — 基于环形缓存的传统生产者消费者模型；</li>
+<li>chan struct{} 类型的异步 Channel — struct{} 类型不占用内存空间，不需要实现缓冲区和直接发送（Handoff）的语义；</li>
+</ul>
+<p>这个提案的目的也不是实现完全无锁的队列，只是在一些关键路径上通过无锁提升 Channel 的性能。社区中已经有无锁 Channel 的实现9，但是在实际的基准测试中，无锁队列在多核测试中的表现还需要进一步的改进10。</p>
+<p>因为目前通过 CAS 实现11的无锁 Channel 没有提供 FIFO 的特性，所以该提案暂时也被搁浅了12。</p>
+<h2 id="channel-的数据结构">channel 的数据结构</h2>
+<h3 id="channel-数据结构">channel 数据结构</h3>
+<pre><code class="language-mermaid">classDiagram
+class hchan {
+  &lt;&lt;service&gt;&gt;
+  ...
+  uint qcount  // Channel 中的元素个数
+  uint dataqsiz //  Channel 中的循环队列的长度
+  buf      unsafe.Pointer // Channel 的缓冲区数据指针
+  sendx    uint   // Channel 的发送操作处理到的位置
+	recvx    uint   // 接收操作处理的位置
+	recvq    waitq  // 由于缓冲区空间不足而阻塞的 Goroutine 列表
+	sendq    waitq  // list of send waiters
+  ...
+}
+
+class sudog {
+   &lt;&lt;class&gt;&gt;
+
+
+}
+
+
+class waitq {
+  &lt;&lt;class&gt;&gt;
+  first *sudog
+	last  *sudog
+}
+
+
+
+waitq --* hchan
+sudog --* waitq
+
+</code></pre>
+<pre><code>type hchan struct {
+	qcount   uint           // total data in the queue
+	dataqsiz uint           // size of the circular queue
+	buf      unsafe.Pointer // points to an array of dataqsiz elements
+	elemsize uint16 //当前 Channel 能够收发的元素的大小
+	elemtype *_type // element type  //当前 Channel 能够收发的元素的类型
+	sendx    uint   // send index
+	recvx    uint   // receive index
+	recvq    waitq  // list of recv waiters
+	sendq    waitq  // list of send waiters
+      closed   uint32
+
+	// lock protects all fields in hchan, as well as several
+	// fields in sudogs blocked on this channel.
+	//
+	// Do not change another G's status while holding this lock
+	// (in particular, do not ready a G), as this can deadlock
+	// with stack shrinking.
+	lock mutex
+}
+</code></pre>
+<p>hchan 是实现channel 的数据结构，包括一个环形buffer队列，该buffer 大小，收发元素对应的操作位置，以及channel的
+元素类型和大小。
+sendq 和 recvq 存储了当前 Channel 由于缓冲区空间不足而阻塞的 Goroutine 列表，这些等待队列使用双向链表 runtime.waitq 表示,</p>
+<pre><code>type waitq struct {
+	first *sudog
+	last  *sudog
+}
+</code></pre>
+<p>sudog 代表了在某个channel 上收发数据而处于等待的goroutine。</p>
+<p>sudog 是为了解决 goroutine 和 同步对象之间多对多的关系，而抽象出的概念。 一个因此一个goroutine可能在多个等待列表中，
+因此一个goroutine 对应多个 sudogs, 多个goroutine 可能等待同一个同步对象，因此，也会存在多个 sudog 对应
+一个对象。
+sudog 通过一个特殊池来分配. 通过 acquireSudog 和 releaseSudog 来分配和释放。</p>
+<h3 id="channel-初始化">channel 初始化</h3>
+<p>Channel 的创建都会使用 make 关键字，编译器会将 make(chan int, 10) 表达式被转换成 OMAKE 类型的节点，并在类型检查阶段将 OMAKE 类型的节点转换成 OMAKECHAN 类型
+根据 Channel 中收发元素的类型和缓冲区的大小初始化 runtime.hchan 结构体和缓冲区：</p>
+<p>上述代码根据 Channel 中收发元素的类型和缓冲区的大小初始化 runtime.hchan 结构体和缓冲区：</p>
+<p>如果当前 Channel 中不存在缓冲区，那么就只会为 runtime.hchan 分配一段内存空间；
+如果当前 Channel 中存储的类型不是指针类型，就会为当前的 Channel 和底层的数组分配一块连续的内存空间；
+在默认情况下会单独为 runtime.hchan 和缓冲区分配内存；
+在函数的最后会统一更新 runtime.hchan 的 elemsize、elemtype 和 dataqsiz 几个字段</p>
+<pre><code class="language-mermaid">graph TD
+A[make] --&gt;|编译器| B(OMAKECHAN)
+B --&gt; C{是否带缓冲}
+C --&gt;|带缓冲区的异步 Channel| D[-]
+C --&gt;|不带缓冲区的同步 Channel| E[-]
+D --&gt; F[runtime.makechan]
+E --&gt; F[runtime.makechan]
+F --&gt; G[ 根据 Channel 中收发元素的类型和缓冲区的大小初始化 runtime.hchan 结构体和缓冲区]
+G --&gt;H{发送类型和缓冲区}
+H --&gt; |Channel 不存在缓冲区| I1[为hchan 分配一段内存空间]
+H --&gt; |Channel 中存储的类型不是指针类型| I2[为hchan 和底层数组分配一块连续的内存空间]
+H --&gt; |默认| I3[为hchan 和缓冲区分配内存]
+I1 --&gt; J[统一更新elemsize,elemtype 和 dataqsiz ]
+I2 --&gt; J[统一更新elemsize,elemtype 和 dataqsiz]
+I3 --&gt; J[统一更新elemsize,elemtype 和 dataqsiz ]
+
+</code></pre>
+<h2 id="channel-的数据发送">channel 的数据发送</h2>
+<p>使用 ch &lt;- i 语句，编译器会将它解析成 OSEND 节点并在 
+<a href="">cmd/compile/internal/gc.walkexpr</a> 函数中转换成
+runtime.chansend1：</p>
+<p>chansend1 会调用runtime.chansend 并传入Channel 和需要发送的数据。runtime.chansend 是向 Channel 中发送数据时最终会调用的函数，这个函数负责了发送数据的全部逻辑，如果我们在调用时将 block 参数设置成 true，那么就表示当前发送操作是一个阻塞操作：</p>
+<pre><code>
+func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
+	lock(&amp;c.lock)
+
+	if c.closed != 0 {
+		unlock(&amp;c.lock)
+		panic(plainError(&quot;send on closed channel&quot;))
+	}
+
+</code></pre>
+<p>在发送数据的逻辑执行之前会先为当前 Channel 加锁，防止发生竞争条件。如果 Channel 已经关闭，那么向该 Channel 发送数据时就会报&quot;send on closed channel&rdquo; 错误并中止程序。</p>
+<h3 id="直接发送">直接发送</h3>
+<p>如果目标 Channel 没有被关闭并且已经有处于读等待的 Goroutine，那么 runtime.chansend 函数会从接收队列 recvq 中取出最先陷入等待的 Goroutine 并直接向它发送数据：</p>
+<pre><code>if sg := c.recvq.dequeue(); sg != nil {
+		send(c, sg, ep, func() { unlock(&amp;c.lock) }, 3)
+		return true
+}
+
+</code></pre>
+<p>发送数据时会调用 runtime.send，该函数的执行可以分成两个部分：</p>
+<ol>
+<li>
+<p>调用 runtime.sendDirect 函数将发送的数据直接拷贝到 x = &lt;-c 表达式中变量 x 所在的内存地址上；</p>
+</li>
+<li>
+<p>调用 runtime.goready 将等待接收数据的 Goroutine 标记成可运行状态 Grunnable 并把该 Goroutine 放到发送方所在的处理器的 runnext 上等待执行，该处理器在下一次调度时就会立刻唤醒数据的接收方；</p>
+</li>
+</ol>
+<pre><code>// send processes a send operation on an empty channel c.
+// The value ep sent by the sender is copied to the receiver sg.
+// The receiver is then woken up to go on its merry way.
+// Channel c must be empty and locked.  send unlocks c with unlockf.
+// sg must already be dequeued from c.
+// ep must be non-nil and point to the heap or the caller's stack.
+func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
+	...
+	if sg.elem != nil {
+		sendDirect(c.elemtype, sg, ep)  
+		sg.elem = nil
+	}
+	gp := sg.g
+	unlockf()
+	gp.param = unsafe.Pointer(sg)
+	if sg.releasetime != 0 {
+		sg.releasetime = cputicks()
+	}
+	goready(gp, skip+1)
+}
+</code></pre>
+<h3 id="缓冲区">缓冲区</h3>
+<p>如果创建的 Channel 包含缓冲区并且 Channel 中的数据没有装满，就会执行下面这段代码</p>
+<pre><code>
+...
+if c.qcount &lt; c.dataqsiz {
+		// Space is available in the channel buffer. Enqueue the element to send.
+		qp := chanbuf(c, c.sendx)
+		if raceenabled {
+			raceacquire(qp)
+			racerelease(qp)
+		}
+
+		typedmemmove(c.elemtype, qp, ep)
+
+		c.sendx++
+
+    // 如果发送处理位置到达达到处理元素的最大值，就置为零，环形Buffer
+		if c.sendx == c.dataqsiz {
+			c.sendx = 0
+		}
+
+		c.qcount++
+
+		unlock(&amp;c.lock)
+		return true
+	}
+
+...
+
+</code></pre>
+<p>首先会使用 chanbuf 计算出下一个可以存储数据的位置，然后通过 runtime.typedmemmove 将发送的数据拷贝到缓冲区中并增加 sendx 索引和 qcount 计数器。</p>
+<h3 id="阻塞发送">阻塞发送</h3>
+<p>当 Channel 没有接收者能够处理数据时，向 Channel 发送数据就会被下游阻塞，当然使用 select 关键字可以向 Channel 非阻塞地发送消息。向 Channel 阻塞地发送数据会执行下面的代码，我们可以简单梳理一下这段代码的逻辑：</p>
+<pre><code>func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
+	...
+	if !block {
+		unlock(&amp;c.lock)
+		return false
+	}
+  //调用 runtime.getg 获取发送数据使用的 Goroutine；
+	gp := getg()
+
+	mysg := acquireSudog()
+	mysg.elem = ep
+	mysg.g = gp
+	mysg.c = c
+	gp.waiting = mysg
+	c.sendq.enqueue(mysg)
+	goparkunlock(&amp;c.lock, waitReasonChanSend, traceEvGoBlockSend, 3)
+
+	gp.waiting = nil
+	gp.param = nil
+	mysg.c = nil
+	releaseSudog(mysg)
+	return true
+}
+
+</code></pre>
+<h3 id="小结">小结</h3>
+<ol>
+<li>
+<p>调用时将 block 参数设置成 true，那么就表示当前发送操作是一个阻塞操作</p>
+</li>
+<li>
+<p>在发送数据的逻辑执行之前会先为当前 Channel 加锁，防止发生竞争条件,
+如果 Channel 已经关闭，那么向该 Channel 发送数据时就会报&quot;send on closed channel&rdquo; 错误并中止程序</p>
+</li>
+<li>
+<p>如果当前 Channel 的 recvq 上存在已经被阻塞的 Goroutine，那么会直接将数据发送给当前的 Goroutine 并将其设置成下一个运行的 Goroutine；</p>
+</li>
+<li>
+<p>如果 Channel 存在缓冲区并且其中还有空闲的容量，我们就会直接将数据直接存储到当前缓冲区 sendx 所在的位置上；</p>
+</li>
+<li>
+<p>如果不满足上面的两种情况，就会创建一个 runtime.sudog 结构并将其加入 Channel 的 sendq 队列中，当前 Goroutine 也会陷入阻塞等待其他的协程从 Channel 接收数据；</p>
+</li>
+</ol>
+<p>发送数据的过程中包含几个会触发 Goroutine 调度的时机：</p>
+<ol>
+<li>发送数据时发现 Channel 上存在等待接收数据的 Goroutine，立刻设置处理器的 runnext 属性，但是并不会立刻触发调度；</li>
+<li>发送数据时并没有找到接收方并且缓冲区已经满了，这时就会将自己加入 Channel 的 sendq 队列并调用 runtime.goparkunlock 触发 Goroutine 的调度让出处理器的使用权；</li>
+</ol>
+<h2 id="channel-的数据接收逻辑">channel 的数据接收逻辑</h2>
+<p>Go 语言中可以使用两种不同的方式去接收 Channel 中的数据：</p>
+<pre><code>i &lt;- ch
+i, ok &lt;- ch
+</code></pre>
+<p>这两种不同的方法经过编译器的处理都会变成 ORECV 类型的节点，后者会在类型检查阶段被转换成 OAS2RECV 类型。数据的接收操作遵循以下的路线图：</p>
+<pre><code class="language-mermaid">stateDiagram
+[*] --&gt; ch
+ch --&gt; ORECV
+ORECV --&gt; OAS2RECV
+
+ORECV --&gt; chanrecv1
+OAS2RECV --&gt; chanrecv2
+
+chanrecv1 --&gt; chanrecv
+chanrecv2 --&gt; chanrecv
+
+</code></pre>
+<p>虽然不同的接收方式会被转换成 runtime.chanrecv1 和 runtime.chanrecv2 两种不同函数的调用，但是这两个函数最终还是会调用 runtime.chanrecv。</p>
+<h3 id="小结-1">小结</h3>
+<p>我们梳理一下从 Channel 中接收数据时可能会发生的五种情况：</p>
+<p>如果 Channel 为空，那么就会直接调用 runtime.gopark 挂起当前 Goroutine；
+如果 Channel 已经关闭并且缓冲区没有任何数据，runtime.chanrecv 函数会直接返回；
+如果 Channel 的 sendq 队列中存在挂起的 Goroutine，就会将 recvx 索引所在的数据拷贝到接收变量所在的内存空间上并将 sendq 队列中 Goroutine 的数据拷贝到缓冲区；
+如果 Channel 的缓冲区中包含数据就会直接读取 recvx 索引对应的数据；
+在默认情况下会挂起当前的 Goroutine，将 runtime.sudog 结构加入 recvq 队列并陷入休眠等待调度器的唤醒；</p>
+<p>我们总结一下从 Channel 接收数据时，会触发 Goroutine 调度的两个时机：</p>
+<ol>
+<li>当 Channel 为空时；</li>
+<li>当缓冲区中不存在数据并且也不存在数据的发送者时；</li>
+</ol>
+<h2 id="总结">总结</h2>
+<h2 id="参考文献">参考文献</h2>
+<p>
+<a href="https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub" target="_blank" rel="noopener">Dmitry Vyukov. Jan, 2014. “Go channels on steroids” </a></p>
+<p>
+<a href="https://github.com/OneOfOne/lfchan/blob/master/lfchan.go" target="_blank" rel="noopener">Ahmed W. A scalable lock-free channel.</a></p>
+<p>
+<a href="https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub" target="_blank" rel="noopener">8 Dmitry Vyukov. Jan, 2014. “Go channels on steroids”</a></p>
+<p>
+<a href="https://github.com/OneOfOne/lfchan/blob/master/lfchan.go" target="_blank" rel="noopener">9 Ahmed W. A scalable lock-free channel.</a></p>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Previous</div>
+    <a href="/programmertalk/courses/golang/chapter3/context/context/" rel="next">Contex详解</a>
+  </div>
+  
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on Sep 9, 2018</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/courses/golang/chapter3/channel.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

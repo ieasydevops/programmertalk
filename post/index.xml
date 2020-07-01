@@ -281,5 +281,1305 @@ A Markdown aside is useful for displaying notices, hints, or definitions to your
 </description>
     </item>
     
+    <item>
+      <title>LibApr 阅读笔记</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2016/2016-02-23-apr-note/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2016/2016-02-23-apr-note/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;apr&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;apr-是什么&#34;&gt;APR 是什么&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;   apr 运行时库目标是： 提供一个可移植的运行时支持库，是Apache HTTP服务器的支持库，提供了一组映射到下层操作系统的API。
+   可以屏蔽平台相关性，使程序员可以叫方便的写出在不同平台上移植的程序。	  
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;功能特性&#34;&gt;功能特性&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;1. 内存管理和内存池功能
+2. 原子操作（Linearizability）
+3. 动态库处理
+4. 文件I/O
+5. 命令参数解析
+6. 锁机制（Locking）
+7. 散列表和数组
+8. Mmap（mmap）功能
+9. 网络套接字和协议
+10.  线程，进程和互斥锁功能
+11.  共享内存功能
+12. 时间子程序
+13.  用户和组ID服务
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;应用背景&#34;&gt;应用背景&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt; 由于公司的设备品种繁多，staragent 作为运维工具的基础设施，广泛部署在公司的各个服务器上，考虑代码的维护性，和可移植性，我们考虑采用 apr 运行库来实现staragent的客户端的核心功能。其中主要涉及APR 库的 1, 5, 6, 9 10,11 等功能。本次我们重点了解如何搭建 apr 库的基本环境，编译构建；项目集成。以及其网络库存，进程间处理库。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-运行环境搭建&#34;&gt;apr 运行环境搭建&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt; 为方便工程测试，我们将依赖的源码包编译为静态连接库，在项目中设置依赖变量，可以保证只用编译
+一次apr库；
+ 
+1. 下载源码包： 
+
+    https://apr.apache.org/	 
+
+2.  执行构建
+
+    为了方便测试，我创建了一个编译目录，
+    如下 是创建的目录结构：
+    
+    ├── build_dep.sh
+    ├── build.sh
+    ├── CMakeLists.txt
+    ├── depend
+    │   └── compiled
+    ├── log
+    └── src
+        ├── apr-1.5.2
+        ├── common
+        └── proc
+    
+    
+    下载的源码，解压后，放在src/apr-1.5.2目录下；
+    在当前路径下执行，buil_dep.sh 脚本，会将apr库编译安装在 depend/compiled/ubuntu_64/目录下。
+   
+    以下时编译安装脚本。
+        
+    #!/bin/sh
+    set -x
+    curDir=`pwd`
+    mkdir -p depend/compiled/ubuntu_64/
+    echo &amp;quot;build apr-1.5.2&amp;quot;
+    cd src/apr-1.5.2/
+    ./configure --prefix=${curDir}/depend/compiled/ubuntu_64
+    make &amp;amp;&amp;amp; make install
+    
+    
+
+3. 设置项目依赖路径
+
+   编译安装完毕后，可以设置路径依赖，我们采用cmake 构建项目工程；
+   需要在构建是指定依赖路径：
+   -DDEP_ROOT=/XXX/depend/compiled/ubuntu_64
+
+4. 添加引用
+
+    需要在项目中设置apr 引用和依赖
+    
+    include_directories(${DEP_ROOT}/include/apr-1)
+    link_direcoteries(${DEP_ROOT}/lib)
+    target_link_libraries(xxx apr-1)
+
+5. 执行构建
+   mkdir -p build &amp;amp;&amp;amp; cd build &amp;amp;&amp;amp; cmake .. &amp;amp;&amp;amp; make
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-库使用的基本结构及编程风格&#34;&gt;apr 库使用的基本结构及编程风格&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;apr 并不是一个框架库，优点是 可以很方便的和其它库联合使用
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr库-编程的代码基本结构skeleton-code&#34;&gt;apr库 编程的代码基本结构（skeleton code）&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt; 一个基本的apr库骨架代码如下： 会调用apr_initialize（） 初始化， 调研apr_terminate() 终结。
+/*   pseudo code of libapr. error checks omitted  */  
+apr_status_t rv;
+apr_foo_t *foo;
+rv = apr_foo_create(&amp;amp;foo, args...);/* create a @foo object by @args */
+rv = apr_foo_do_something(foo, args...); /* do something with @foo */
+apr_foo_destroy(foo); /* destroy the @foo object. Sometimes, this is done implicitly by 
+                       * destroying related memory pool. Please see below */
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr-的编程风格&#34;&gt;apr 的编程风格&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;  ＊ 命名规则很简单，清晰
+  ＊ 数据类型大部分对用户隐藏，（可通过API操作属性；未实现完全的类型）
+  ＊ 大部分的返回结果为 apr_status_t. 返回结果会作为参数适用。
+  ＊ 基于内存池
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-内存池&#34;&gt;apr 内存池&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;大部分的libapr API 依赖于内存池。通过内存池，可以很方便的管理内存块。 如果你有很多内存快，需要申请和释放，管理起来就会比较麻烦，可能导致内存泄漏。apr 的内存池库可以解决此问题。apr  所有的内存申请，都是有内存池负责申请，调用 apr_pool_destroy() 即可释放掉所有的内存。好处有二：
+  其一： 预防内存泄漏
+  其二： 分配内存块的开销相对降低。
+  
+  内存池迫使我们基于会话编程；一个内存池，可以看成一个会话上下文，一些具有相同生命周期的对象集合。你可以使用一个会话上下文来管理一个对象集合。
+  基本思想是： 在会话开始的时候，创建一个内存池； 你不需要关心他们的生命周期，最后，会话结束的时候，释放掉内存池即可。
+
+ 备注：
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;内存池操作的基本api&#34;&gt;内存池操作的基本API&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt; /* excerpted from apr_pools.h */
+ 
+ /* 内存创建 */
+ APR_DECLARE(apr_status_t) apr_pool_create(apr_pool_t **newpool,
+                                      apr_pool_t *parent);
+
+  /* 内存申请 */                                      
+ APR_DECLARE(void *) apr_palloc(apr_pool_t *p, apr_size_t size);
+ 
+ 
+ /* 内存池销毁 */ 
+ APR_DECLARE(void) apr_pool_destroy(apr_pool_t *p);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;申请释放-一块内存空间&#34;&gt;申请，释放 一块内存空间&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;  /* excerpted from mp-sample.c */
+       apr_pool_t *mp;
+      /* create a memory pool. */
+      apr_pool_create(&amp;amp;mp, NULL);
+      
+      /* allocate memory chunks from the memory pool */
+      char *buf1;
+      buf1 = apr_palloc(mp, MEM_ALLOC_SIZE);    
+
+     /* destroy the memory pool. These chunks above are freed by this */
+      apr_pool_destroy(mp);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;几个内存池使用建议&#34;&gt;几个内存池使用建议：&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt; 1. apr_palloc() 并没有最大的内存限制，内存池主要是基与小的内存块设计的，初始化的大小是 8kbyte; 若需要使用较大的内存块，比如几M ，建议不要使用内存池。
+ 2. 默认，内存池管理 不会主动将申请的内存返回给操作系统，如果程序长时间运行，可能会有问题。建议限定内存池的上限。
+ 
+     #define YOUR_POOL_MAX_FREE_SIZE 32 
+
+     apr_pool_t *mp;
+     apr_pool_create(&amp;amp;mp, NULL);
+     apr_allocator_t* pa = apr_pool_allocator_get(mp); 
+     if（pa）｛
+             apr_allocator_max_free_set(pa, YOUR_POOL_MAX_FREE_SIZE);  
+      
+     ｝
+     
+ 3. 以上例子 给出了如何申请和释放内存；libapr 封装了内存的申请和释放实现逻辑。
+   apr_pool_create（）／ apr_pool_destroy(mp); 成对出现。
+   rv = apr_initialize();／ apr_terminate(); 成对出现。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;内存池的清理及销毁相关api&#34;&gt;内存池的清理及销毁相关API&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;  场景1:
+  
+  apr_pool_clear()
+  与apr_pool_destroy()类似，但内存池依然可以使用；一个典型的场景如下：
+
+  /* sample code about apr_pool_clear() */
+  apr_pool_t *mp;
+  apr_pool_create(&amp;amp;mp, NULL);
+  for (i = 0; i &amp;lt; n; ++i) {
+       do_operation(..., mp);
+       apr_pool_clear(mp);
+   }
+   
+
+   场景2:  我们需要在内存池 clear/destroy 时执行特定的操作，可以通过注册callback函数实现。在回调函数里，你可以实现任何收尾处理代码。
+ 
+   apr_pool_cleanup_register()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr内存池构建结构&#34;&gt;apr内存池构建结构&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;  apr的内存池，是基于树结构的。每个内存池拥有一个父的内存池，
+  apr_pool_create() API，第二个参数，是其父内存池的地址，传递为NLL，则当前的内存池，最为根节点。
+  当调用apr_pool_destroy()时，内存池的子节点也会被销毁， 当调用apr_pool_clear() 时，内存池可用，但其子节点的内存池被销毁。当一个内存池的子节点
+  销毁时，其 cleanup 函数会被调用。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;使用建议&#34;&gt;使用建议&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;  传递 NULL 作为内存池的 cleanup 回调函数 （ BUG ）
+   
+  应 像下面的代码 传递  apr_pool_cleanup_null 
+  
+  /* pseudo code about memory pool typical bug */
+  
+  /* apr_pool_cleanup_register(mp, ANY_CONTEXT_OF_YOUR_CODE, ANY_CALLBACK_OF_YOUR_CODE, NULL); THIS IS A BUG */
+
+  /* FIXED */
+  apr_pool_cleanup_register(mp, ANY_CONTEXT_OF_YOUR_CODE, ANY_CALLBACK_OF_YOUR_CODE, apr_pool_cleanup_null);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;apr-进程处理库&#34;&gt;apr 进程处理库&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt; 为了便于理解，我们基于一个功能来学习apr 进程库。
+ 我们的任务是： 通过apr进程库，创建一个子进程，在子进程中执行一个shell命令，然后 在父进程中，将该子进程执行的结果，在终端输出。
+ 
+ 我们需要学习的知识：
+ 
+ 如何利用apr 库 创建一个子进程；
+ 
+ 子进程执行完毕后，父进程如何获取子进程执行的结果。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;apr-进程库&#34;&gt;apr 进程库：&lt;/h3&gt;
+&lt;h4 id=&#34;进程属性对象&#34;&gt;进程属性对象&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;   /* excerpted from apr_thread_proc.h */
+   
+    APR_DECLARE(apr_status_t) apr_procattr_create(apr_procattr_t **new_attr, apr_pool_t *cont);
+
+    第一个参数： 结果参数；
+    第二个参数： 进程使用的内存池对象 
+
+    apr_procattr_t 结构比较复杂，提供了get/set方法； 在 apr_thread_proc.h 中定义；
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;detach-api&#34;&gt;detach API&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;    APR_DECLARE(apr_status_t) apr_threadattr_detach_set(apr_threadattr_t *attr, apr_int32_t on);
+    通过此API，可以设置子进程为分离的进程（detached） ; 不同的操作系统(detached)的含义不同；
+    在windows 系统里，当子进程为命令行应用，并且不需要看控制台的时候，设置为分离模式；在 linux 操作系统里，如果子进程为一个服务进程则建议设置为分离模式。
+    默认的模式是： non-detachable;
+    
+    typedef enum {
+      APR_SHELLCMD,           /**&amp;lt; use the shell to invoke the program */
+      APR_PROGRAM,            /**&amp;lt; invoke the program directly, no copied env */
+      APR_PROGRAM_ENV,        /**&amp;lt; invoke the program, replicating our environment */
+      APR_PROGRAM_PATH,       /**&amp;lt; find program on PATH, use our environment */
+      APR_SHELLCMD_ENV        /**&amp;lt; use the shell to invoke the program,  replicating our environment
+                               */
+    } apr_cmdtype_e;
+
+     apr_cmdtype_e  主要作用：
+     
+      （1）设置执行进程是否是使用shell; 
+     
+               APR_SHELLCMD 和 APR_SHELLCMD_ENV 两种模式，是使用 shell 来 创建一个进程；可与system(3)做比较。
+               与system(3) 和 fork 或 exec 比较，有时被认为一种容易的交互方式；
+               在 libapr 建议 不用 shell 来执行一个进程。理由是： 虽然利用 shell 来执行任务 好像是易于扩展，但实际存在安全漏洞。 除非       
+               你很清楚自己在执行什么，否则不要用 APR_SHELLCMD 或 APR_SHELLCMD_ENV。
+      
+       （2）另一个不同 主要是，环境变量。
+            传递环境变量有两种方式： 
+           （a）使用 APR_PROGRAM_ENV 或 APR_SHELLCMD_ENV. 
+               子进程会获得父进程环境变量的一个副本；子进程修改任务环境变量的值并不会影响父进程。
+           （b）通过设置 apr_proc_create() 函数的 参数来传递。
+           
+        （3）最后一个不同主要是和 PATH 环境变量有关。
+             APR_PROGRAM_PATH 是唯一的，只用通过使用 APR_PROGRAM_PATH 这种模式，才可以用一个 程序的名称 代替 程序的路径。
+             比如： 可以使用 &amp;quot;ls&amp;quot; 启动一个子进程。libapr 会 从PATH的环境变量里搜索 其确切的路径。否则我们就传递一个绝对路径，如 &amp;quot;/bin/ls&amp;quot; ;
+             作者不推荐使用 可能会存在安全隐患。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;进程创建api&#34;&gt;进程创建API&lt;/h4&gt;
+&lt;h5 id=&#34;创建进程函数&#34;&gt;创建进程函数&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt; /* excerpted from apr_thread_proc.h */
+ APR_DECLARE(apr_status_t) apr_proc_create(apr_proc_t *new_proc,
+                                      const char *progname,
+                                      const char * const *args,
+                                      const char * const *env, 
+                                      apr_procattr_t *attr, 
+                                      apr_pool_t *pool);
+
+
+ 函数说明：
+ 第一个参数： 子进程返回值，内存由apr 库创建；
+ 第二个参数： 子进程程序的名称，建议传递绝对路径。
+ 第三个参数： 子进程运行的参数列表；构造子进程参数列表方法如下：
+ 
+    /* pseudo code of args to apr_proc_create() */
+       int argc = 0;
+       const char* argv[32];    /* 32 is a magic number. enough size for the number of arguments list */
+       argv[argc++] = progname; /* program path of the command to run */
+       argv[argc++] = &amp;quot;-i&amp;quot;;
+       argv[argc++] = &amp;quot;foo&amp;quot;;
+       argv[argc++] = &amp;quot;--longopt&amp;quot;;
+       argv[argc++] = &amp;quot;bar&amp;quot;;
+       argv[argc++] = NULL;    /* The final element should be NULL as sentinel */
+       
+       该参数列表，第一个参数 为 程序运行的路径，最后一个参数最为哨兵，传递NULL。
+ 
+ 第四个参数： 传递给子进程环境变量列表，
+             和第三个参数类似，参数列表的最后一个值为NULL，最为哨兵。
+ 第五个参数： apr_procattr_t; 进程属性对象，在1中介绍；通过apr_proattr_create()API创建
+ 第六个参数： 内存池地址；
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;获取子进程执行状态&#34;&gt;获取子进程执行状态。&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt; /* excerpted from apr_thread_proc.h */
+ APR_DECLARE(apr_status_t) apr_proc_wait(apr_proc_t *proc,
+                                    int *exitcode, apr_exit_why_e *exitwhy,
+                                    apr_wait_how_e waithow);
+
+函数说明：
+第一个参数： 之前通过apr_proc_create()创建的进程属性对象；
+第二，三个参数： 结果参数；
+第四个参数：等待子进程的方式：
+         APR_WAIT  当前进程会阻塞，直到子进程终止；
+         APR_NOWAIT 非阻塞；    
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;父子进程间通信的一种方式-pipe&#34;&gt;父子进程间通信的一种方式 pipe&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;管道时一种内部进程通信的方式。在父子进程间通信，比较方便。通过管道，父进程可以传递字符流到子进程的标准输入；同样，父进程也可以通过管道收到子进程发的字符流。子进程可以将输出结果写入标准输出或标准错误。子进程可以不 care 管道，只需要从标准 输入／输出／错误里读写； 相对的，从父进程的视角来看，管道就像一个文件对象。父进程只需要调用 apr_file_read() 或  apr_file_write() 从其管道 来发送或接收 数据 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;管道处理函数&#34;&gt;管道处理函数&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;/* excerpted from apr_thread_proc.h */
+APR_DECLARE(apr_status_t) apr_procattr_io_set(apr_procattr_t *attr, 
+                                         apr_int32_t in, apr_int32_t out,
+                                         apr_int32_t err);
+函数参数说明：
+第一个参数：进程属性对象；
+第2，3，4 参数 分别对应改进程的标准  输入/输出/错误。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;后记&#34;&gt;后记&lt;/h3&gt;
+&lt;p&gt;apr库 涉及内容比较多，是一个循序渐进的过程。我是刚入门学习，水平有限，欢迎大家交流指证。&lt;/p&gt;
+&lt;p&gt;我的计划如下：
+熟悉apr库的使用方法 -&amp;gt; 应用实战 －&amp;gt; 研究其源代码 －&amp;gt; 自己编写类似的工具箱&lt;/p&gt;
+&lt;p&gt;有兴趣的同学欢迎加我，相互交流。&lt;/p&gt;
+&lt;p&gt;未完待续。。。。&lt;/p&gt;
+&lt;h3 id=&#34;相关链接&#34;&gt;相关链接：&lt;/h3&gt;
+&lt;p&gt;［1］
+&lt;a href=&#34;&#34;&gt;apr官网&lt;/a&gt;
+［2］
+&lt;a href=&#34;http://dev.ariel-networks.com/apr/apr-tutorial&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;apr 使用教程&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>以CMDB为基础构建DevOps平台</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2019/2019-10-16-cmdb%E5%BB%BA%E8%AE%BE/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2019/2019-10-16-cmdb%E5%BB%BA%E8%AE%BE/</guid>
+      <description>&lt;h1 id=&#34;以cmdb为基础构建devops平台&#34;&gt;以CMDB为基础构建DevOps平台&lt;/h1&gt;
+&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
+&lt;p&gt;CMDB是运维其它系统的基础。通过对业界CMDB系统相关资料的学习整理，结合自身实践的经验，尝试总结一些CMDB建设的观点和思路。&lt;/p&gt;
+&lt;h2 id=&#34;本文概述&#34;&gt;本文概述&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;  基础概念（CMDB相关的概念）
+  CMDB的模型
+  CMDB在运维体系中的地位（全局观）
+  CMDB的实践
+  CMDB的经验总结
+  CMDB相关的产品介绍
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;基础概念&#34;&gt;基础概念&lt;/h2&gt;
+&lt;p&gt;配置管理数据库( Configuration Management Database,CMDB) :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;是一个逻辑数据库，包含了配置项全生命周期的信息以及配置项之间的关系(包括物理关系、实时通信关系、
+非实时通信关系和依赖关系).  - 来自百度
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;也称配置管理，配置管理一直被认为是 ITIL 服务管理的核心，因为其他所有流程均需要使用配置管理数据库 (CMDB).&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;举例说明： 比如说变更系统发起了一个部署请求，要部署某个版本到现网，部署完成之后，上层的变更系统会把变更的
+结果写到CMDB中，对配置进行归档；在某个机器down机，此时可以快速的知道该机器的具体用途，确定影响的业务；当
+机器需要重新恢复的时候，可以快速的根据CMDB中的信息进行恢复
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;配置管理和配置文件管理&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; ITIL所讲的配置管理是从软件工程管理角度出发的，把一切对象都当做配置，，比如说源代码、文档、人员、服务器
+ 甚至硬盘和内存等等。所以说他和业务程序的配置管理有着本质的不同，为了有效区分，我们又习惯说业务程序的配
+ 置管理叫配置文件管理。但又有着一定的联系，在ITIL中，业务程序的配置可能会以一个配置项存在，
+ 附属在应用程序上。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;配置管理和资产管理&lt;/p&gt;
+&lt;p&gt;区别
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/resource-config-manager-diff.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;核心的区别点就是导向，配置管理是面向业务管理，而非成本，这个会决定配置管理的粒度。当前如果业务非常简单，不需要对服务器端口进行管理，此时则不需要考虑纳入端口的管理，否则增加管理的代价&lt;/p&gt;
+&lt;p&gt;配置项&lt;/p&gt;
+&lt;p&gt;配置项是指要在配置管理控制下的资产、人力、服务组件或者其他逻辑资源。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  从整个服务或系统来说，包括硬件、软件、文档、支持人员到单独软件模块或硬件组件（CPU、内存、SSD、硬盘等等。
+  配置项需要有整个生命周期（状态）的管理和追溯（日志）。对配置项的分类，我一般从逻辑资源和物理资源两个角度
+  来分解，然后层次化分解，这个思路会让你特别清晰，不会混乱。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;属性&lt;/p&gt;
+&lt;p&gt;一个配置项就是一个对象，有对象便有属性，属性是一个配置项的具体描述。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 比如说服务器这个配置项，他的具体描述有在哪个机房、哪个机柜的哪个位置、现在是否有业务运行、具体谁负责等等。在后面的模型篇里会对属性做全面的梳理，完成现实世界到模型世界的转换。另外配置项和属性可以转换，比如说IP地址，他肯定是一个资源对象存在。但是从服务器的角度来说，它作为一个属性存在，更准确的说是网卡的属性
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;模型&#34;&gt;模型&lt;/h2&gt;
+&lt;p&gt;模型的核心职责，就是把配置项和属性逐条的梳理出来。模型整理，重点做了四个方面工作：&lt;/p&gt;
+&lt;p&gt;1、配置管理系统的角色&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;第一、应用运维，负责服务器上的业务信息维护；
+第二、基础运维，负责机房、机柜及其服务器物理信息的准确性；
+第三、配置管理员，负责基础信息的维护，比如说业务分类，人员信息；
+第四、查询类角色，比如研发。CMDB是核心的资源信息管理系统，一般不轻易开放权限。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2、配置项识别与定义&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 这是重点工作，没有简单的方法可循，细致活，基于上图的【配置项】的物理资源和逻辑资源的不断分解，根据业务需要最终识别出要管理的配置项。然后对每一个配置项进行整理，确定要管理的属性。形成类似的下表：
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/config-table.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;就拿最核心的服务器资源来说，会形成如下表的信息整理&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/attribute.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;逐个进行整理，在上表中有几个方面需要注意：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;第一、每个配置项目确定了维护角色，他在后续的过程中，需要对这个准确性负责，确定维护的职责边界。
+
+第二、要整理出配置项的关联，比如说上表中的所属机房、所属机柜。
+
+第三、这个表不是数据库的设计表，具体数据库的设计表是开发人员根据这个模型参考实现。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;3、基于场景的配置管理规范&lt;/p&gt;
+&lt;p&gt;配置管理的核心目的是为了确保配置信息集中管理，并且是准确的管理。在这个里面需要做两个核心的工作。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;第一、配置项的规范化管理；
+
+第二、面向配置项的流程规范化管理，没有一套与之匹配的配置流程，最后配置管理都会混乱不堪，这个系统也就形同虚设。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;4、状态变迁图
+用一张图来说明资源状态的变化，便于更好的基于场景和变更来控制配置项状态的变更，其实也就是它的生命周期管理。&lt;/p&gt;
+&lt;h2 id=&#34;cmdb在运维生态中的地位全局观&#34;&gt;CMDB在运维生态中的地位（全局观）&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;CMDB 是 Devops的重要元数据基础，建立基础设施层，平台层和持续交付系统，持续反馈系统的联系纽带。
+互联网时代，公司快速发展，软件研发的速度和质量是永恒的追求目标。敏捷研发体系
+离不开持续交付体系的支撑，持续交付依托于 持续集成，持续部署，持续反馈。这些系统的构建，需要通过统一的元数据
+平台，来管理底层基础资源，从而建立起：服务，资源，人员的关系。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/Devops-CMDB-R.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;该图的几个核心概念如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;   基础设施服务： 计算，存储，网络的抽象服务
+   平台服务： 存储服务，MR服务，Cache缓存服务等
+   资源管理层次：基础设施层元信息，Pass层元信息，应用资源元信息
+   云管控： 私有云，公有云，混合云
+   Devops :  服务构建，交付，运行 和运营
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看出， CMDB 承载了底层资源的元信息的沉淀，作为支撑系统，为上层的软件生命周期管理系统提供元数据服务。
+为了更清楚的了解CMDB的地位以及和运维其他系统直接的关系，我们看下DevOps 的全景图，&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/over-view-devops.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;在Devops 全景图中，反应了持续交付，及敏捷体系的建设核心要素。持续交付离不开 CI/CD，部署流水线的支撑； 完成服务的持续优化与升级，需要持续反馈。(在
+&lt;a href=&#34;https://meixinyun.github.io//%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/2019/04/14/%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;有效构建海量运营的持续反馈能力&lt;/a&gt;文章中，详细讲述了如何实现海量运维体系中的持续反馈。)&lt;/p&gt;
+&lt;p&gt;从运维平台化的角度，来看ITIL，CMDB和Devops与之间关系。&lt;/p&gt;
+&lt;p&gt;如图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/itil-devops-cmdb.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;其中：ITIL ：包括运维体系建设中的NOC，事件管理，应急响应（ONCall），变更，发布管理，知识问答，运维知识库等。
+这些系统的构建依托中间层：自动化运维 和 数据化运维的支撑。
+而实现运维的自动化和数据化，则需要通过 CMDB 的元数据层，建立各个支撑系统 和 底层基础设施直接的映射关系。&lt;/p&gt;
+&lt;h3 id=&#34;cmdb-建设中的演化&#34;&gt;CMDB 建设中的演化&lt;/h3&gt;
+&lt;h3 id=&#34;面向应用的it资源模型框架&#34;&gt;面向应用的IT资源模型框架&lt;/h3&gt;
+&lt;p&gt;IT资源模型框架，反应组织，部门，人员 和 基础设施层，PaaS 层以及业务层的关系，如图：
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/IT-Resource-FrameWork.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;以应用为中心的cmdb模型&#34;&gt;以应用为中心的CMDB模型&lt;/h3&gt;
+&lt;p&gt;从应用视角，来看应用的管理会包含应用环境，服务资源，部署资源，以及运维动作。不同的数据，由不同的团队或系统负责。可以从资源，运维动作，状态三个维度构建应用的管理体系。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 应用管理：明确应用管理的边界，统一术语和名称
+ IP资源管理：IT资源管理，实现全局分层配置
+ 应用支撑系统管理：结合应用管理需求，纳管应用描述，环境配置，制品标准，管理规程，维护手段的等应用信息
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;cmdb的实践&#34;&gt;CMDB的实践&lt;/h2&gt;
+&lt;h3 id=&#34;构建cmdb的建设的原则&#34;&gt;构建CMDB的建设的原则&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;1. 应用CMDB必须提供统一的应用元数据管理能力，和应用类型无关
+2. 应用CMDB建设的核心诉求是应用生命周期管理
+3. 应用CMDB必须以应用为中心，而非以基础资源为中心
+4. 应用CMDB必须要从应用的角度构建起与IT资源的弹性关系
+5. 应用CMDB是为应用资源、动作、状态的统一管理提供支撑
+6. 应用CMDB要有统一的基础资源层CMDB作为基础
+7. 应用CMDB的核心场景就是持续交付
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;构建cmdb的过程是一个渐进式的迭代过程&#34;&gt;构建CMDB的过程，是一个渐进式的迭代过程&lt;/h3&gt;
+&lt;p&gt;CMDB 的构建不是一蹴而就，是一个渐进式的过程。从CMDB的微内核和弹性CMDB模型库开始，通过 “自动发现+标准流程+人工维护”的来完善CMDB数据库。&lt;/p&gt;
+&lt;p&gt;所谓的CMDB的微内核，是指以应用、集群和主机三个概念就可以构建起一个CMDB，基于这三个概念，可以不断去向周边扩散。
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/cmdb-core.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;主机可以在其关联或者拥有的资源上不断去扩展，比如说主机所在的机柜、机柜所在的机房、机器关联的交换机等等。&lt;/p&gt;
+&lt;p&gt;所谓的 弹性模型 是指： 由对象的弹性和对象CI及其关联的弹性定义实现的。&lt;/p&gt;
+&lt;p&gt;下图的案例：
+对象的弹性定义：
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/object.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;对象CI及其关联的弹性定义:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/ci-related.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;自动发现&lt;/strong&gt; 是降低维护成本的一种有效方式, 但确保一个CMDB库信息的有效性，还需要标准化的流程 和人工维护。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准化的流程&lt;/strong&gt; 是运维资源信息变更的场景化流程梳理，比如说机房搬迁，服务器搬迁，服务器下架等等，这个流程需要识别出来，并确定相应的CMDB配置项状态变更过程。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;人工维护&lt;/strong&gt;，在有些流程没有构建起来的情况下，则需要通过人工变更的能力把CMDB信息维护准确，比如说主机所属负责人变更，这个时候不建议流程了，可以通过人工直接变更完成。那如何确保维护准确呢？通过外围系统来控制，比如说告警信息，如果负责人没有变更告警是直达原有负责人，导致告警不准确。&lt;/p&gt;
+&lt;h2 id=&#34;cmdb的经验总结&#34;&gt;CMDB的经验总结&lt;/h2&gt;
+&lt;p&gt;其实CMDB真的是非常简单的系统，至少在两家公司做的CMDB都是非常短的时间完成，最多两个月。但是其实施的过程很多经验可以分享。&lt;/p&gt;
+&lt;p&gt;1、导致CMDB失败的因素&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;A、缺少管理层承诺----没有管理层的承诺，CMDB不可能成功。
+
+B、在复杂流程上消耗太多的时间---我们是创建一个CMDB库，不是一个流程系统。
+
+C、没有创建相应的工作指导文档---指导如何管理和维护CMDB。
+
+D、没有指定配置项负责人----确保配置项有人专职维护。
+
+E、目标过大，涵盖太多的功能----比如说IT采购和预算管理等等。
+
+F、颗粒度不合适----配置合理的CMDB的配置项层次和粒度非常重要。
+
+G、存在组织隔阂----CMDB是一个集成体系，靠流程中的每一个人通力协作，而不是某个人。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2、导致CMDB成功的因素&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;A、业务导向。比如说我们在CMDB的新的系统中实时加入QR码技术，为了降低资产盘点的工作量。
+
+B、能自动发现就自动发现，降低配置管理的成本，但自动发现的信息不能用来做告警。
+
+C、配置项的管理员必须全程参与，需求定型、测试及验收等等。
+
+D、CMDB系统建设完成之后，其他系统必须和他联动。比如说监控、质量、容量等等，用场景驱动配置项的管理。
+
+E、流程一定要平台化，不要让流程脱离CMDB存在，比如说搞一个OA流程，这个是很致命的。
+
+F、CMDB要持续演进，特别是云端资源的管理。
+
+G、配置项和流程必须要文档化，后期要进行CMDB培训。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;参考文献&#34;&gt;参考文献&lt;/h1&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s/eTxt3yXjQai_NH6hxcrbEw&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;【平台篇】运维平台之CMDB系统建设 &lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s/veqrnI4jrprrgT9BqmK61Q&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt; 长文 | 重构CMDB，避免运维之耻 &lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://tech.canway.net/product/13.html?bd_vid=10555330452774906329&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;&lt;/a&gt;
+
+&lt;a href=&#34;http://www.dcits.com/list-140-1.html#B_vid=11189524108422460471&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;T资源管理系统Sm@rtCMDB&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://tech.canway.net/product/13.html?bd_vid=10555330452774906329&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;蓝鲸CMDB解决方案&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.yunweipai.com/archives/28836.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;优维科技老王：与其说建设CMDB，不如说建设IT资源图谱&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.yunweipai.com/archives/28207.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;优维科技王津银：创新赋能 银行业新一代CMDB的落地实践&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>微服务 ServiceMesh学习资源</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2018/2018-09-11-%E5%BE%AE%E6%9C%8D%E5%8A%A1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2018/2018-09-11-%E5%BE%AE%E6%9C%8D%E5%8A%A1/</guid>
+      <description>&lt;h1 id=&#34;概念篇&#34;&gt;概念篇&lt;/h1&gt;
+&lt;p&gt;微服务相关资源收集，从是什么，为什么，怎么样，以及以后的演化几个纬度。&lt;/p&gt;
+&lt;h2 id=&#34;什么是微服务----是什么&#34;&gt;什么是微服务    （是什么）&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.infoq.com/cn/news/2017/11/WHAT-SERVICE-MESH-WHY-NEED&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;什么是服务网格以及为什么我们需要服务网格&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483677&amp;amp;idx=1&amp;amp;sn=863125404cd2955052724759656bfcf7&amp;amp;chksm=fb2af2e5cc5d7bf345f2ffa4e5a2fab2c2f835b959896b30ad9a65e456714dae74270b02a913&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Service Mesh的诞生,从分布式到微服务&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;解决什么问题--为什么&#34;&gt;解决什么问题  （为什么）&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzI5MDEzMzg5Nw==&amp;amp;mid=2660396277&amp;amp;idx=1&amp;amp;sn=e3fd0e49b4947e80fbfd3cdd781bad96&amp;amp;chksm=f7424e13c035c705401b08795eb5c494cd1001c39760bc603c377f550f999d5dc8355229b2f9&amp;amp;mpshare=1&amp;amp;scene=1&amp;amp;srcid=1108KXT47jsSir7gXXN7x1yj&amp;amp;pass_ticket=5n8O9dw5nrNWdp91I1Ex8q0wFqwN7oHELYvWuTB%2BJGXvmM0y3ASvIhOn%2FU9zG29J#rd&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;原理解析Service Mesh与ESB、API管理与消息代理的关系&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzA3MDg4Nzc2NQ==&amp;amp;mid=2652136254&amp;amp;idx=1&amp;amp;sn=bba9bbd24ac8e5c1f6ef5d1125a6975b&amp;amp;chksm=84d53304b3a2ba12f88675c1bf51973aa1210d174da9e6c2ddcd1f3c84ec7e25987b3bce1071&amp;amp;mpshare=1&amp;amp;scene=1&amp;amp;srcid=1020GPmfbEVP9QDNlZBHg47I&amp;amp;pass_ticket=vR63tjXqn9DTRAEWRKRMIB8O1ybqCamYyCza7%2BE5YRJRfpf%2F5OwphFKHGOiDiS6u#rd&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;下一代微服务&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;解决方案---怎么样&#34;&gt;解决方案   （怎么样）&lt;/h2&gt;
+&lt;h3 id=&#34;业界解决方案对比各自的优缺点&#34;&gt;业界解决方案对比，各自的优缺点&lt;/h3&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzI4MTY5NTk4Ng==&amp;amp;mid=2247489181&amp;amp;amp;idx=1&amp;amp;amp;sn=36269befdb53b61fb883941ad2d0b814&amp;amp;source=41#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;解读2017之Service Mesh：群雄逐鹿烽烟起&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483697&amp;amp;idx=1&amp;amp;sn=b5fdd3af4ae352942820cec9280257c3&amp;amp;chksm=fb2af2c9cc5d7bdf05b7a58ba9120f4390de52c9c74e3d5e6932ca6b9367677234dbf8af06c1&amp;amp;mpshare=1&amp;amp;scene=1&amp;amp;srcid=1220gyaL6UP5ZUFpMn0UgPke&amp;amp;pass_ticket=K%2FYVK4frKmQIBjzOKz2fFYc%2BwxcpMJV4d14ui%2BayOESnQJD%2BLr5DtBVa12t1Zu2N#rd&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Service Mesh 时代的选边与站队&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483674&amp;amp;idx=1&amp;amp;sn=cb5da75e9a265b574edd2cb9dc1818e6&amp;amp;chksm=fb2af2e2cc5d7bf4bba43f355b3e81c834cf11c01918530e0234205055256d37da2f1edc717e&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;面向Kubernetes的新开源Service Mesh : Conduit登场&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&#34;原理篇&#34;&gt;原理篇&lt;/h1&gt;
+&lt;h2 id=&#34;istio-各个组件的介绍&#34;&gt;istio 各个组件的介绍&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://preliminary.istio.io/zh/docs/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;官网-中文文档&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483653&amp;amp;idx=1&amp;amp;sn=4cd7b210b04fd32be48ab305da30bbf3&amp;amp;chksm=fb2af2fdcc5d7beb670099148882ebb1ced7995afe114b72e32434f39000b3d95f874ecd5cc6&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;重新定义Service Mesh的新生服务网格Istio&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483660&amp;amp;idx=1&amp;amp;sn=ea3ba4c12dac40531932259e7c3da05f&amp;amp;chksm=fb2af2f4cc5d7be26b84f7e679bdb6329b835a8d005ceba5f3d4f0f2a307ac9a53ce8d1aa322&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;服务网格新生代Istio进化，与传统模式相较5大特性更助容器扩展&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483741&amp;amp;idx=1&amp;amp;sn=bf32a03aa1ead21f733c60ad533d7a5e&amp;amp;chksm=fb2af2a5cc5d7bb36cc9b39cb89420f335bbcd85bd561ee8e62078024a07cc6fe7a103f19344&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;聊聊ServiceMesh 数据面板 Envoy&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&#34;工程实践如何做&#34;&gt;工程实践（如何做）&lt;/h1&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzI0Nzc3MTQyMw==&amp;amp;mid=2247485460&amp;amp;idx=1&amp;amp;sn=cd9189b75f106088065336144279ad4a&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;蚂蚁金服大规模微服务架构下的Service Mesh探索之路&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s/dPknATIUHkjYFrrgDUjXbQ&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Service Mesh 数据平面 SOFAMosn 深层揭秘&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483710&amp;amp;idx=1&amp;amp;sn=5daea9c54b9835b660dac5b0ce02f462&amp;amp;chksm=fb2af2c6cc5d7bd0b2e30d8c8f642352344aace5985df3fa96735db25b22387fc67342c4b42a&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;微博Mesh服务化改造如何支撑&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;案例实战&#34;&gt;案例实战&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s?__biz=MzU0MTMyMDg1NQ==&amp;amp;mid=2247483756&amp;amp;idx=1&amp;amp;sn=ee475f20b9900aec7e56ae03313bf149&amp;amp;chksm=fb2af294cc5d7b82509ef23d7268370588b997d1b169970bbbce08810488f098024a5a84cb78&amp;amp;scene=21#wechat_redirect&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;使用 Istio治理微服务入门&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&#34;展望未来如何发展&#34;&gt;展望未来（如何发展）&lt;/h1&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/thomaslwq/publicfiles/tree/master&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;&amp;ldquo;Introduction to Service Meshes&amp;rdquo;&lt;/a&gt;
+
+&lt;a href=&#34;https://servicemesh.gitbooks.io/awesome-servicemesh/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;ServiceMesh 中文网&lt;/a&gt;
+
+&lt;a href=&#34;https://github.com/servicemesher/meetup-slides&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Service Mesh Meetup&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>有效构建海量运营的持续反馈能力</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2019/2019-04-14-%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2019/2019-04-14-%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B/</guid>
+      <description>&lt;h1 id=&#34;有效构建海量运营的持续反馈能力&#34;&gt;有效构建海量运营的持续反馈能力&lt;/h1&gt;
+&lt;p&gt;本文来自对大梁先生[DevOps最后一棒，有效构建海量运营的持续反馈能力]一文的学习和理解。&lt;/p&gt;
+&lt;h2 id=&#34;本文的思路梳理&#34;&gt;本文的思路梳理&lt;/h2&gt;
+&lt;p&gt;服务的产品螺旋式升级和快速迭代，离不开Devops 体系的支撑。在Devops 体系的最后一个环节，包含两个维度：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;      1. 运维活动的质量运营与终结
+      
+      2. 产品的技术运营和生命周期的终结
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;本文的讨论的焦点是：在产品生命周期结束前，如何通过在技术运营阶段构建的质量体系，来实现（对服务的）持续反馈和优化。&lt;/p&gt;
+&lt;p&gt;首先，对 Devops 体系定义（计划，需求，设计，开发，测试，部署，运营，EOL）；
+通过监控，告警，运营来做持续反馈。&lt;/p&gt;
+&lt;p&gt;其次：提出来监控，告警，运营完成质量体系的核心要素；
+通过做立体监控+ 舆情监控实现360无死角监控；&lt;/p&gt;
+&lt;p&gt;再次，立体监控带来的海量的报警，需要解决告警泛滥问题&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 1. “理清监控对象与指标的关系”，通过指标分类（低层次，高层次），监控的数据归一化（将采集和
+     计算的数据）转换为值和率 后，通过表报和告警的形式输出，达到分析状态和发现异常的目标。
+ 2. 提出了通过三种技巧（溯源，根源，优先）来实现对海量告警事件分析处理
+ 3. 介绍了常用的动态算法和告警收敛算法来对监控告警收敛
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最后： 介绍了织云监控的指标体系，和织云监控的质量体系&lt;/p&gt;
+&lt;h2 id=&#34;背景介绍&#34;&gt;背景介绍&lt;/h2&gt;
+&lt;h3 id=&#34;devops体系介绍&#34;&gt;Devops体系介绍&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-bbea08db80becdeb.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;DevOps的体系，它最后的一个环节，就是做运营和终结的环节,它应该包含两个纬度:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 一是这次运维活动的质量运营与终结；
+ 二是产品的技术运营和生命周期的终结
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;本文讨论的焦点：
+在产品生命周期结束前，我们在技术运营阶段构建的质量体系，以实现持续反馈和优化的目标&lt;/p&gt;
+&lt;h3 id=&#34;运维如何对产品做持续反馈&#34;&gt;运维如何对产品做持续反馈？&lt;/h3&gt;
+&lt;p&gt;通过监控，告警，运营实现（对服务的）持续反馈和优化 。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-29eacf1880009f0c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;监控告警运营-核心要素&#34;&gt;监控，告警，运营 核心要素&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;监控——覆盖率、状态反馈、指标度量&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;监控要做到360度无死角，业务出现了什么问题都能发现，有了监控的反馈，可以看到实时监控的状态，同时，当指标发生变化的时候也需要看到一些反馈&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;告警——时效性、准确性、触及率&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;业务越来越复杂，层次越来越多，每一个监控点都会产生数据指标、状态异常，会收到越来越多的告警。未看到或者看到未处理都需要承担责任，因为收到的并非都是误告警。最重要还要有触及率，告警由谁发现与处理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;运营——RCA、事件管理、报表/考核&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;问题再三出现、必须从根源优化。通过事件管理机制保证 RCA 可以落地，最后通过报表和考核去给运维赋予权利推动相关优化活动的开展，包括架构和代码的优化等等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;如何构建360无死角立体监控&#34;&gt;如何构建360无死角立体监控&lt;/h2&gt;
+&lt;p&gt;立体监控  +  舆情监控&lt;/p&gt;
+&lt;h3 id=&#34;立体监控&#34;&gt;立体监控&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-cb8ce8cc2d079c3a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;业务按照不同的层级进行管理，从下向上，有服务器层、数据库、逻辑层、中间计算的这一层，有接入层、负载
+均衡，有我们的机房，DNS服务、客户端、用户端，为了做到无死角，我们规划与建设了很多监控点，美其名曰
+立体化监控。
+ 在2014年实现用户舆情监控能力后，我们的监控点做到了100%的覆盖
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;舆情监控&#34;&gt;舆情监控&lt;/h3&gt;
+&lt;h4 id=&#34;舆情监控-实现原理图&#34;&gt;舆情监控 实现原理图&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-72c50ed144241622.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;用户舆情监控顾名思义就是监控用户的声音和反馈。用户的意见反馈来源可以分几部分，一是appstore的入口，另一个是app内嵌的反馈入口，还有的就是腾讯的用户反馈论坛，所有的数据都会被汇集到织云舆情监控平台上，然后通过机器学习实现自动分类。系统会把类似“QQ空间打不开”、“QQ空间不用好”等这些词汇进行语意分析和归类，然后统一告警成“QQ空间异常”，时间间隔是15分钟颗粒度。（技术细节可以参考我在2016年在北京TOP100大会上的分享主题。）&lt;/p&gt;
+&lt;p&gt;这套监控先天就有门槛，因为要基于用户的主动反馈行为，同时需要较多的用户反馈数据量，因为腾讯的用户量基数很大，用户主动反馈的量也很大。同时，舆情监控可以用于监控技术上的质量问题，也能用于监控产品的体验或交互问题&lt;/p&gt;
+&lt;h2 id=&#34;持续运营阶段面临的挑战和解决方案&#34;&gt;持续运营阶段面临的挑战和解决方案&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;（监控全面覆盖后，必然带来海量的告警压力，如何解决告警泛滥，是下面的主要议题）
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;运营阶段解决的难题&#34;&gt;运营阶段解决的难题&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-cf88374c74c5f4a6.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;繁——简&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在具体生产过程中会产生运维的事件或者是故障，经常会有死机，以及各层监控告警，这些繁琐的告警、故障，改如何简单化？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;泛——精&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;举个案例，在一台核心的交换机下，假设其下联有1000台的机器分布到数据层、逻辑层、接入层等等，当这台交换机故障不可用时，由于有立体化监控的存在，每个监控点都会产生大量的告警信息，我们要如何发现这些告警是由于这台核心交换机故障引起的呢？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;乱——序&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;由于指标采集方式和计数据量的不同，直接导致了监控的流处理效率是不一样的，告警收到的次序不一样，我们要如何排序，如何有效识别优先级？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;解决方案&#34;&gt;解决方案&lt;/h3&gt;
+&lt;h4 id=&#34;理清监控对象与指标的关系&#34;&gt;理清监控对象与指标的关系&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-0c0a98e7947f7873.png&#34; alt=&#34;&#34;&gt;
+腾讯业务要监控的对象如图，按照业务逻辑从下往上，下面是通用的监控层面，网络、服务器、虚拟化还有应用，应用包括了组件的一些监控。&lt;/p&gt;
+&lt;p&gt;基于立体化的监控，假设用组件的监控，无论是QQ还是QQ空间、QQ音乐，都有一些通用的指标可以衡量。如，打开的内存是多少？长连接数是多少？用户进程、吞吐量、流量、CPU，业务层面返回码的分别是什么？省市连接的成功率、请求量的分布是什么？这都与具体的业务逻辑无关&lt;/p&gt;
+&lt;p&gt;为了理清海量的监控数据，我们把指标划分成两大类&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;指标划分两大类&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;低层次指标&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;把公共的、基础设施等在业务逻辑之下的指标称之为低层次的指标，网络、硬件、虚拟化等。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;高层次指标&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;高层次的指标要能更直接的反馈业务可用性的情况，如成功率、延时、请求率等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;遵循的原则&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在规划监控处理或者优化监控策略时，要尽量把低层次的指标自动化处理或收敛掉，尽量以高纬度的指标来告警&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;高层次的指标，是要能够实时反馈业务的真实状况的，在海量规模的业务运维场景下，靠人没办法看到单机的层面，必须要看到集群的层面&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在高层次指标中，还要有效的区分开单服务的高层次的指标，和业务功能的高层次的指标&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;善用这些低层次的指标能够帮助运维快速的定位高层次指标的故障原因&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;可靠性和可用性&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;可靠性是指单个服务失败的次数&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;微服务自身有失败重试的逻辑，需要在可靠性和可用性之间做出一定取舍&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;监控的本质（指标的归一化处理）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-8fa2686f534d7a79.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;收集和计算得到一些值和率，通过一定的分析策略或算法，然后把结论以不同的形式展现，最终达到分析状态和发现异常的目标&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;海量运营监控需要强调信息的有效性&#34;&gt;海量运营监控需要强调信息的有效性&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;原因：立体化的监控，会带来监控指标的爆炸，更有可能带来告警数据的失控&lt;/li&gt;
+&lt;li&gt;如何解决：有效的解决告警多、误告警多
+&lt;ul&gt;
+&lt;li&gt;关联分析
+&lt;ul&gt;
+&lt;li&gt;把一些真正重要的，需要通过事件、活动、指标提取出来。希望不要把什么事情都告警出来，而过多的消耗告警的诚信&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;无误告警
+&lt;ul&gt;
+&lt;li&gt;怎么样把收敛策略、屏蔽的策略用到极致，必要时可以将两者组合，以达到更强化的效果&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;持续运营
+&lt;ul&gt;
+&lt;li&gt;做好持续运营就是做好跟进，为了保证重要的事情有人跟、有人度量，防止问题再三出现，要在流程上有保障的机制&lt;/li&gt;
+&lt;li&gt;质量体系来闭环管理
+&lt;ul&gt;
+&lt;li&gt;当监控发现业务架构不合理、代码不合理等问题，能够通过该质量体系，推动业务、开发、运维去将优化措施落地，这也是为了最终的商业价值&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;海量数据收敛的手段&#34;&gt;海量数据收敛的手段&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-0741f32a43d76bdc.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;溯源、根因、优选&lt;/p&gt;
+&lt;h4 id=&#34;溯源分析实践简介&#34;&gt;溯源分析实践简介&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-b264a7187472d4f0.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;高纬与降维打击&lt;/strong&gt;。高维与降维打击，把一个指标的结果值或率以不同的纬度展开，要把每一个纬度的指标组合的状态异常都变成告警，这是很不现实的，因为压根处理不过来。反而多维度的指标异常能通过日常的报表汇总分析就能发现的异常，然后通过考核去持续的推动，把异常指标给理顺、优化掉，这是就是高维、降维的打击。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**级联分析。**网络有一个词叫微突发，网络突然拥塞了，导致一大波低层次和高层次的告警产生。举个案例，一个交换机异常，引发下联的服务器爆炸式的告警，当此类情况发生，我们的统一告警平台全部不理，做好全局的收敛，以保证监控告警的有效性不受影响。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**逆向思维。**意思是不能只看结果数据，要回到原始数据来看。如果要做到逆向思维可生效，那流处理集群在真正加工完，存储的结果数据之前要做最基础的清晰，把那部分日志备份到大数据平台做离线的计算，然后结果数据再走正常的流，去做告警也好，异常波动也好，因为很多异常的东西必须要看到原始数据。我们曾经深入分析相册的日上传照片流水日志，找到了大量异常的用户照片，从而节省了大量的运营成本，这些都是结果数据无法做到的效果。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;根因分析实践简介&#34;&gt;根因分析实践简介&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-99775648e7217d47.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;**用高层次的告警收敛低层次的告警。**同一个集群下既产生了低层次的告警，又产生了高层次的告警，低层次的告警不用发。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;用主调的告警收敛被调的告警&lt;/strong&gt;。模块A调用模块B，B挂了，A受不受影响？从保障业务可用性的角度，如果A没有产生告警，证明该场景只是B的可靠性告警，告警通知开发而不是运维。但如果B挂了，A也产生了告警，运维就应该收到A的告警，B还是告警给开发。推进告警分级（分值、分级、分人、分通道）的机制，其实是慢慢把一些运维要做的事情分给开发，运维只看核心的，软件可靠性这些开发来看，可靠性是开发的问题，可用性是运营质量的问题。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**用原因告警收敛现象告警。**在业务逻辑的调用联调中，用原因告警收敛掉现象告警。（具体可参考2016年3月深圳运维大会上，我关于监控的分享PPT）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**用主动触发的活动去屏蔽一个对象的告警。**有些告警是由于变更的行为引起的，要收敛掉。如正在做升级引发了告警，运维系统要能关联这些事件与告警。有高层次的告警、低层次的告警，还有运维的活动事件，都把这些集中在一起，通过权重的算法，有一个排序决策说告警应该是告这条链路，而不是每一个对象都重复的告警。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;优选指标实践简介&#34;&gt;优选指标实践简介&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-07cb0e211b59e8a1.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;**核心指标论。**腾讯内部的系统代号叫DLP，是一种通过人工来筛选核心指标的方法。举例，一个模块可能有300－400个指标，这300－400个指标中，包含有低层次的指标，高层次的指标，但当这个模块出问题的时候，这300－400个指标可能都会产生告警，那么应该怎么样收敛呢？倘若我们提前已经对该模块进行过核心指标的人工筛选，这个指标能代表模块最真实的指标。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;**监控的相关性。**监控与监控之间是相关的，例如300个指标告警了，最核心的那个也会告警，最核心的告警了这300个指标可以不告警，只看核心的就可以了，为什么要人手选核心指标，因为暂时没有办法人工识别。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;告警分级管理。&lt;/strong&gt; 可以基于核心的指标对告警做分级，非核心的开发自己收，核心的运维收，高规格保障。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;降低流试监控的计算量。&lt;/strong&gt; 监控点越多，流的数据越大，整个监控流处理集群规模很大，10万台机器光是流处理的集群都是接近1500台，当运营成本压力大时，我们也可以重点的保障DLP的指标的优先计算资源，保证优先给予容量的支持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;常用动态阈值算法与策略简介&#34;&gt;常用（动态阈值）算法与策略简介&lt;/h3&gt;
+&lt;p&gt;在定义指标状态异常时，我们的经验是尽量不要用固定阀值，要用也是动态阀值，否则在监控对象的阀值管理上就会有大量的人工管理的成本。其他的推荐策略如图。
+&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-669ab17f686fd404.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;常用收敛算法简介&#34;&gt;常用收敛算法简介&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-3e799866e8ae8cbe.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;毛刺收敛
+&lt;ul&gt;
+&lt;li&gt;持续多长时间报警，一般建议采集周期的2～3倍&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;同类收敛
+&lt;ul&gt;
+&lt;li&gt;一个模块有300个监控实力，产生了300条的告警，只要有一条告给运维，对于运维同类收敛掉了。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;时间收敛
+&lt;ul&gt;
+&lt;li&gt;生产环境中有很多定时的任务，如定时跑批会引起I/O的陡增等异常，这种可以针对性的收敛掉。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;昼夜收敛
+&lt;ul&gt;
+&lt;li&gt;有一些告警，在分布式服务的高可用架构下，晚上不需要告警出来，可以等白天才告警，更人性化的管理。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;变更收敛
+&lt;ul&gt;
+&lt;li&gt;如果告警的时间点有运维的活动，就要收敛掉它。怎么做到的？取决于要把运维的活动都收口在标准化运维的平台，运维平台对生产环节都要将变更日志写入在变更记录中心那里，然后统一告警系统能够关联变更记录来决策是收敛还是发出告警&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;织云监控指标体系及质量体系&#34;&gt;织云监控指标体系及质量体系&lt;/h2&gt;
+&lt;h3 id=&#34;织云监控的指标体系&#34;&gt;织云监控的指标体系&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-3700a74f352d1423.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;织云监控构建的质量体系，分成用户端、客户端、服务端、基础端，定义核心指标 DLP，并且善用分级告警、分渠道告警，结合短信、QQ、微信和电话等渠道实现告警通知，整个质量监控体系都是围绕预警、自愈、分析、排障碍的能力构建&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;织云监控的质量体系&#34;&gt;织云监控的质量体系&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/6740346-9eedbcc265097a8b.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;小结织云监控的质量体系，我们希望打造一个闭环，能够实现持续反馈、度量、优化，让团队间能够有效的协同工作，更高效更有效。&lt;/p&gt;
+&lt;p&gt;监控能力。全局的看、需要什么样的监控能力和监控点，同时要理清指标是怎么分层的，哪些指标是重要的？最终把它转成业务看得懂的高层次指标。&lt;/p&gt;
+&lt;p&gt;业务可用性。运维要看什么，要看可靠性还是可用性，如果规模不大看可靠性可以，但是在海量的场景下可靠性要太细，要抽象核心指标来度量，用于衡量可用性。可靠性则可以通过考核体系去度量与管理，结合QA和老板的力量来推动开发团队的投入与优化。&lt;/p&gt;
+&lt;p&gt;用户体验。做技术运营会有视角的盲点，会经常迷恋可用性的数据是4个9、5个9，但这并不完全代表了我们服务质量好，当用户连接不上我们的服务端时，几个9的意义都不大。这是一个很现实的问题，因此用户体验监控一定要做，因为内部的可用性再高都不代表用户用得好。&lt;/p&gt;
+&lt;p&gt;技术解决。要有技术解决的方案，要有自动化的工具，有协助用户排障的工具，有根因分析的算法平台等等。&lt;/p&gt;
+&lt;p&gt;统计分析。最终形成可度量的指标、可考核的、可展示的，最好是DIY展示的，监控数据的统计/报表能力服务化，应发挥更多的角色来使用监控数据，而非仅限于运维角色。&lt;/p&gt;
+&lt;p&gt;持续改进。最终持续的改进无论是架构的问题、代码的问题，还是因为标准化的问题或非功能落地推进不了的问题，都是需要数字来度量和推动。最好，这个数字要能间接的反馈商业的价值，也就是DevOps提倡的思路。&lt;/p&gt;
+&lt;h2 id=&#34;相关链接&#34;&gt;相关链接&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://www.jianshu.com/p/4b7c88f491be&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;IT大咖说&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>监控体系建设-全链路监控</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2019/2019-11-02-%E7%9B%91%E6%8E%A7%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E5%85%A8%E9%93%BE%E8%B7%AF%E7%9B%91%E6%8E%A7/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2019/2019-11-02-%E7%9B%91%E6%8E%A7%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E5%85%A8%E9%93%BE%E8%B7%AF%E7%9B%91%E6%8E%A7/</guid>
+      <description>&lt;h1 id=&#34;监控体系建设-全链路监控&#34;&gt;监控体系建设-全链路监控&lt;/h1&gt;
+&lt;h2 id=&#34;定义&#34;&gt;定义&lt;/h2&gt;
+&lt;p&gt;全链路监控： 从业务视角出发，能直观反映整个业务流程的健康状态，无需切换系统，即可贯穿全局和上下游，能快速发现，定位问题。&lt;/p&gt;
+&lt;h2 id=&#34;实现关键&#34;&gt;实现关键&lt;/h2&gt;
+&lt;h3 id=&#34;健康状态评估&#34;&gt;健康状态评估&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;     通过统一数据模型，和查询接口，完成监控对象数据模型的抽象，
+     通过对指标的归一化处理，抽象出黄金指标，完成对象对象状态特性的抽象     
+     通过对服务稳定性抽象，如SLA，MTTR等为服务打分，完成对服务，系统的抽象。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;链路拓扑生成&#34;&gt;链路拓扑生成&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;人工筛选+自动生成
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;人工筛选&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  类似黄金指标，可以把影响业务的核心流程通过人工的形式梳理出来，形成黄金流程。关注这个黄金流程上的业务活动，
+  以及核心这些业务活动关联以来有什么（系统，服务）
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;自动生成&lt;/p&gt;
+&lt;p&gt;从三个维度：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  服务 与 资源的关系：
+     来自CMDB，服务树。辅助确定故障影响面；
+  服务 与 服务 的关系：
+    来自中间件埋点
+  网络拓扑关系：
+    来自网络流量分析，网络拓扑 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;异常检测&#34;&gt;异常检测&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;    智能基线预警
+    专家规则预警
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;问题及解决方案&#34;&gt;问题及解决方案&lt;/h2&gt;
+&lt;h3 id=&#34;跨部门或者跨bu的链路监控问题&#34;&gt;跨部门或者跨BU的链路监控问题&lt;/h3&gt;
+&lt;p&gt;业务全链路路监控通过“黄金指标”+“业务维度”来解决这个难题&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;首先每个部门把直接对外提供服务的核心业务梳理出来，并设定它的“黄金指标”，我们设定这样的黄金指标
+为这个部门的SLA指标，其它部门的系统调用这个业务时，就看这些SLA的指标是否正常，而不再关心这个业
+务的内部调用细节。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;每个部门都定义自己的对外核心业务和SLA指标，形成一种标准化的服务能力评价体系，业务全链路可以把各个部门的业务节点串联起来，组成一个更大的大网，在这个里面每个部门都对外暴露的自己的关键业务，每个关键业务通过“黄金指标”量化服务能力，这样就可以快速定位到底是谁的问题，建立起一个正在的全景式监控&lt;/p&gt;
+&lt;h3 id=&#34;业务全链路的精确的定位&#34;&gt;业务全链路的精确的定位&lt;/h3&gt;
+&lt;p&gt;精准定位两类：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 鹰眼系统，原理和Dapper类似，主要做系统Trace链路排查
+ 阿里的A3系统： 日志的异常诊断的一个工具，
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;业务全链路的异常检测&#34;&gt;业务全链路的异常检测&lt;/h3&gt;
+&lt;p&gt;业务活动的监控指标分为三层&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/bz-layer3.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;第一层是这个业务活动的黄金指标，对第一层的指标我们会追求它的准确率，会为每一个指标建立单独的预测模型，然后通过时间序列等算法，尽可能做到对这个指标的准确判断以及报警。&lt;/li&gt;
+&lt;li&gt;第二层是这个业务活动依赖各系统服务的监控指标，对于这一层指标我们采用的准确性与成本和效率均衡的策略，通过一些轻量级波动检测算法来实现异常检测，而且这一层次的检测是由上一层触发，只有在上一层检测发现异常时才触发，不会一直定时执行。&lt;/li&gt;
+&lt;li&gt;第三层是这个业务活动所在应用的监控指标，包括他整个系统调用链路上的各种应用指标，包括系统指标、各类中间件、缓存、数据库等等，这一层的数据量是最大的，我们不会直接用智能算法分析这些指标，而是分析它们产生的各类报警事件和变更事件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;异常检测分析流程：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/abnormal-ana.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s/DJhJKD4TCDgSwyLZbSotKg&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;AI时代的全链路监控，阿里工程师怎么做&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>监控体系建设-演化历程及标准化</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2019/2019-11-01-%E7%9B%91%E6%8E%A7%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E8%BF%9B%E5%8C%96%E5%8E%86%E7%A8%8B/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2019/2019-11-01-%E7%9B%91%E6%8E%A7%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-%E8%BF%9B%E5%8C%96%E5%8E%86%E7%A8%8B/</guid>
+      <description>&lt;h1 id=&#34;监控体系建设-演化历程及标准化&#34;&gt;监控体系建设-演化历程及标准化&lt;/h1&gt;
+&lt;h1 id=&#34;目标&#34;&gt;目标&lt;/h1&gt;
+&lt;p&gt;本文，结合工作的实践以及他人的分享，整理了监控系统建设中的若干问题以及对应的解决方案。&lt;/p&gt;
+&lt;h2 id=&#34;本文逻辑&#34;&gt;本文逻辑&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;监控系统进化一般路径
+监控系统如何标准化
+小结
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;监控系统进化的一般路径&#34;&gt;监控系统进化的一般路径&lt;/h2&gt;
+&lt;p&gt;如同人类的进化史，大部分公司都会经历 工具时代，平台化，标准化，智能化的过程。&lt;/p&gt;
+&lt;h3 id=&#34;工具化时代&#34;&gt;工具化时代&lt;/h3&gt;
+&lt;p&gt;聚焦的问题： 解决有没有的问题。&lt;/p&gt;
+&lt;p&gt;代表：   基于开源的监控系统如，Nagios+Cacti  / zabbix 等。&lt;/p&gt;
+&lt;p&gt;存在的问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;   1. 无法定制。投入人力和资源都比较少，无法对这些组件和系统深入的二次开发或定制。和
+      公司的运维体系不能融为一体。
+   2. 不能规模化. 随着公司业务体量的增加，监控的规模上来后，性能，稳定性，产品易用性
+      等问题表现突出，无法系统的解决。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;平台化时代&#34;&gt;平台化时代&lt;/h3&gt;
+&lt;p&gt;聚焦的问题：解决性能，稳定性，以及和运维体系整合联动。&lt;/p&gt;
+&lt;p&gt;代表：： 如小米开源的open-falcon, 阿里的 alimonitor，鹰眼 等&lt;/p&gt;
+&lt;p&gt;存在的问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  1. 监控的全面覆盖，必然带来监控指标的爆炸性增长，带来了监控告警的泛滥。
+  2. 监控自定义的东西就很多，标准化的程度低，监控的运维管控就很困难，进一步的数据分析挖掘就更难做了
+  3. 产品的专业性比较强，用户的要求比苛刻，复杂程度高
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;标准化时代&#34;&gt;标准化时代&lt;/h3&gt;
+&lt;p&gt;聚焦的问题：解决监控指标爆炸，监控指标的标准化，业务全链路，以及服务质量评估体系建立。&lt;/p&gt;
+&lt;p&gt;代表： 阿里的Sunfire监控平台，prometheus+thanos ， 更多的是结合公司的业务层场景，
+平台+标准+人工标注。&lt;/p&gt;
+&lt;h3 id=&#34;智能化&#34;&gt;智能化&lt;/h3&gt;
+&lt;p&gt;聚焦的问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  发现问题： 异常捕获（时间序列的异常，操作日志异常等）
+  定位问题： RCA，根因溯源，推荐，事件关联分析等
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;代表：阿里的智能诊断平台，skyline,  Prophet, 腾讯Metis, 以及裴丹老师的相关理论研究&lt;/p&gt;
+&lt;p&gt;存在的问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  这部分还处于探索阶段，大部分公司都处于弱智能时代。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;监控系统如何标准化&#34;&gt;监控系统如何标准化&lt;/h2&gt;
+&lt;p&gt;监控系统的标准化的最终目的，是为业务全链路监控打好基础。全链路监控的目的是为了快速发现问题，定位问题。&lt;/p&gt;
+&lt;h2 id=&#34;标准化的目标及意义&#34;&gt;标准化的目标及意义&lt;/h2&gt;
+&lt;p&gt;我理解的标准化，主要来自三个维度：数据模型层和指标规范层，业务规范层&lt;/p&gt;
+&lt;h3 id=&#34;数据模型层&#34;&gt;数据模型层：&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;指的是建立一种通用的数据模型，能完全覆盖各个监控层级的业务需求，同时能提供一种标准的监控查询语法，满足
+各个业务的定制化分析，聚合等需求。
+ 
+典型的解决方案： 如prometheus 的PROMQL, 和 阿里基于HiTsdb 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;指标规范-四个黄金指标资源类型的通用指标-use业务类型的red-等&#34;&gt;指标规范： 四个黄金指标，资源类型的通用指标 USE，业务类型的：RED 等&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;指的是对 监控指标的归一化处理。比如，google SRE 解密中提出的四大黄金指标，
+流量 ：业务在单位时间内的调用量，如：服务的QPS、每秒订单笔数等。
+耗时 ：业务的具体处理时长，需区分成功耗时和失败耗时。
+错误 ：调用出错数量、成功率、错误码。
+饱和度 ：应用已使用资源的占比。
+
+Weave Cloud在基于Google的“4个黄金指标”的原则下结合Prometheus以及Kubernetes容器实践，细
+化和总结 得出的：RED方法
+(请求)速率：服务每秒接收的请求数。
+(请求)错误：每秒失败的请求数。
+(请求)耗时：每个请求的耗时。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;USE方法全称”Utilization Saturation and Errors Method”，主要用于分析系统性能问题，可以指导用户快速识别资源瓶颈以及错误的方法。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;使用率：关注系统资源的使用情况。 这里的资源主要包括但不限于：CPU，内存，网络，磁盘等等。100%
+的使用率通常是系统性能瓶颈的标志。
+饱和度：例如CPU的平均运行排队长度，这里主要是针对资源的饱和度(注意，不同于4大黄金信号)。任何
+资源在某种程度上的饱和都可能导致系统性能的下降。
+错误：错误计数。例如：“网卡在数据包传输过程中检测到的以太网网络冲突了14次”。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;业务规范&#34;&gt;业务规范&lt;/h3&gt;
+&lt;p&gt;为解决业务全链路分析而建立业务监控模型&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;业务域：一个完整的业务或产品称为“业务域”，如电商的“交易域”、“营销域”、“支付域”等。
+
+业务活动：业务域中的的核心业务用例叫做“业务活动”，如交易域的“下单确认”、“创建订单”等，业务活
+动是整个监控模型的核心，每个业务活动都会有标准的【黄金指标】来反应自身的健康状况，业务活动之
+间建立上下游关系就形成了业务链路。
+
+系统服务：业务活动中的依赖的关键方法称作“系统服务”，如“下单确认”包含：查询会员、查询商品、查询
+优惠等关键方法，每个系统服务也通过【黄金指标】来表示其健康状况。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;小结&#34;&gt;小结&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;本文梳理了监控体系建设的进化历程，以及如何实现标准化。后续会介绍如何给予标准化，实现全链路业务监控。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;参考文献&#34;&gt;参考文献&lt;/h1&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://www.sohu.com/a/254463051_262549&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;阿里业务全链路智能监控探索&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>蓝鲸体系架构及设计思想学习笔记</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2020/2020-04-13-note/</guid>
+      <description>&lt;h1 id=&#34;目标&#34;&gt;目标&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;  通过学习蓝鲸体系架构及设计思想，扩展自己在运维体系建设领域的认知。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;学习重点&#34;&gt;学习重点&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;蓝鲸体系的背景，设计理念，和落地方式
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;设计背景&#34;&gt;设计背景&lt;/h1&gt;
+&lt;h2 id=&#34;运维转型历程&#34;&gt;运维转型历程&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;十年前&lt;/strong&gt; ,需求驱动型的, 业务运维忙于:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;   服务器、网络、OS、DB、发布、变更、监控、故障处理、运营环境信息维护提取等等。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;五年前&lt;/strong&gt;, 使我们的运维团队从**“操作服务输出”**，转型为**“解决方案服务输出” **&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;三年前&lt;/strong&gt;，2012年，作为落地承载运维转型方案的蓝鲸体系同时开始构建&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;     为什么要转型： 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;原因1：业务红海化&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;     1. 行业竞争很激烈，精细化运营越来越重要，希望业能将务可用性保持在无限接近7*24
+     2. 产品策划运营等其它岗位提供各类运营工具以提高“产品运营”的效率，甚至能为运营决策提供准确的
+       数据依据
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;原因2：“传统运维”生存空间塌缩&lt;/p&gt;
+&lt;p&gt;原因3：我们太累了&lt;/p&gt;
+&lt;h3 id=&#34;运维转型的长远目标&#34;&gt;运维转型的长远目标&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;    将基础运维服务（发布变更、监控处理、数值调整、数据提取等）尽可能做到运维无人
+    值守，运维提供解决方案（工具）
+    
+    同时负责随时调整解决方案，但不提供重复性的操作服务，由使用者自助或者外包团队操作
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;设计理念&#34;&gt;设计理念&lt;/h1&gt;
+&lt;h2 id=&#34;面临的挑战&#34;&gt;面临的挑战&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;      业务类型复杂
+      
+      技术框架多样
+      
+      发布变更、故障处理等运维操作场景和操作流程是没有直观规律
+      
+      服务器数量，操作单元量庞大，增长速度很快
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;需求分析&#34;&gt;需求分析&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;      不能侵入业务架构，不能依赖业务架构，不能依赖业务所使用的技术，不能依赖
+      有统一的运维操作流程
+      
+      甚至，也最好别指望开发商为你做什么改造，还得支持海量场景（最好能支持十万
+      级操作单元并发）
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;总结出来的共同点是：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;运维通过linux命令，可以搞定所有“发布变更故障处理等”运维操作流程。&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 虽然只有这一点，但也足够了，这至少说明，运维的基础服务，不论是发布变更还是告警处理，
+ 都是可以分步骤的，步骤可能是串行的，也可能有分支结构
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;设计思路&#34;&gt;设计思路&lt;/h2&gt;
+&lt;p&gt;尽可能将单个步骤抽象为原子，再将原子自动化，而后通过任务引擎连接成“串”或者“树状分支结构”实现全自动化**&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 设计思路的优点：不依赖业务类型，不依赖架构，不依赖场景，只要运维手工能做的，都可以做
+ 成无人值守
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;落地方式&#34;&gt;落地方式&lt;/h1&gt;
+&lt;h2 id=&#34;将原子自动化&#34;&gt;将原子自动化&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;运维通过命令可以做的步骤，在蓝鲸作业平台上封装个脚本，就变成了可集成的自动化原子，而运维
+通过其他运营系统页面操作的步骤，由蓝鲸集成平台中的ESB平台与其对接好接口之后，也变成了可
+集成的自动化原子
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;将原子集成为工具&#34;&gt;将原子集成为工具&lt;/h2&gt;
+&lt;p&gt;运维/运营工具的开发对传统运维是有一定障碍的，蓝鲸通过几方面的工作来解决这个问题&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 1. 在“蓝鲸集成平台”（蓝鲸体系目前有6个平台）中构建了一个PaaS模块，业务运维（devops）无需关
+    注找服务器、部署环境（各种包、mysql、nginx等）等步骤，只需要写好工具本身的逻辑代码上装
+    到PaaS容器就行了，同时还免除了工具的运维成本（高可用、故障修复等）。基于docker技术，工具
+    的部署也是一键式的
+
+ 2. 其次是开发了一套工具代码框架，内置了统一登录、权限、tag等通用功能，更重要的是，不需要一个一个
+ 去对接各个系统的接口（原子），因为ESB模块都封装好了，只要写个函数就可以调用这些原子
+ 
+ 3. 再有就是解决运维的前端开发难题——前端样例库。提供了“从各种页面元素到不同类型的运维工具的页面组合
+    套餐”，减少了运维消耗在前端开发上的时间
+    
+ 4. 最后，还为蓝鲸开发者提供培训，一般来说，新进毕业生在通过四周以内的培训之后，就可以独立在蓝鲸集
+    成平台中构建APP工具
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;通过以上方案，基本解决了运维构建工具高门槛的问题，而且可以随时低成本的根据业务变化（例如新增了模块，导致发布变更、告警处理流程都变了）调整工具&lt;/p&gt;
+&lt;h2 id=&#34;进化方向&#34;&gt;进化方向&lt;/h2&gt;
+&lt;p&gt;在这种设计模式下，蓝鲸团队的建设方向就很清晰了：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1. 继续降低工具本身的开发成本，提高PaaS模块的可靠性；
+
+2. 扩展原子服务，找出运维海量操作流程中，重复度最高的一些原子，构建成平台，封装接口提供给PaaS作
+   为自动化原子，让运维更轻松的调度更多节点，提升单个节点功能密度，升级拓展更多的流程，直到把流程升
+   级到运维无人值守，升级到对产品、策划等岗位的闭环服务为止。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;进化成果&#34;&gt;进化成果&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸集成平台：包含PaaS、ESB、开发框架、web样例等模块，是运维制作工具APP的平台。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸移动平台：蓝鲸体系的移动端操作入口。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸作业平台：各种大小文件传输，含参脚本执行类的动作，可以在蓝鲸作业平台封装，通过接口操控。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸配置平台：从业务的各层分级结构到子节点的各类属性，都可以直观的存储于蓝鲸配置平台，通过接口存取。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸管控平台：一套基于海量标准设计的管控系统，为作业平台提供文件管道和任务管道，为数据平台提供数据管
+道等，整个蓝鲸体系对OS及容器单元、大数据的所有管控，只依赖管控平台的一个智能agent。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;蓝鲸数据平台：基于kafka、storm构建的供应用运维使用的实时计算平台，为上层蓝鲸集成平台上的智能决策
+类工具族、数据视图类工具族、辅助决策类工具族提供大数据处理及实时计算能力&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;运维团队的进化历程&#34;&gt;运维团队的进化历程&lt;/h2&gt;
+&lt;h3 id=&#34;运维基础工作自动化&#34;&gt;运维基础工作自动化&lt;/h3&gt;
+&lt;h3 id=&#34;辅助产品运营自动化&#34;&gt;辅助产品运营自动化&lt;/h3&gt;
+&lt;h3 id=&#34;数据化运维&#34;&gt;数据化运维&lt;/h3&gt;
+&lt;h2 id=&#34;蓝鲸服务&#34;&gt;蓝鲸服务&lt;/h2&gt;
+&lt;p&gt;蓝鲸的服务可以分成两类：PaaS和SaaS。&lt;/p&gt;
+&lt;p&gt;对应用运维来说，PaaS服务是万能的，几乎没有场景限制，只要是原子能覆盖的流程，都能做得出来，非常灵活&lt;/p&gt;
+&lt;p&gt;蓝鲸大力发展PaaS服务，也印证了运维发展的理念：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;依靠运维，武装运维，使其能提供更高维度的服务，而不是取代运维&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;蓝鲸平台系统架构&#34;&gt;蓝鲸平台系统架构&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://bkdocs-1252002024.file.myqcloud.com/ZH/5.1/%E8%93%9D%E9%B2%B8%E4%BD%93%E7%B3%BB/assets/allView.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;腾讯蓝鲸智云体系由原子平台和通用的一级 SaaS 服务组成，平台包括 管控平台、配置平台、作业平台、数据平台、容器管理、PaaS 平台、移动平台 等，通用 SaaS 包括节点管理、标准运维、日志检索、蓝鲸监控、故障自愈等，为各种云（公有云、私有云、混合云）的用户提供不同场景、不同需求的一站式技术运营解决方案。&lt;/p&gt;
+&lt;h2 id=&#34;参考文章&#34;&gt;参考文章&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.greatops.net/?id=3&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;腾讯蓝鲸体系架构及设计思想&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://bk.tencent.com/docs/document/5.1/18/560&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;蓝鲸文档中心 &amp;gt; 蓝鲸体系 &amp;gt; 体系架构&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>进程，线程，协程详解</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2016/2016-06-01-%E8%B0%83%E5%BA%A6%E5%99%A8%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2016/2016-06-01-%E8%B0%83%E5%BA%A6%E5%99%A8%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</guid>
+      <description>&lt;h1 id=&#34;进程线程协程详解&#34;&gt;进程，线程，协程详解&lt;/h1&gt;
+&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
+&lt;p&gt;彻底弄清楚进程，线程，协程。&lt;/p&gt;
+&lt;h2 id=&#34;本文规划&#34;&gt;本文规划&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;概念简述&lt;/li&gt;
+&lt;li&gt;进程，线程的联系 ，区别 （是什么）&lt;/li&gt;
+&lt;li&gt;为什么引入多线程模型（为什么）&lt;/li&gt;
+&lt;li&gt;多线程的实现模型（怎么样）&lt;/li&gt;
+&lt;li&gt;协程是什么？为什么引入？如何实现？&lt;/li&gt;
+&lt;li&gt;总结&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;概念简述&#34;&gt;概念简述&lt;/h2&gt;
+&lt;h4 id=&#34;并发某个时刻同时处理n个任务&#34;&gt;并发：某个时刻，同时处理N个任务&lt;/h4&gt;
+&lt;h4 id=&#34;并行n个worker同时执行n个任务&#34;&gt;并行：N个Worker，同时执行N个任务&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;注意： 在没有并行能力机器上使用并发，实际上会降低你的性能。
+比如 只有1个核，同时处理N个计算任务，存在上下文切换的损耗
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;进程正在执行程序的实例操作系统资源调度的最小单位每个进程都有一个地址空间和控制线程&#34;&gt;进程：正在执行程序的实例。操作系统资源调度的最小单位。每个进程都有一个地址空间，和控制线程。&lt;/h4&gt;
+&lt;h4 id=&#34;线程--是进程的一个实体是cpu调度和分派的基本单位和进程共享地址空间准并行的运行多个控制线程&#34;&gt;线程:  是进程的一个实体,是CPU调度和分派的基本单位。和进程共享地址空间，准并行的运行多个控制线程&lt;/h4&gt;
+&lt;h2 id=&#34;进程线程的区别与联系&#34;&gt;进程，线程的区别与联系&lt;/h2&gt;
+&lt;p&gt;进程：进程模型基于两种独立的概念：资源分组处理和执行。有些情况，将两种概念分开会更有益，这也是引入“线程”这一概念的原因。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 理解进程的另一个角度，用某种方法把相关的资源集中在一起。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;进程与线程的联系&#34;&gt;进程与线程的联系&lt;/h3&gt;
+&lt;p&gt;进程与线程的关系模型如图(Figure2-11)&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2016/thread_mode.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;图（a）, 三个进程，每个进程有一个线程；
+图（b）一个进程中，有三个线程。
+从图上可以清晰看出，进程和线程之间的联系。&lt;/p&gt;
+&lt;h3 id=&#34;进程与线程的区别&#34;&gt;进程与线程的区别&lt;/h3&gt;
+&lt;p&gt;进程与线程的区别，表（Figure 2-12）
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2016/diff_processer_thread.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;为什么引入多线程模型&#34;&gt;为什么引入多线程模型&lt;/h2&gt;
+&lt;p&gt;为什么在一个进程引入多个线程&lt;/p&gt;
+&lt;p&gt;有若干理由，如下&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1. 许多应用中同时并发着多种活动，某些活动随着时间推移会被阻塞。将应用程序分解成可以准并行运行的多个顺序线程，会使得
+   程序设计模型简单。
+2. 在有了多进程模型的抽象之后，我们才不必考虑中断，定时器和上下文切换，只需考察并行进程。类似，在有了多线程模型后，才
+   能引入一种新的元素：并行实体共享同一个地址空间，和所有可用数据的能力。对某些应用而言，这种能力是必须的，而这正是多
+   进程模型（具有不同地址空间）所无法表达的
+3. 线程比进程更轻量级，比进程更容易创建，销毁。在许多系统中，创建一个线程较创建一个进程要快（10～100）倍。
+   对于IO密集型的，拥有多个线程，可以让彼此并发执行
+4. 在多核（CPU）系统中，多线程模型是有益的。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;多线程模型要解决什么问题？&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;   多线程使得顺序进程的思想得以保留，这种顺序进程阻塞了系统调用，但是仍然实现了并行性。对系统调用进行阻塞时程序设计变
+   得简单，且并行性改善了性能。
+   单线程服务器虽然保留了阻塞系统调用的简单性，但却放弃了性能。通过有限状态机的方法，运用非阻塞调用和中断，通过并行
+性实现高性能，但给编程增加了困难。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2016/construc_server.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;多线程的实现模型怎么样&#34;&gt;多线程的实现模型（怎么样）&lt;/h2&gt;
+&lt;p&gt;有两种主要方法实现线程包：用户空间中和在内核中。由于这两种方法，互有利弊，以至出现了混合实现方式。为了便于区分，我们可分为三种线程模型：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 用户级线程模型
+ 内核级线程模型
+ 混合线程模型
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;用户级线程模型-与-内核级线程模型&#34;&gt;用户级线程模型 与 内核级线程模型&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2016/user_thread_kernel_thread.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;用户空间中实现线程-把整个线程包放在用户空间中内核对线程包一无所知从内核的角度考虑是按照正常的方式管理即单线程进程&#34;&gt;用户空间中实现线程： 把整个线程包放在用户空间中，内核对线程包一无所知。从内核的角度考虑，是按照正常的方式管理，即单线程进程。&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;用户空间管理线程如图 2-16（a), 每个进程需要有其专属的的线程表（thread table）,用来追踪该进程中的线程。这些线程表和内核中
+的进程表类似，不过他仅仅记录各个线程的属性，如每个线程的程序计数器，堆栈指针，寄存器和状态等。该线程表由运行时系统管理。
+
+
+用户空间中实现线程的优点：
+      1. 用户级线程包可以在不支持线程的操作系统上实现
+      2. 用户空间的线程切换比陷入内核切换要快一个数量级（或更多）
+         当某个线程引起本地阻塞后，它调用一个运行时系统过程，该过程检查该线程是否必须进入阻塞状态。如果是，它在线程表中保存
+         该线程的寄存器（即它本身的），查看表中可运行的就绪线程，并把新的线程的保存值重新装入机器的寄存器中。只要堆栈指针
+         和程序计数器一被切换，新的线程就又自动投入运行。如果机器有一条保存所有寄存器的指令和另一条装入全部寄存器的指令，
+         那么整个线程的切换可以在几条指令内完成。
+      3. 允许每个进程有自己定制的调度算法。
+          用户级线程具有较好的扩展性，因为在内核空间中内核线程需要一些固定表格空间和堆栈空间，如果内核线程数量非常大，就会
+          出问题。
+
+用户级线程的问题：
+
+  第一：如何实现阻塞系统调用。
+       由于用户线程包对内核是透明的，用户的任何一个线程进行阻塞系统调用，会导致该进程下的所有线程被阻塞。使用线程的一个主要目标
+       是，首先要允许每个线程使用阻塞调用，但是还要避免被阻塞的线程影响其他的线程。
+  
+  第二：如果一个线程开始运行，那么在该进程中的其他线程就不能运行，除非第一个线程自动放弃CPU。
+       单独的进程内部，没有时钟中断，不能用轮转调度的方式调度进程。
+  第三：与阻塞系统调用问题类似的缺页故障
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;内核级线程模型在内核中记录系统中所有线程的线程表当某个线程希望创建或销毁一个线程时进行一个系统调用这个系统调用通过对线程表的更新完成线程的创建和销毁如图2-16-b&#34;&gt;内核级线程模型：在内核中记录系统中所有线程的线程表。当某个线程希望创建或销毁一个线程时，进行一个系统调用，这个系统调用通过对线程表的更新完成线程的创建和销毁。如图2-16 (b)&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;内核线程的实现原理：内核的线程表保存了每个线程的寄存器，状态和其他信息。这些信息和在用户空间中（运行时系统）的线程是一样的，但是现
+在保存在内核中。这些信息是传统内核所维护的每个单线程进程信息的子集。另外，还维护了传统的进程信息。
+
+内核线程的优势： 
+1.  所有能够阻塞线程的调用都以系统调用的形式出现。
+     当一个线程阻塞时，内核可以选择调用同一个进程的另一个线程（若有一个就绪线程），或者运行另外一个进程中的线程。相比，在用户空
+     线程中，运行时系统只能运行自己进程内的线程，知道内核剥夺它的CPU（或没有可运行的线程）为止。
+2.  内核中不需要任何新的，非阻塞的系统调用。当出现阻塞和缺页故障时候，可以很方便的检查该进程是否有任何其他可以运行的线程。
+
+内核线程的问题：
+      在内核中创建和销毁现场的代价比较大。
+           （线程池，控制线程的回收和循环利用，是一种有效降低线程开销的方法）
+      内核线程模型业引入了其他更多的复杂问题：
+           在一个多线程进程创建新进程时，新进程是否拥有和原进程相同数量的线程还是只有一个线程？ 
+           如果多个线程都注册了一个信号，当信号到达时，如何调度线程？
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;混合线程模型&#34;&gt;混合线程模型&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;为了结合用户级线程和内核级线程的优势，就出现了混合线程模型。该模型如图 2-17
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2016/mix_thread_mode.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;该模型，是用内核级线程，将用户级线程与某些或着全部内核线程多路复用起来。编程人员可以决定有多少个内核级线程和多少个用户级线程彼此多路复用。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 优势：内核只识别内核级线程，对其调度。每个内核级线程，有一个可以轮流使用的用户基级线程集合。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;混合线程模型需要解决一个核心的问题是：如果线程阻塞在某个系统调用或页面故障上，只要同一个进程中有任何就绪的线程，就应该有可能运行其他的线程。避免用户空间和内核空间不必要的切换，从而提升效率。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;实现机制： 调度程序激活机制
+
+     内核给每个进程安排一定数量的虚拟处理器，并且让（用户空空间）运行时系统将线程分配到处理器上
+     
+     当内核了解到一个线程被阻塞之后（例如：由于执行了一个阻塞系统调用或产生了一个页面故障），内核通知该进程的运行时系统，并且在
+     堆栈中以参数形式传递有问题的线程编号和发生事件的一个描述。内核通过一个已知的起始地址启动运行时系统，从而发出了通知，这是
+     对UNIX中信号的一种粗略模拟。这个机制称之为 上行调用
+     
+     一旦如此激活，运行时系统就重新调度其线程，这个过程通常是这样：
+     把当前线程标记为阻塞并从就绪表中取出另一个线程，设置其寄存器，然后在启动之。稍后，当内核知道原来的线程有可云心时（例如：原
+     先试图读取的管道中又了数据，或已从磁盘中读入了故障的页面），内核就一次又上行调用运行时系统，通知它这一件事情。此时，该运行
+     时系统按照自己的判断，或者立即重启被组赛的线程，或者把它放入就绪表中稍后运行。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;协程&#34;&gt;协程&lt;/h2&gt;
+&lt;h4 id=&#34;协程定义&#34;&gt;协程定义&lt;/h4&gt;
+&lt;p&gt;V1:  
+&lt;a href=&#34;http://en.volupedia.org/wiki/Coroutine&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;协同程序是一种计算机程序组件，它通过允许暂停和恢复执行，将子程序泛化以实现非抢占式的多任务处理。&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Coroutines are computer program components that generalize subroutines for non-preemptive multitasking, 
+by allowing execution to be suspended and resumed
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;V2:  
+&lt;a href=&#34;https://en.cppreference.com/w/cpp/language/coroutines&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;协程是一个函数，它可以暂停执行以在以后恢复，是无堆栈的。它通过返回调用方来暂停执行，恢复执行需要的数据与堆栈分开存储。使得可以进行异步执行顺序代码&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;A coroutine is a function that can suspend execution to be resumed later. Coroutines are stackless: they 
+suspend execution by returning to the caller and the data that is required to resume execution is stored 
+separately from the stack. This allows for sequential code that executes asynchronously 
+(e.g. to handle non-blocking I/O without explicit callbacks), and also supports algorithms on lazy-computed 
+infinite sequences and other uses
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;我理解 协程 本质是一种 通过顺序代码来实现异步执行的函数机制。在降低线程切换带来开销的同时，通过系统并行执行来提升执行效率。&lt;/p&gt;
+&lt;p&gt;参考文章：&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;&#34;&gt;现在操作系统&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
   </channel>
 </rss>

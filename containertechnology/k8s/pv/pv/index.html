@@ -1,0 +1,1349 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="目标 k8s Volume 使用场景 PVC/PV/StorageClass 基本操作和概念呢解析 PVC/PV 设计与实现原理 存储基">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/containertechnology/k8s/pv/pv/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/containertechnology/k8s/pv/pv/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/containertechnology/k8s/pv/pv/">
+  <meta property="og:title" content="应用持久化 | ProgrammerTalk">
+  <meta property="og:description" content="目标 k8s Volume 使用场景 PVC/PV/StorageClass 基本操作和概念呢解析 PVC/PV 设计与实现原理 存储基"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2019-05-05T00:00:00&#43;01:00">
+    
+    <meta property="article:modified_time" content="2019-05-05T00:00:00&#43;01:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>应用持久化 | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/">Overview</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/cncfoverview/cncfoverview/">云原生技术概览</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/fundamentals/fundamentals/">K8S体系架构</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/fundamentals/fundamentals/">K8S 体系架构</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/schedule/schedule/">Kubernetes调度和资源管理</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/schedule/schedule/">k8sSchedule</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/schedulealgorithem/schedulealgo/">调度器流程和算法</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/job/job/">作业管控系统</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/job/job/">作业任务系统</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/network/network01/">容器网络模型</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network01/">网络模型基础</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network02/">网络模型进阶</a>
+      </li>
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/network/network03/">理解CNI和CNI插件</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/pv/pv/">应用持久化</a>
+    <ul class="nav docs-sidenav">
+      
+      <li class="active">
+        <a href="/programmertalk/containertechnology/k8s/pv/pv/">PV/PVC/Storage</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/appobserver/appobserver/">应用监控</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/appobserver/appobserver/">AppObservability</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  <div class="docs-toc-item">
+    <a class="docs-toc-link" href="/programmertalk/containertechnology/k8s/appconf/appconf/">应用配管</a>
+    <ul class="nav docs-sidenav">
+      
+      <li >
+        <a href="/programmertalk/containertechnology/k8s/appconf/appconf/">基本概念</a>
+      </li>
+      
+    </ul>
+    
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#目标">目标</a></li>
+    <li><a href="#存储基本概念介绍">存储基本概念介绍</a>
+      <ul>
+        <li><a href="#术语表">术语表</a></li>
+        <li><a href="#持久化存储的业务场景">持久化存储的业务场景</a></li>
+        <li><a href="#pod-volumes-的三种类型">Pod Volumes 的三种类型：</a></li>
+        <li><a href="#pod-volumes-存在的问题">Pod Volumes 存在的问题</a></li>
+        <li><a href="#pod-volumes-的解决方案--persistent-volumes">Pod Volumes 的解决方案- Persistent Volumes</a></li>
+        <li><a href="#persistent-volumes-的接口描述-pvc">Persistent Volumes 的接口描述 PVC</a></li>
+        <li><a href="#pvc-和-pv的两种bound-关系">PVC 和 PV的两种Bound 关系</a></li>
+      </ul>
+    </li>
+    <li><a href="#pvcpvstorageclass-基本操作和概念解析">PVC/PV/StorageClass 基本操作和概念解析</a>
+      <ul>
+        <li><a href="#pod-volumes-使用">Pod Volumes 使用</a></li>
+        <li><a href="#static-volume-provisioning-案例分析">Static Volume Provisioning 案例分析</a></li>
+        <li><a href="#dynamic-volume-provisioning-案例分析">Dynamic Volume Provisioning 案例分析</a></li>
+        <li><a href="#pv-spec-重要字段解析">PV Spec 重要字段解析</a></li>
+        <li><a href="#pv-状态图">PV 状态图</a></li>
+      </ul>
+    </li>
+    <li><a href="#pvcpv-设计与实现原理">PVC/PV 设计与实现原理</a>
+      <ul>
+        <li><a href="#架构设计">架构设计</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>应用持久化</h1>
+
+          <div class="article-style">
+            <h2 id="目标">目标</h2>
+<ol>
+<li>k8s Volume 使用场景</li>
+<li>PVC/PV/StorageClass 基本操作和概念呢解析</li>
+<li>PVC/PV 设计与实现原理</li>
+</ol>
+<h2 id="存储基本概念介绍">存储基本概念介绍</h2>
+<h3 id="术语表">术语表</h3>
+<table>
+<thead>
+<tr>
+<th align="left">术语</th>
+<th align="left">描述</th>
+<th align="left">简称</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Volumes</td>
+<td align="left">存储卷</td>
+<td align="left">V</td>
+</tr>
+<tr>
+<td align="left">Pod Volumes</td>
+<td align="left">Pod存储卷</td>
+<td align="left">PV</td>
+</tr>
+<tr>
+<td align="left">Persistent Volumes</td>
+<td align="left">持久化卷</td>
+<td align="left">PV</td>
+</tr>
+<tr>
+<td align="left">PersistentVolumeClaim</td>
+<td align="left">持久化存储卷申明</td>
+<td align="left">PVC</td>
+</tr>
+<tr>
+<td align="left">in-tree</td>
+<td align="left">网络存储实现的代码在k8s仓库中</td>
+<td align="left">in-tree</td>
+</tr>
+<tr>
+<td align="left">out-of-tree</td>
+<td align="left">网络存储实现, 通过从抽象接口将不通的存储<br> driver实现从k8s代码仓库中玻璃</td>
+<td align="left">out-of-tree</td>
+</tr>
+<tr>
+<td align="left">container storage interface</td>
+<td align="left">K8s社区后面对存储插件实现(out of tree)的官方推荐方式</td>
+<td align="left">CSI</td>
+</tr>
+</tbody>
+</table>
+<h3 id="持久化存储的业务场景">持久化存储的业务场景</h3>
+<ol>
+<li>如果 pod 中的某一个容器在运行时异常退出，被 kubelet 重新拉起之后，如何保证之前容器产生的重要数据没有丢失？</li>
+<li>如果同一个 pod 中的多个容器想要共享数据，应该如何去做？</li>
+</ol>
+<h3 id="pod-volumes-的三种类型">Pod Volumes 的三种类型：</h3>
+<ol>
+<li>本地存储，常用的有 emptydir/hostpath；</li>
+<li>网络存储：网络存储当前的实现方式有两种，一种是 in-tree，它的实现的代码是放在 K8s 代码仓库中的，随着k8s对存储类型支持的增多，这种方式会给k8s本身的维护和发展带来很大的负担；而第二种实现方式是 out-of-tree，它的实现其实是给 K8s 本身解耦的，通过抽象接口将不同存储的driver实现从k8s代码仓库中剥离，因此out-of-tree 是后面社区主推的一种实现网络存储插件的方式；</li>
+<li>Projected Volumes：它其实是将一些配置信息，如 secret/configmap 用卷的形式挂载在容器中，让容器中的程序可以通过POSIX接口来访问配置数据；</li>
+</ol>
+<h3 id="pod-volumes-存在的问题">Pod Volumes 存在的问题</h3>
+<p><img src="../../../k8s/pv/pvbasic.png" alt="pv basic"></p>
+<ol>
+<li>场景一：pod 重建销毁，如用 Deployment 管理的 pod，在做镜像升级的过程中，会产生新的 pod并且删除旧的 pod ，那新旧 pod 之间如何复用数据？</li>
+<li>场景二：宿主机宕机的时候，要把上面的 pod 迁移，这个时候 StatefulSet 管理的 pod，其实已经实现了带卷迁移的语义。这时通过 Pod Volumes 显然是做不到的；</li>
+<li>场景三：多个 pod 之间，如果想要共享数据，应该如何去声明呢？我们知道，同一个 pod 中多个容器想共享数据，可以借助 Pod Volumes 来解决；当多个 pod 想共享数据时，Pod Volumes 就很难去表达这种语义；</li>
+<li>场景四：如果要想对数据卷做一些功能扩展性，如：snapshot、resize 这些功能，又应该如何去做呢？</li>
+</ol>
+<h3 id="pod-volumes-的解决方案--persistent-volumes">Pod Volumes 的解决方案- Persistent Volumes</h3>
+<p>将存储和计算分离，通过不同的组件来管理存储资源和计算资源，然后解耦 pod 和 Volume 之间生命周期的关联
+。这样，当把 pod 删除之后，它使用的PV仍然存在，还可以被新建的 pod 复用。</p>
+<h3 id="persistent-volumes-的接口描述-pvc">Persistent Volumes 的接口描述 PVC</h3>
+<p>用户在使用持久化存储时，真正关心的问题是：</p>
+<ol>
+<li>使用的存储是可以被多个node共享还是只能单node独占访问(注意是node level而不是pod level)？</li>
+<li>只读还是读写访问？
+而不关心，与存储相关的实现细节。
+这就使得我们需要抽象一层接口层，屏蔽掉存储实现细节的信息。这就是PVC的来历</li>
+</ol>
+<p><strong>为什么需要设计PVC?</strong></p>
+<ol>
+<li>
+<p>职责分离。</p>
+<pre><code>  PVX中只用声明自己需要的存储大小，access mode (单node独占还是多node 共享，只读还是
+  读写访问？)等业务真正关系的存储需求，PV和其对应的后段存储信息则交给cluster admin
+  统一运维和管控，安全访问策略更容易控制。
+</code></pre>
+</li>
+<li>
+<p><strong>PVC简化了User对存储的需求，PV才是存储实际信息的载体</strong></p>
+<pre><code>  通过kube-controller-manager中的PersistentVolumeController将PVC和合适的PV bound
+  到一起，从而满足实际的存储需求
+</code></pre>
+</li>
+<li>
+<p>PVC类似接口，PV类似接口对应的实现</p>
+</li>
+</ol>
+<!-- ![pv basic](../../../k8s/pv/whypvc.png) -->
+<h3 id="pvc-和-pv的两种bound-关系">PVC 和 PV的两种Bound 关系</h3>
+<p>正如前文分析，PV 和PVC 类似实现类和接口的关系，那么在实际中两者的关系就有静态绑定，和动态绑定两种
+接下来，分析两种关系。</p>
+<h4 id="static-volume-provisioning-静态bound">Static Volume Provisioning (静态Bound)</h4>
+<p><img src="../../../k8s/pv/staticprovisiong.png" alt="pv basic"></p>
+<p>实现过程</p>
+<ol>
+<li>由集群管理员（cluster admin）事先去规划这个集群中的用户会怎样使用存储，它会先预分配一些存储，也就是预先创建一些 PV；</li>
+<li>然后用户在提交自己的存储需求（也就是 PVC）的时候，K8s 内部相关组件会帮助它把 PVC 和 PV 做绑定；3. 用户再通过 pod 去使用存储的时候，就可以通过 PVC 找到相应的 PV</li>
+</ol>
+<p>静态绑定的方式，
+需要先设置好模版，对资源池的划分比较粗糙。</p>
+<pre><code>举例：如果用户需要的是 20G，然而集群管理员在分配的时候可能有 80G 、100G 的，但没有 20G的，这样就很
+难满足用户的真实需求，也会造成资源浪费
+</code></pre>
+<h4 id="dynamic-provisioning动态态bound">Dynamic Provisioning(动态态Bound)</h4>
+<p><img src="../../../k8s/pv/dynamicprovisiong.png" alt="pv basic"></p>
+<p>实现过程</p>
+<ol>
+<li>
+<p>集群管理员不预先创建PV，而提供模版文件（StorageClass)</p>
+<pre><code> StorageClass 表示创建某一类型存储（块存储，文件存储等）所需的一些参数。用户在提交自身存储需求
+ (PVC)时，在PVC中指定使用的存储模版（StorageClass）
+</code></pre>
+</li>
+<li>
+<p>集群中的管控组件，会结合 PVC 和 StorageClass 的信息, 动态的生成
+用户所需的PV，将PVC和PV绑定后，Pod 即可以使用PV了。</p>
+<pre><code>通过 StorageClass 配置生成存储所需要的存储模板，再结合用户的需求动态创建 PV 对象，做到按需分
+配，在没有增加用户使用难度的同时也解放了集群管理员的运维工作
+</code></pre>
+</li>
+</ol>
+<h2 id="pvcpvstorageclass-基本操作和概念解析">PVC/PV/StorageClass 基本操作和概念解析</h2>
+<h3 id="pod-volumes-使用">Pod Volumes 使用</h3>
+<p><img src="../../../k8s/pv/podvolumes.png" alt="pv basic"></p>
+<ol>
+<li>通过 .spec.volumes 申明pod 的 volumes 信息</li>
+<li>通过 .spec.containers.volumesMounts 申明 container
+如何使用pod 的volumes 信息</li>
+<li>通过 .spec.containers.volumesMounts.subPath 隔离不通容器在同一个
+volumes上数据存储的路径，实现多个container 共享同一个volumes</li>
+</ol>
+<h3 id="static-volume-provisioning-案例分析">Static Volume Provisioning 案例分析</h3>
+<ol>
+<li>Cluster Admin &amp; User</li>
+</ol>
+<p><img src="../../../k8s/pv/staticprovisiongcase.png" alt="pv basic"></p>
+<ol start="2">
+<li>管理员配置解析</li>
+</ol>
+<p><img src="../../../k8s/pv/clusteradminop.png" alt="管理员配置解析"></p>
+<ol start="2">
+<li>用户配置解析</li>
+</ol>
+<p><img src="../../../k8s/pv/userop.png" alt="用户PV配置解析"></p>
+<h3 id="dynamic-volume-provisioning-案例分析">Dynamic Volume Provisioning 案例分析</h3>
+<ol>
+<li>系统管理员</li>
+</ol>
+<p><img src="../../../k8s/pv/dynamicclusteradminop.png" alt="动态PV用户配置解析"></p>
+<p>1.1 系统管理员不再预分配 PV，而只是创建一个模板文件 &ndash; StorageClass</p>
+<pre><code>  StorageClass 的信息：
+  第一：provisioner, 即那个存储插件。
+      存储插件provisioner对应创建PV的具体实现
+  第二：参数。
+      k8s创建存储的时候，需要指定的一些细节参数。如：regionld、zoneld、fsType 和它的类型，
+      ReclaimPolicy：使用方使用结束、Pod 及 PVC 被删除后，这块 PV 应该怎么处理
+</code></pre>
+<ol start="2">
+<li>用户如何用</li>
+</ol>
+<p><img src="../../../k8s/pv/dynamicuserop.png" alt="动态PV用户配置解析"></p>
+<p>2.1 PVC 新加一个字段-StorageClassName</p>
+<p>2.2 用户提交完PVC之后，K8s 集群中的相关组件就会根据PVC以及StorageClass动态生成 PV,并和当前PVC绑定</p>
+<p>2.3 之后用户在提交自己的 yaml 时，PVC找到PV，并把它挂载到相应的容器中</p>
+<h3 id="pv-spec-重要字段解析">PV Spec 重要字段解析</h3>
+<p><img src="../../../k8s/pv/keywordsparser.png" alt="动态PV用户配置解析"></p>
+<p>用户在提交PVC的时候,最重要的两个字段 —— Capacity 和 AccessModes。</p>
+<p><em>Capacity</em>: 存储对象的大小；
+<em>AccessModes</em> : PV三种使用方式:
+1. 单 node 读写访问；
+2. 多个 node 只读访问，是常见的一种数据的共享方式；
+3. 多个 node 上读写访问。</p>
+<p>在提交 PVC 后，k8s 集群中的相关组件是如何去找到合适的 PV 呢？</p>
+<ol>
+<li>首先它是通过为 PV 建立的 AccessModes 索引找到所有能够满足用户的 PVC 里面的 AccessModes 要求的 PV list，</li>
+<li>然后根据PVC的 Capacity，StorageClassName, Label Selector 进一步筛选 PV，</li>
+<li>最小适合原则筛选
+如果满足条件的 PV 有多个，选择 PV 的 size 最小的，accessmodes 列表最短的 PV</li>
+</ol>
+<p>在PV 使用完毕后如何释放回收？</p>
+<p><em>ReclaimPolicy</em>:常见的有二种方式:</p>
+<ol>
+<li>delete: PVC 被删除之后，PV 也会被删除；</li>
+<li>Retain: 就是保留，保留之后，后面这个 PV 需要管理员来手动处理。</li>
+</ol>
+<p>StorageClassName：动态 Provisioning 时必须指定的一个字段,来指定到底用哪一个模板文件来生成 PV；</p>
+<p>NodeAffinity：创建出来的PV，它能被哪些node去挂载使用，
+其实是有限制的。然后通过 NodeAffinity 来声明对node的限制，这样其实对 使用该PV的pod调度也有限制。
+pod 必须要调度到这些能访问 PV 的 node 上，才能使用这块 PV</p>
+<h3 id="pv-状态图">PV 状态图</h3>
+<pre><code class="language-mermaid">stateDiagram
+
+CreatePV --&gt; Pending 
+Pending --&gt; Available 
+Available --&gt; Bound
+
+Bound --&gt; Released
+Released --&gt; Deleted
+Released --&gt; Failed
+
+</code></pre>
+<p>解释：</p>
+<ol>
+<li>首先在创建PV对象后，它会处在短暂的pending 状态；
+等真正的 PV 创建好之后，它就处在 available 状态</li>
+<li>用户在提交 PVC 之后，被 K8s 相关组件做完 bound（即：找到相应的 PV），这个时候 PV 和 PVC 就结合到一起了，此时两者都处在 bound 状态</li>
+<li>在使用完 PVC，将其删除后，这个 PV 就处在 released 状态</li>
+<li>当 PV 已经处在 released 状态下，它是没有办法直接回到 available 状态
+想把已经 released 的 PV 复用，有两种方式
+4.1 新建一个 PV 对象，然后把之前的 released 的 PV 的相关字段的信息填到新的 PV 对象里面，这样的话，这个 PV 就可以结合新的 PVC 了
+4.2 是我们在删除 pod 之后，不要去删除 PVC 对象，这样给 PV 绑定的 PVC 还是存在的，下次 pod 使用的时候，就可以直接通过 PVC 去复用</li>
+</ol>
+<h2 id="pvcpv-设计与实现原理">PVC/PV 设计与实现原理</h2>
+<h3 id="架构设计">架构设计</h3>
+<h4 id="podpv-创建的流程">Pod/PV 创建的流程</h4>
+<p><img src="../../../k8s/pv/podcreateflow.png" alt="动态PV用户配置解析"></p>
+<p>CSI(container storage interface) 的实现可分为两大部分：</p>
+<ul>
+<li>第一部分是由k8s社区驱动实现的通用的部分，如图中 csi-provisioner和 csi-attacher controller；</li>
+<li>第二部分由云存储厂商实践的，对接云存储厂商的 OpenApi，主要是实现真正的 create/delete/mount/unmount 存储的相关操作，对应到上图中的csi-controller-server和csi-node-server。</li>
+</ul>
+<p>用户提交 yaml 之后，k8s内部的处理流程：</p>
+<ol>
+<li>
+<p>用户在提交 PVCyaml 的时候，首先会在集群中生成一个 PVC 对象</p>
+</li>
+<li>
+<p>PVC 对象会被 csi-provisioner controller watch到，csi-provisioner 会结合 PVC 对象以及 PVC 对象中声明的 storageClass，通过 GRPC 调用 csi-controller-server</p>
+</li>
+<li>
+<p>csi-controller-server，然后，到云存储服务这边去创建真正的存储，并最终创建出来 PV 对象</p>
+</li>
+<li>
+<p>由集群中的 PV controller 将 PVC 和 PV 对象做 bound ， PV 就可以被使用了</p>
+</li>
+<li>
+<p>用户在提交 pod 之后,首先会被调度器调度选中某一个合适的node</p>
+</li>
+<li>
+<p>该 node 上面的 kubelet 在创建 pod 流程中会通过首先 csi-node-server 将我们之前创建的 PV 挂载到我们 pod 可以使用的路径</p>
+</li>
+<li>
+<p>kubelet 开始  create &amp;&amp; start pod 中的所有 container</p>
+</li>
+</ol>
+<h4 id="pvpvc-以及通过-csi-使用存储流程">PV、PVC 以及通过 csi 使用存储流程</h4>
+<p><img src="../../../k8s/pv/pvstages.png" alt="动态PV用户配置解析"></p>
+<p>有三个阶段：</p>
+<p>第一:  create 阶段，主要是创建存储</p>
+<pre><code> 用户提交完 PVC，由 csi-provisioner 创建存储，并生成 PV 对象，之后 PV controller 将 PVC 及生
+ 成的 PV 对象做 bound
+</code></pre>
+<p>第二:  attach 阶段，就是将那块存储挂载到 node 上面(通常为将存储load到node的/dev下面)；</p>
+<pre><code>用户在提交 pod yaml 的时候，首先会被调度选中某一个 合适的node，等 pod 的运行 node 被选出来之后，
+会被 AD Controller watch 到 pod 选中的 node，它会去查找 pod 中使用了哪些 PV。然后它会生成一
+个内部的对象叫 VolumeAttachment 对象，从而去触发 csi-attacher去调用csi-controller-server 
+去做真正的 attache 操作，attach操作调到云存储厂商OpenAPI。这个 attach 操作就是将存储 attach到 
+pod 将会运行的 node 上面
+</code></pre>
+<p>第三:  mount 阶段，将对应的存储进一步挂载到 pod 可以使用的路径</p>
+<pre><code>kubelet 创建 pod的过程中，它在创建 pod 的过程中，首先要去做一个 mount，这里的 mount 操作是为了将
+已经attach到这个 node 上面那块盘，进一步 mount 到 pod 可以使用的一个具体路径，之后 kubelet 才
+开始创建并启动容器
+</code></pre>
+<h2 id="总结">总结</h2>
+<ul>
+<li>介绍了 K8s Volume 的使用场景，以及本身局限性；</li>
+<li>通过介绍 K8s 的 PVC 和 PV 体系，说明 K8s 通过 PVC 和 PV 体系增强了 K8s Volumes 在多 Pod 共享/迁移/存储扩展等场景下的能力的必要性以及设计思想；</li>
+<li>通过介绍 PV（存储）的不同供给模式 (static and dynamic)，学习了如何通过不同方式为集群中的 Pod 供给所需的存储；</li>
+<li>通过 PVC&amp;PV 在 K8s 中完整的处理流程，深入理解 PVC&amp;PV 的工作原理。</li>
+</ul>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Previous</div>
+    <a href="/programmertalk/containertechnology/k8s/appconf/appconf/" rel="next">应用配管</a>
+  </div>
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Next</div>
+    <a href="/programmertalk/containertechnology/k8s/appobserver/appobserver/" rel="prev">应用可观测性</a>
+  </div>
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on May 5, 2019</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/containertechnology/k8s/pv/pv.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

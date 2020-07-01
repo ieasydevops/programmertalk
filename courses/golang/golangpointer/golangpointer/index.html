@@ -1,0 +1,1140 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Golang Pointer">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/golang/golangpointer/golangpointer/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/courses/golang/golangpointer/golangpointer/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/golang/golangpointer/golangpointer/">
+  <meta property="og:title" content="GolangStudy | ProgrammerTalk">
+  <meta property="og:description" content="Golang Pointer"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2018-09-09T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2018-09-09T00:00:00&#43;00:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>GolangStudy | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item active">
+    <a class="docs-toc-link" href="/programmertalk/courses/golang/golangpointer/golangpointer/">OverView</a>
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#指针的基本概念">指针的基本概念</a></li>
+    <li><a href="#go语言中指针的特点">Go语言中指针的特点</a>
+      <ul>
+        <li><a href="#为什么不能进行指针运算">为什么不能进行指针运算？</a></li>
+        <li><a href="#指针的核心概念">指针的核心概念</a></li>
+      </ul>
+    </li>
+    <li><a href="#go-中的指针地址和指针类型">GO 中的指针地址和指针类型</a></li>
+    <li><a href="#golang-的关键字-make-和-new">golang 的关键字 make 和 new</a>
+      <ul>
+        <li><a href="#new-关键字">new 关键字</a></li>
+        <li><a href="#比较在c语言中的临时变量和go语言中的临时变量指针">比较在C语言中的临时变量和GO语言中的临时变量指针</a></li>
+        <li><a href="#构造器和符合语句constructors-and-composite-literals-">构造器和符合语句（Constructors and composite literals ）</a></li>
+      </ul>
+    </li>
+    <li><a href="#make-关键字">make 关键字</a></li>
+    <li><a href="#pointer-vs-values">Pointer vs Values</a></li>
+    <li><a href="#参考阅读">参考阅读</a></li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>GolangStudy</h1>
+
+          <div class="article-style">
+            <h1 id="golang-指针">golang 指针</h1>
+<h2 id="指针的基本概念">指针的基本概念</h2>
+<ul>
+<li>指针地址</li>
+<li>指针类型</li>
+</ul>
+<h2 id="go语言中指针的特点">Go语言中指针的特点</h2>
+<p>Go语言为程序员提供了控制数据结构指针的能力，但是，并<strong>不能进行指针运算</strong>。</p>
+<h3 id="为什么不能进行指针运算">为什么不能进行指针运算？</h3>
+<ol>
+<li>
+<p>指针类型变量即拥有指针高效访问的特点，又不会发生指针偏移，从而避免了非法修改关键性数据的问题。</p>
+</li>
+<li>
+<p>垃圾回收也比较容易对不会发生偏移的指针进行检索和回收。</p>
+</li>
+</ol>
+<h3 id="指针的核心概念">指针的核心概念</h3>
+<p>指针（pointer）在Go语言中可以被拆分为两个核心概念：</p>
+<ul>
+<li>
+<p>类型指针，允许对这个指针类型的数据进行修改，传递数据可以直接使用指针，而无须拷贝数据，<strong>类型指针不能进行偏移和运算。</strong></p>
+</li>
+<li>
+<p>切片，由<strong>指向起始元素的原始指针、元素数量和容量组成</strong>。</p>
+<pre><code>切片比原始指针具备更强大的特性，而且更为安全。切片在发生越界时，运行时会panic，并打出堆栈，而原
+始指针只会崩溃。
+</code></pre>
+</li>
+</ul>
+<h2 id="go-中的指针地址和指针类型">GO 中的指针地址和指针类型</h2>
+<p>Go语言中使用在变量名前面添加&amp;操作符（前缀）来获取变量的内存地址（取地址操作）</p>
+<pre><code>ptr :=&amp;V // V 类型为T
+
+其中 v 代表被取地址的变量，变量 v 的地址使用变量 ptr 进行接收，ptr 的类型为*T，称做 T 的指针类型，*代表指针。
+
+</code></pre>
+<h2 id="golang-的关键字-make-和-new">golang 的关键字 make 和 new</h2>
+<ul>
+<li>
+<p>make 的作用是 初始化内置的数据结构，slice,map,channel 
+<a href="https://golang.org/doc/effective_go.html#allocation_make" target="_blank" rel="noopener">1</a></p>
+</li>
+<li>
+<p>new  的作用是 根据传入的类型，分配一片内存空间，并返回指向这篇内存空间的指针
+<a href="https://golang.org/doc/effective_go.html#allocation_new" target="_blank" rel="noopener">2</a></p>
+</li>
+</ul>
+<h3 id="new-关键字">new 关键字</h3>
+<p>先看 new 这个关键字，new 是一个内置的内存分配函数，区别与其它语言的 new, 它不初始化内存，只将其归零。也就是说，new（T）为类型为T的新项分配 zeroed storage 并返回其地址，即类型为 *T 的值。在go 中，它返回指向新分配的类型为T的零值的指针。</p>
+<pre><code>
+It's a built-in function that allocates memory, but unlike its namesakes in some 
+other languages it does not initialize the memory, it only zeros it. That is, 
+new(T) allocates zeroed storage for a new item of type T and returns its address,
+a value of type *T. In Go terminology, it returns a pointer to a newly allocated 
+zero value of type T.
+
+Since the memory returned by new is zeroed, it's helpful to arrange when designing 
+your data structures that the zero value of each type can be used without further 
+initialization. This means a user of the data structure can create one with new and
+ get right to work. For example, the documentation for bytes.Buffer states that 
+ &quot;the zero value for Buffer is an empty buffer ready to use.&quot; Similarly, sync.Mutex 
+ does not have an explicit constructor or Init method. Instead, the zero value 
+ for a sync.Mutex is defined to be an unlocked mutex.
+
+</code></pre>
+<p>举例：</p>
+<p>The zero-value-is-useful property works transitively,</p>
+<pre><code>
+type SyncedBuffer struct {
+    lock    sync.Mutex
+    buffer  bytes.Buffer
+}
+
+</code></pre>
+<p>类型为 SyncedBuffer 的值 分配完，或申明完就可以立即使用，并不需要进一步的初始化</p>
+<pre><code>
+p := new(SyncedBuffer)  // type *SyncedBuffer
+var v SyncedBuffer      // type  SyncedBuffer
+
+</code></pre>
+<h3 id="比较在c语言中的临时变量和go语言中的临时变量指针">比较在C语言中的临时变量和GO语言中的临时变量指针</h3>
+<p>在C语言中，如下的写法</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int *fun() //指针函数 （返回值是一个地址）
+{
+	int a = 10;
+	return &amp;a;  //返回变量a的地址
+}
+
+int main()
+{
+	int *b = NULL;
+	b = fun();
+	printf(&quot;%d\n&quot;, *b);
+}
+编译时会有警告：
+main.c:14:12: warning: function returns address of local variable [-Wreturn-local-addr]
+$ ./a.out 
+Segmentation fault (core dumped) //运行发生段错误
+
+</code></pre>
+<p>在 go 语言中，</p>
+<pre><code>package main
+import (
+    &quot;fmt&quot;
+)
+func  fun() *int {
+	a := 10;
+	return &amp;a;  //返回变量a的地址
+}
+func main() {
+    b :=fun()
+    fmt.Printf(&quot;%T,%p %d\n&quot;, b,b, *b)
+}
+go run a.go
+
+*int,0xc000018078 10
+输出b 的类型为指针，内存地址为：0xc000018078,存储的值为10
+
+</code></pre>
+<p>new 和 make 关键字的区别</p>
+<pre><code class="language-mermaid">graph TD
+A[new] --&gt;|-| B(pointer)
+make --&gt;|-| D[slice]
+make --&gt;|-| E[hash]
+make --&gt;|-| F[channel]
+</code></pre>
+<h3 id="构造器和符合语句constructors-and-composite-literals-">构造器和符合语句（Constructors and composite literals ）</h3>
+<p>某些情况下，0值并不是我们想要的，如下例子：</p>
+<pre><code>func NewFile(fd int, name string) *File {
+    if fd &lt; 0 {
+        return nil
+    }
+    f := new(File)
+    f.fd = fd
+    f.name = name
+    f.dirinfo = nil
+    f.nepipe = 0
+    return f
+}
+</code></pre>
+<p>我们可以通过复合语句(composite literals)简化，</p>
+<pre><code>func NewFile(fd int, name string) *File {
+    if fd &lt; 0 {
+        return nil
+    }
+    f := File{fd, name, nil, 0}
+    return &amp;f
+}
+
+</code></pre>
+<p>上述例子，我们返回了一个临时变量，这个临时变量在函数返回后，在内存中的值依然存在。以上的语句可以进一步简化；</p>
+<pre><code>
+return &amp;File{fd, name, nil, 0}
+
+</code></pre>
+<p>复合文本的字段按顺序排列，并且必须全部存在。但是，通过将元素显式标记为字段：值对，初始值设定项可以按任意顺序显示，缺少的值保留为各自的零值。所以可以进一步简化：</p>
+<pre><code>return &amp;File{fd: fd, name: name}
+
+</code></pre>
+<p>如何复合构造的语句不包含 属性字段创建一个0值的类型指针，那么</p>
+<pre><code>new(File) 和 &amp;File{} 
+</code></pre>
+<p>两种表达方式是等效的。</p>
+<h2 id="make-关键字">make 关键字</h2>
+<p>内置函数 make (T , args) 和 new(T) 不同。make 只能创建 slices , map ,channel， make 会返回一个初始化
+的类型为T的值（而非0值）。 这个区别的根本原因在于，这三种类型的数据结构，在使用前必须被初始化。</p>
+<h2 id="pointer-vs-values">Pointer vs Values</h2>
+<p>对比分析如下两个函数定义，请解释他们的区别:</p>
+<pre><code>// 定义一个新的 []byte 类型,
+type ByteSlice []byte
+
+// 绑定对应的Append函数，
+func (slice ByteSlice) Append(data []byte) []byte {
+    ...
+}
+
+// 通过重新定义方法，将指向ByteSlice的指针作为其接收器来消除这种笨拙，这样方法就可以覆盖调用方的切片。
+func (p *ByteSlice) Append(data []byte) {
+    slice := *p
+    // Body as above, without the return.
+    *p = slice
+    ...
+}
+</code></pre>
+<p>第一步，我们提供值传递的方法，构造了Append函数，但需要将 更新后的 slice返回，
+第二个函数，将值传递转化为指针，这样可以直接对传入的slice进行修改，从而省掉返回值
+其实，我们可以跟进一步，修改一些这个函数，为如下形式：</p>
+<pre><code>func (p *ByteSlice) Write(data []byte) (n int, err error) {
+    slice := *p
+    // Again as above.
+    *p = slice
+    return len(data), nil
+}
+
+</code></pre>
+<p>类型 *ByteSlice, 符合标准的 io.Writer接口。因此可以直接输出</p>
+<pre><code>var b ByteSlice
+fmt.Fprintf(&amp;b, &quot;This hour has %d days\n&quot;, 7)
+
+</code></pre>
+<p>由于只有 *ByteSlice 满足 io.Writer， 因此我们传递 ByteSlice 的地址，(即: &amp;b),</p>
+<p>指针和值的区别在于，值传递的方法，能被指针和值调用，但指针的方法，只能被指针类调用。
+出现此规则的原因是：指针方法可以修改接收器；对值调用他们将</p>
+<h2 id="参考阅读">参考阅读</h2>
+<p>
+<a href="https://golang.org/doc/effective_go.html#allocation_new" target="_blank" rel="noopener">allocation_new</a></p>
+<p>
+<a href="https://golang.org/doc/effective_go.html#allocation_make" target="_blank" rel="noopener">allocation_make</a></p>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on Sep 9, 2018</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/courses/golang/golangpointer/golangpointer.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

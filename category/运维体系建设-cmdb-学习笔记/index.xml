@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>运维体系建设 CMDB 学习笔记 | ProgrammerTalk</title>
+    <link>https://meixinyun.github.io/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-cmdb-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+      <atom:link href="https://meixinyun.github.io/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-cmdb-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.xml" rel="self" type="application/rss+xml" />
+    <description>运维体系建设 CMDB 学习笔记</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language>
+    <image>
+      <url>https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>运维体系建设 CMDB 学习笔记</title>
+      <link>https://meixinyun.github.io/programmertalk/category/%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE-cmdb-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+    </image>
+    
+    <item>
+      <title>以CMDB为基础构建DevOps平台</title>
+      <link>https://meixinyun.github.io/programmertalk/post/2019/2019-10-16-cmdb%E5%BB%BA%E8%AE%BE/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/post/2019/2019-10-16-cmdb%E5%BB%BA%E8%AE%BE/</guid>
+      <description>&lt;h1 id=&#34;以cmdb为基础构建devops平台&#34;&gt;以CMDB为基础构建DevOps平台&lt;/h1&gt;
+&lt;h2 id=&#34;目标&#34;&gt;目标&lt;/h2&gt;
+&lt;p&gt;CMDB是运维其它系统的基础。通过对业界CMDB系统相关资料的学习整理，结合自身实践的经验，尝试总结一些CMDB建设的观点和思路。&lt;/p&gt;
+&lt;h2 id=&#34;本文概述&#34;&gt;本文概述&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;  基础概念（CMDB相关的概念）
+  CMDB的模型
+  CMDB在运维体系中的地位（全局观）
+  CMDB的实践
+  CMDB的经验总结
+  CMDB相关的产品介绍
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;基础概念&#34;&gt;基础概念&lt;/h2&gt;
+&lt;p&gt;配置管理数据库( Configuration Management Database,CMDB) :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;是一个逻辑数据库，包含了配置项全生命周期的信息以及配置项之间的关系(包括物理关系、实时通信关系、
+非实时通信关系和依赖关系).  - 来自百度
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;也称配置管理，配置管理一直被认为是 ITIL 服务管理的核心，因为其他所有流程均需要使用配置管理数据库 (CMDB).&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;举例说明： 比如说变更系统发起了一个部署请求，要部署某个版本到现网，部署完成之后，上层的变更系统会把变更的
+结果写到CMDB中，对配置进行归档；在某个机器down机，此时可以快速的知道该机器的具体用途，确定影响的业务；当
+机器需要重新恢复的时候，可以快速的根据CMDB中的信息进行恢复
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;配置管理和配置文件管理&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; ITIL所讲的配置管理是从软件工程管理角度出发的，把一切对象都当做配置，，比如说源代码、文档、人员、服务器
+ 甚至硬盘和内存等等。所以说他和业务程序的配置管理有着本质的不同，为了有效区分，我们又习惯说业务程序的配
+ 置管理叫配置文件管理。但又有着一定的联系，在ITIL中，业务程序的配置可能会以一个配置项存在，
+ 附属在应用程序上。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;配置管理和资产管理&lt;/p&gt;
+&lt;p&gt;区别
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/resource-config-manager-diff.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;核心的区别点就是导向，配置管理是面向业务管理，而非成本，这个会决定配置管理的粒度。当前如果业务非常简单，不需要对服务器端口进行管理，此时则不需要考虑纳入端口的管理，否则增加管理的代价&lt;/p&gt;
+&lt;p&gt;配置项&lt;/p&gt;
+&lt;p&gt;配置项是指要在配置管理控制下的资产、人力、服务组件或者其他逻辑资源。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;  从整个服务或系统来说，包括硬件、软件、文档、支持人员到单独软件模块或硬件组件（CPU、内存、SSD、硬盘等等。
+  配置项需要有整个生命周期（状态）的管理和追溯（日志）。对配置项的分类，我一般从逻辑资源和物理资源两个角度
+  来分解，然后层次化分解，这个思路会让你特别清晰，不会混乱。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;属性&lt;/p&gt;
+&lt;p&gt;一个配置项就是一个对象，有对象便有属性，属性是一个配置项的具体描述。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 比如说服务器这个配置项，他的具体描述有在哪个机房、哪个机柜的哪个位置、现在是否有业务运行、具体谁负责等等。在后面的模型篇里会对属性做全面的梳理，完成现实世界到模型世界的转换。另外配置项和属性可以转换，比如说IP地址，他肯定是一个资源对象存在。但是从服务器的角度来说，它作为一个属性存在，更准确的说是网卡的属性
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;模型&#34;&gt;模型&lt;/h2&gt;
+&lt;p&gt;模型的核心职责，就是把配置项和属性逐条的梳理出来。模型整理，重点做了四个方面工作：&lt;/p&gt;
+&lt;p&gt;1、配置管理系统的角色&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;第一、应用运维，负责服务器上的业务信息维护；
+第二、基础运维，负责机房、机柜及其服务器物理信息的准确性；
+第三、配置管理员，负责基础信息的维护，比如说业务分类，人员信息；
+第四、查询类角色，比如研发。CMDB是核心的资源信息管理系统，一般不轻易开放权限。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2、配置项识别与定义&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 这是重点工作，没有简单的方法可循，细致活，基于上图的【配置项】的物理资源和逻辑资源的不断分解，根据业务需要最终识别出要管理的配置项。然后对每一个配置项进行整理，确定要管理的属性。形成类似的下表：
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/config-table.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;就拿最核心的服务器资源来说，会形成如下表的信息整理&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/attribute.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;逐个进行整理，在上表中有几个方面需要注意：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;第一、每个配置项目确定了维护角色，他在后续的过程中，需要对这个准确性负责，确定维护的职责边界。
+
+第二、要整理出配置项的关联，比如说上表中的所属机房、所属机柜。
+
+第三、这个表不是数据库的设计表，具体数据库的设计表是开发人员根据这个模型参考实现。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;3、基于场景的配置管理规范&lt;/p&gt;
+&lt;p&gt;配置管理的核心目的是为了确保配置信息集中管理，并且是准确的管理。在这个里面需要做两个核心的工作。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;第一、配置项的规范化管理；
+
+第二、面向配置项的流程规范化管理，没有一套与之匹配的配置流程，最后配置管理都会混乱不堪，这个系统也就形同虚设。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;4、状态变迁图
+用一张图来说明资源状态的变化，便于更好的基于场景和变更来控制配置项状态的变更，其实也就是它的生命周期管理。&lt;/p&gt;
+&lt;h2 id=&#34;cmdb在运维生态中的地位全局观&#34;&gt;CMDB在运维生态中的地位（全局观）&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;CMDB 是 Devops的重要元数据基础，建立基础设施层，平台层和持续交付系统，持续反馈系统的联系纽带。
+互联网时代，公司快速发展，软件研发的速度和质量是永恒的追求目标。敏捷研发体系
+离不开持续交付体系的支撑，持续交付依托于 持续集成，持续部署，持续反馈。这些系统的构建，需要通过统一的元数据
+平台，来管理底层基础资源，从而建立起：服务，资源，人员的关系。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/Devops-CMDB-R.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;该图的几个核心概念如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;   基础设施服务： 计算，存储，网络的抽象服务
+   平台服务： 存储服务，MR服务，Cache缓存服务等
+   资源管理层次：基础设施层元信息，Pass层元信息，应用资源元信息
+   云管控： 私有云，公有云，混合云
+   Devops :  服务构建，交付，运行 和运营
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看出， CMDB 承载了底层资源的元信息的沉淀，作为支撑系统，为上层的软件生命周期管理系统提供元数据服务。
+为了更清楚的了解CMDB的地位以及和运维其他系统直接的关系，我们看下DevOps 的全景图，&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/over-view-devops.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;在Devops 全景图中，反应了持续交付，及敏捷体系的建设核心要素。持续交付离不开 CI/CD，部署流水线的支撑； 完成服务的持续优化与升级，需要持续反馈。(在
+&lt;a href=&#34;https://meixinyun.github.io//%E8%BF%90%E7%BB%B4%E4%BD%93%E7%B3%BB%E5%BB%BA%E8%AE%BE/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/2019/04/14/%E6%9C%89%E6%95%88%E6%9E%84%E5%BB%BA%E6%B5%B7%E9%87%8F%E8%BF%90%E8%90%A5%E7%9A%84%E6%8C%81%E7%BB%AD%E5%8F%8D%E9%A6%88%E8%83%BD%E5%8A%9B.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;有效构建海量运营的持续反馈能力&lt;/a&gt;文章中，详细讲述了如何实现海量运维体系中的持续反馈。)&lt;/p&gt;
+&lt;p&gt;从运维平台化的角度，来看ITIL，CMDB和Devops与之间关系。&lt;/p&gt;
+&lt;p&gt;如图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/itil-devops-cmdb.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;其中：ITIL ：包括运维体系建设中的NOC，事件管理，应急响应（ONCall），变更，发布管理，知识问答，运维知识库等。
+这些系统的构建依托中间层：自动化运维 和 数据化运维的支撑。
+而实现运维的自动化和数据化，则需要通过 CMDB 的元数据层，建立各个支撑系统 和 底层基础设施直接的映射关系。&lt;/p&gt;
+&lt;h3 id=&#34;cmdb-建设中的演化&#34;&gt;CMDB 建设中的演化&lt;/h3&gt;
+&lt;h3 id=&#34;面向应用的it资源模型框架&#34;&gt;面向应用的IT资源模型框架&lt;/h3&gt;
+&lt;p&gt;IT资源模型框架，反应组织，部门，人员 和 基础设施层，PaaS 层以及业务层的关系，如图：
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/IT-Resource-FrameWork.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;以应用为中心的cmdb模型&#34;&gt;以应用为中心的CMDB模型&lt;/h3&gt;
+&lt;p&gt;从应用视角，来看应用的管理会包含应用环境，服务资源，部署资源，以及运维动作。不同的数据，由不同的团队或系统负责。可以从资源，运维动作，状态三个维度构建应用的管理体系。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 应用管理：明确应用管理的边界，统一术语和名称
+ IP资源管理：IT资源管理，实现全局分层配置
+ 应用支撑系统管理：结合应用管理需求，纳管应用描述，环境配置，制品标准，管理规程，维护手段的等应用信息
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;cmdb的实践&#34;&gt;CMDB的实践&lt;/h2&gt;
+&lt;h3 id=&#34;构建cmdb的建设的原则&#34;&gt;构建CMDB的建设的原则&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;1. 应用CMDB必须提供统一的应用元数据管理能力，和应用类型无关
+2. 应用CMDB建设的核心诉求是应用生命周期管理
+3. 应用CMDB必须以应用为中心，而非以基础资源为中心
+4. 应用CMDB必须要从应用的角度构建起与IT资源的弹性关系
+5. 应用CMDB是为应用资源、动作、状态的统一管理提供支撑
+6. 应用CMDB要有统一的基础资源层CMDB作为基础
+7. 应用CMDB的核心场景就是持续交付
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;构建cmdb的过程是一个渐进式的迭代过程&#34;&gt;构建CMDB的过程，是一个渐进式的迭代过程&lt;/h3&gt;
+&lt;p&gt;CMDB 的构建不是一蹴而就，是一个渐进式的过程。从CMDB的微内核和弹性CMDB模型库开始，通过 “自动发现+标准流程+人工维护”的来完善CMDB数据库。&lt;/p&gt;
+&lt;p&gt;所谓的CMDB的微内核，是指以应用、集群和主机三个概念就可以构建起一个CMDB，基于这三个概念，可以不断去向周边扩散。
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/cmdb-core.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;主机可以在其关联或者拥有的资源上不断去扩展，比如说主机所在的机柜、机柜所在的机房、机器关联的交换机等等。&lt;/p&gt;
+&lt;p&gt;所谓的 弹性模型 是指： 由对象的弹性和对象CI及其关联的弹性定义实现的。&lt;/p&gt;
+&lt;p&gt;下图的案例：
+对象的弹性定义：
+&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/object.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;对象CI及其关联的弹性定义:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://meixinyun.github.io/assets/images/2019/ci-related.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;自动发现&lt;/strong&gt; 是降低维护成本的一种有效方式, 但确保一个CMDB库信息的有效性，还需要标准化的流程 和人工维护。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准化的流程&lt;/strong&gt; 是运维资源信息变更的场景化流程梳理，比如说机房搬迁，服务器搬迁，服务器下架等等，这个流程需要识别出来，并确定相应的CMDB配置项状态变更过程。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;人工维护&lt;/strong&gt;，在有些流程没有构建起来的情况下，则需要通过人工变更的能力把CMDB信息维护准确，比如说主机所属负责人变更，这个时候不建议流程了，可以通过人工直接变更完成。那如何确保维护准确呢？通过外围系统来控制，比如说告警信息，如果负责人没有变更告警是直达原有负责人，导致告警不准确。&lt;/p&gt;
+&lt;h2 id=&#34;cmdb的经验总结&#34;&gt;CMDB的经验总结&lt;/h2&gt;
+&lt;p&gt;其实CMDB真的是非常简单的系统，至少在两家公司做的CMDB都是非常短的时间完成，最多两个月。但是其实施的过程很多经验可以分享。&lt;/p&gt;
+&lt;p&gt;1、导致CMDB失败的因素&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;A、缺少管理层承诺----没有管理层的承诺，CMDB不可能成功。
+
+B、在复杂流程上消耗太多的时间---我们是创建一个CMDB库，不是一个流程系统。
+
+C、没有创建相应的工作指导文档---指导如何管理和维护CMDB。
+
+D、没有指定配置项负责人----确保配置项有人专职维护。
+
+E、目标过大，涵盖太多的功能----比如说IT采购和预算管理等等。
+
+F、颗粒度不合适----配置合理的CMDB的配置项层次和粒度非常重要。
+
+G、存在组织隔阂----CMDB是一个集成体系，靠流程中的每一个人通力协作，而不是某个人。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;2、导致CMDB成功的因素&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;A、业务导向。比如说我们在CMDB的新的系统中实时加入QR码技术，为了降低资产盘点的工作量。
+
+B、能自动发现就自动发现，降低配置管理的成本，但自动发现的信息不能用来做告警。
+
+C、配置项的管理员必须全程参与，需求定型、测试及验收等等。
+
+D、CMDB系统建设完成之后，其他系统必须和他联动。比如说监控、质量、容量等等，用场景驱动配置项的管理。
+
+E、流程一定要平台化，不要让流程脱离CMDB存在，比如说搞一个OA流程，这个是很致命的。
+
+F、CMDB要持续演进，特别是云端资源的管理。
+
+G、配置项和流程必须要文档化，后期要进行CMDB培训。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;参考文献&#34;&gt;参考文献&lt;/h1&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s/eTxt3yXjQai_NH6hxcrbEw&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;【平台篇】运维平台之CMDB系统建设 &lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://mp.weixin.qq.com/s/veqrnI4jrprrgT9BqmK61Q&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt; 长文 | 重构CMDB，避免运维之耻 &lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://tech.canway.net/product/13.html?bd_vid=10555330452774906329&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;&lt;/a&gt;
+
+&lt;a href=&#34;http://www.dcits.com/list-140-1.html#B_vid=11189524108422460471&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;T资源管理系统Sm@rtCMDB&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://tech.canway.net/product/13.html?bd_vid=10555330452774906329&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;蓝鲸CMDB解决方案&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.yunweipai.com/archives/28836.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;优维科技老王：与其说建设CMDB，不如说建设IT资源图谱&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;http://www.yunweipai.com/archives/28207.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;优维科技王津银：创新赋能 银行业新一代CMDB的落地实践&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

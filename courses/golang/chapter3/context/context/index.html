@@ -1,0 +1,1195 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ace Mei">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="并发编程 Context">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/context/context/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="/programmertalk/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/programmertalk/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/programmertalk/index.webmanifest">
+  <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/context/context/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="ProgrammerTalk">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/golang/chapter3/context/context/">
+  <meta property="og:title" content="Contex详解 | ProgrammerTalk">
+  <meta property="og:description" content="并发编程 Context"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2018-09-09T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2018-09-09T00:00:00&#43;00:00">
+  
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Contex详解 | ProgrammerTalk</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/programmertalk/">ProgrammerTalk</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/containertechnology/"><span>ContainerTechnology</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="/programmertalk/courses/"><span>Courses</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/devops/"><span>Devops</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/ee/"><span>EngineeringEfficiency</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/programmertalk/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+<div class="container-fluid docs">
+  <div class="row flex-xl-nowrap">
+    <div class="col-12 col-md-3 col-xl-2 docs-sidebar">
+      
+
+
+
+
+
+  
+    
+  
+
+
+
+
+<form class="docs-search d-flex align-items-center">
+  <button class="btn docs-toggle d-md-none p-0 mr-3" type="button" data-toggle="collapse" data-target="#docs-nav" aria-controls="docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    <span><i class="fas fa-bars"></i></span>
+  </button>
+
+  
+  <input name="q" type="search" class="form-control" placeholder="Search..." autocomplete="off">
+  
+</form>
+
+<nav class="collapse docs-links" id="docs-nav">
+  
+
+  
+  
+  
+  
+  <div class="docs-toc-item active">
+    <a class="docs-toc-link" href="/programmertalk/courses/golang/chapter3/context/context/">Contex详解</a>
+
+  </div>
+  
+  
+</nav>
+
+    </div>
+
+    
+    <div class="d-none d-xl-block col-xl-2 docs-toc">
+      <ul class="nav toc-top">
+        <li><a href="#" id="back_to_top" class="docs-toc-title">Contents</a></li>
+      </ul>
+
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#context-的设计背景及原则">Context 的设计背景及原则</a>
+      <ul>
+        <li><a href="#服务端处理请求逻辑">服务端处理请求逻辑</a></li>
+        <li><a href="#流水线工作模式">流水线工作模式</a></li>
+        <li><a href="#使用原则">使用原则</a></li>
+      </ul>
+    </li>
+    <li><a href="#context-实现">Context 实现</a>
+      <ul>
+        <li><a href="#context-的类图结构">Context 的类图结构</a></li>
+        <li><a href="#context-接口申明">Context 接口申明</a></li>
+        <li><a href="#接口分析">接口分析</a></li>
+        <li><a href="#context-的派生接口介绍">Context 的派生接口介绍</a></li>
+      </ul>
+    </li>
+    <li><a href="#context-实现原理分析">Context 实现原理分析</a></li>
+    <li><a href="#context-典型的使用场景举例分析">Context 典型的使用场景，举例分析</a>
+      <ul>
+        <li><a href="#http-请求的场景">Http 请求的场景</a></li>
+        <li><a href="#主动提交一个取消事件">主动提交一个取消事件</a></li>
+        <li><a href="#一个容易犯错的例子">一个容易犯错的例子</a></li>
+        <li><a href="#pipline-的场景">Pipline 的场景</a></li>
+      </ul>
+    </li>
+    <li><a href="#context-总结">Context 总结</a></li>
+    <li><a href="#扩展阅读">扩展阅读</a></li>
+  </ul>
+</nav>
+
+      
+    </div>
+    
+
+    <main class="col-12 col-md-9 col-xl-8 py-md-3 pl-md-5 docs-content" role="main">
+
+      <article class="article">
+
+        <div class="docs-article-container">
+          <h1>Contex详解</h1>
+
+          <div class="article-style">
+            <h2 id="context-的设计背景及原则">Context 的设计背景及原则</h2>
+<h3 id="服务端处理请求逻辑">服务端处理请求逻辑</h3>
+<p>在Go服务端，每个传入的请求被一个自己的goroutine 处理。 请求处理器通常会开启额外的 goroutine 来访问后端服务
+比如 database 或 RPC服务。每个请求的 goroutine 集合通常需要访问该请求特定的信息，比如用户的ID，授权token
+以及 请求的 deadline. 当请求被取消或超时时，这个请求对应的goroutine 集能快速退出，系统可以回收它们使用的所有资源。</p>
+<h3 id="流水线工作模式">流水线工作模式</h3>
+<h3 id="使用原则">使用原则</h3>
+<ul>
+<li>
+<p>不要将Context 存储到一个结构体中，而应该是通过函数传参的方式传递。Context 应该当作第一个参数</p>
+</li>
+<li>
+<p>不要传递一个空的 context 。当你不知道该传递何种Context时候，可以用 context.TODO</p>
+</li>
+<li>
+<p>仅对传输进程和API的请求范围的数据使用上下文值，而不是将可选参数传递给函数。</p>
+</li>
+<li>
+<p>相同的Context 可以传递给不同 goroutine中的函数，Context 对于多个goroutine同时使用是安全的。</p>
+</li>
+</ul>
+<h2 id="context-实现">Context 实现</h2>
+<h3 id="context-的类图结构">Context 的类图结构</h3>
+<pre><code class="language-mermaid">classDiagram
+Context &lt;|-- emptyCtx : Implementation
+Context &lt;|-- cancelCtx : Implementation
+Context &lt;|-- timerCtx : Implementation
+Context &lt;|-- valueCtx : Implementation
+
+
+&lt;&lt;interface&gt;&gt; Context
+Context : Deadline() (deadline time.Time, ok bool)
+Context : Done() &lt;-chan struct{}
+Context : Err() error
+Context : Value(key interface{}) interface{}
+
+
+
+class CancelFunc{
+   &lt;&lt;func&gt;&gt; 
+  CancelFunc func()
+}
+
+
+CancelFunc --* WithCancel
+Context    --* WithCancel
+
+
+</code></pre>
+<h3 id="context-接口申明">Context 接口申明</h3>
+<pre><code>// A Context carries a deadline, a cancellation signal, and other values across
+// API boundaries.
+//
+// Context's methods may be called by multiple goroutines simultaneously.
+type Context interface {
+	// Deadline returns the time when work done on behalf of this context
+	// should be canceled. 
+  // Deadline returns ok==false when no deadline is set. 
+  // Successive calls to Deadline return the same results.
+	Deadline() (deadline time.Time, ok bool)
+
+	// Done returns a channel that's closed when work done on behalf of this
+	// context should be canceled. Done may return nil if this context can
+	// never be canceled. Successive calls to Done return the same value.
+	// The close of the Done channel may happen asynchronously,
+	// after the cancel function returns.
+	//
+	// WithCancel arranges for Done to be closed when cancel is called;
+	// WithDeadline arranges for Done to be closed when the deadline expires; 
+  // WithTimeout arranges for Done to be closed when the timeout elapses.
+
+	// Done is provided for use in select statements:
+	Done() &lt;-chan struct{}
+
+	// If Done is not yet closed, Err returns nil.
+	// If Done is closed, Err returns a non-nil error explaining why:
+	// Canceled if the context was canceled
+	// or DeadlineExceeded if the context's deadline passed.
+	// After Err returns a non-nil error, successive calls to Err return the same error.
+	Err() error
+
+	// Value returns the value associated with this context for key, or nil
+	// if no value is associated with key. Successive calls to Value with
+	// the same key returns the same result.
+	Value(key interface{}) interface{}
+}
+
+</code></pre>
+<h3 id="接口分析">接口分析</h3>
+<pre><code>// Done is provided for use in select statements:
+Done() &lt;-chan struct{}
+</code></pre>
+<p>Done 方法返回一个 struct{} chan , 该 channel 扮演了一个代表 context 运行函数的取消信号。
+当该channel 关闭时，相应的函数应该放弃对应的工作并返回。</p>
+<p>Context 并不提供Cancel 方法，这和Done channel 只能被动接受的原因相同。 接受取消信号的函数，通常并不是
+发送 cancel 信号 函数。尤其是,当一个父操作为子操作开启新的 goroutine 时，子操作不能取消父操作。</p>
+<pre><code>Err() error
+</code></pre>
+<p>Err 函数会返回一个错误提示，为什么当前的context 被取消。</p>
+<pre><code>Deadline() (deadline time.Time, ok bool)
+</code></pre>
+<p>Deadline 方法允许函数判断，是否值得开始工作。如果所剩的时间比较少，就不值得开启工作。在编码中，
+也可以用用于设置I/O操作的超时时间</p>
+<pre><code>Value(key interface{}) interface{}
+</code></pre>
+<p>Value  函数，允许上下文携带请求范围的数据。这些数据可以被多个子 goroutine 线程安全的访问。</p>
+<h3 id="context-的派生接口介绍">Context 的派生接口介绍</h3>
+<p>为了便于使用，Context 包提供了几个派生的Context，他们提供了Context语意，和一个 CancelFunc的回调函数。
+当上下文被取消时，从它派生的所有上下文也将被取消。 函数原型如下：</p>
+<pre><code>
+// A CancelFunc tells an operation to abandon its work.
+// A CancelFunc does not wait for the work to stop.
+// A CancelFunc may be called by multiple goroutines simultaneously.
+type CancelFunc func()
+
+
+WithCancel(parent Context) (ctx Context, cancel CancelFunc)
+
+WithDeadline(parent Context, d time.Time) (Context, CancelFunc)
+
+WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)
+
+</code></pre>
+<p>这几个函数，都接受一个上下文（parent Context)，并返回一个派生的上下文，和一个CancelFunc。调用CancelFunc将
+触发以下操作：</p>
+<ul>
+<li>取消输入context 派生的子context，以及该子context 派生的子孙 context</li>
+<li>删除父对象对子对象的引用</li>
+<li>停止任何关联的计时器。</li>
+</ul>
+<h2 id="context-实现原理分析">Context 实现原理分析</h2>
+<h2 id="context-典型的使用场景举例分析">Context 典型的使用场景，举例分析</h2>
+<h3 id="http-请求的场景">Http 请求的场景</h3>
+<p>如下代码，模拟了一个一个HTTP Server 服务，处理客户端请求需要2秒时间，若在两秒内，用户取消了请求，
+该请求应该立刻被返回。</p>
+<pre><code>
+func main() {
+	// Create an HTTP server that listens on port 8000
+	http.ListenAndServe(&quot;:8000&quot;, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		// This prints to STDOUT to show that processing has started
+		fmt.Fprint(os.Stdout, &quot;processing request\n&quot;)
+		// We use `select` to execute a peice of code depending on which
+		// channel receives a message first
+		select {
+		case &lt;-time.After(2 * time.Second):
+			// If we receive a message after 2 seconds
+			// that means the request has been processed
+			// We then write this as the response
+			w.Write([]byte(&quot;request processed&quot;))
+		case &lt;-ctx.Done():
+			// If the request gets cancelled, log it
+			// to STDERR
+			fmt.Fprint(os.Stderr, &quot;request cancelled\n&quot;)
+		}
+	}))
+}
+
+</code></pre>
+<p>可以通过在2秒内关闭浏览器模拟取消请求，在控制台上就能看到 request cancelled 的输出。完整的代码在
+<a href="https://github.com/sohamkamani/blog-example-go-context-cancellation" target="_blank" rel="noopener">这里</a>。</p>
+<h3 id="主动提交一个取消事件">主动提交一个取消事件</h3>
+<p>在某些场景下，如果我们希望在满足特定条件下取消一个任务，可以通过提交一个cancel事件来实现。
+下面的例子，展示这种场景</p>
+<pre><code>
+func operation1(ctx context.Context) error {
+	time.Sleep(100 * time.Millisecond)
+	return errors.New(&quot;failed&quot;)
+}
+
+func operation2(ctx context.Context) {
+	select {
+	case &lt;-time.After(500 * time.Millisecond):
+		fmt.Println(&quot;done&quot;)
+	case &lt;-ctx.Done():
+		fmt.Println(&quot;halted operation2&quot;)
+	}
+}
+
+func main() {
+  ctx :=context.Background()
+  ctx, cancel :=context.WithCancel(ctx)
+  go func(){
+    err :=Operation1(ctx)
+    if err != nil {
+      cancel()
+    }
+  }()
+  operation2(ctx)
+}
+
+
+</code></pre>
+<p>例子2，带有超时时间的context。</p>
+<pre><code>func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	go handle(ctx, 500*time.Millisecond)
+	select {
+	case &lt;-ctx.Done():
+		fmt.Println(&quot;main&quot;, ctx.Err())
+	}
+}
+
+func handle(ctx context.Context, duration time.Duration) {
+	select {
+	case &lt;-ctx.Done():
+		fmt.Println(&quot;handle&quot;, ctx.Err())
+	case &lt;-time.After(duration):
+		fmt.Println(&quot;process request with&quot;, duration)
+	}
+}
+
+</code></pre>
+<h3 id="一个容易犯错的例子">一个容易犯错的例子</h3>
+<pre><code>
+func doSomething() {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	someArg := &quot;loremipsum&quot;
+	go doSomethingElse(context.Background(), someArg)
+}
+
+</code></pre>
+<p>doSomething 函数退出时，就会调用cancel(),此时，doSomething 会被迫终止，
+在函数中调用另一个子进程时，应创建一个新的context</p>
+<h3 id="pipline-的场景">Pipline 的场景</h3>
+<p>所谓的Pipline 可以理解为： 通过channel 连在一起的一系列的状态，每个状态都有
+一组goroutine 执行相同的函数。在每个阶段，这些 goroutine 执行如下操作：</p>
+<ul>
+<li>从上游接受channel 获取值</li>
+<li>对获取的数据执行一些操作，</li>
+<li>将数据通过传出 channels下发</li>
+</ul>
+<p>通过一个例子来说明：</p>
+<p>生成函数</p>
+<pre><code>func gen(nums ...int) &lt;-chan int {
+    out := make(chan int)
+    go func() {
+        for _, n := range nums {
+            out &lt;- n
+        }
+        close(out)
+    }()
+    return out
+}
+</code></pre>
+<h2 id="context-总结">Context 总结</h2>
+<h2 id="扩展阅读">扩展阅读</h2>
+<p>
+<a href="https://blog.golang.org/pipelines" target="_blank" rel="noopener">Go Concurrency Patterns: Pipelines and cancellation</a></p>
+
+          </div>
+
+          
+
+
+
+          
+          <div class="article-widget">
+            
+<div class="post-nav">
+  
+  
+  
+  <div class="post-nav-item">
+    <div class="meta-nav">Next</div>
+    <a href="/programmertalk/courses/golang/chapter3/channel/" rel="prev">Channel</a>
+  </div>
+  
+</div>
+
+          </div>
+          
+        </div>
+
+        <div class="body-footer">
+          <p>Last updated on Sep 9, 2018</p>
+
+          
+
+
+
+
+
+  
+  
+
+<p class="edit-page">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/courses/golang/chapter3/context/context.md">
+    <i class="fas fa-pen pr-2"></i>Edit this page
+  </a>
+</p>
+
+
+
+
+          
+
+
+          
+  
+  
+
+
+        </div>
+
+      </article>
+
+      <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+  </p>
+</footer>
+
+
+    </main>
+  </div>
+</div>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js" integrity="sha256-lyWCDMnMeZiXRi7Zl54sZGKYmgQs4izcT7+tKc+KUBk=" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/programmertalk/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.1/anchor.min.js" integrity="sha256-pB/deHc9CGfFpJRjC43imB29Rse8tak+5eXqntO94ck=" crossorigin="anonymous"></script>
+    <script>
+      anchors.add();
+    </script>
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/programmertalk/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
