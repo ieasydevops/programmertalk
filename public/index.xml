@@ -2337,12 +2337,256 @@ pod 将会运行的 node 上面
       <link>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/wal/wal/</link>
       <pubDate>Sun, 05 May 2019 00:00:00 +0100</pubDate>
       <guid>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/wal/wal/</guid>
-      <description>&lt;h2 id=&#34;概览&#34;&gt;概览&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;目录&#34;&gt;目录&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;概览&lt;/li&gt;
+&lt;li&gt;WAL管理&lt;/li&gt;
+&lt;li&gt;WAL Read/Writer&lt;/li&gt;
+&lt;li&gt;Log file 格式&lt;/li&gt;
+&lt;li&gt;Record 文件格式&lt;/li&gt;
+&lt;li&gt;格式的优缺点&lt;/li&gt;
+&lt;li&gt;WAL的实现&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;概览&#34;&gt;概览&lt;/h2&gt;
+&lt;p&gt;Write ahead log (WAL) 以日志文件的形式将内存表的操作顺序的持久化到存储介质上。在失败的时候，WAL文件 通过利用这些日志文件重建内存表，来恢复数据库到之前一致的状态。当一个内存表被安全的刷写到持久化介质后，对应的WLA日志会逐步的归档和淘汰，最终
+归档的日志经过一个时间后会从磁盘清理掉。&lt;/p&gt;
 &lt;h2 id=&#34;wal管理&#34;&gt;WAL管理&lt;/h2&gt;
+&lt;p&gt;WAL文件是有在WAL目录下递增的序列号生成，为了能恢复到database的状态，这些文件需要按照序列号来读。WAL管理器，
+提供了将WAL文件作为单个单元读取的抽象。在内部，它使用Reader或Writer抽象来打开和读取文件。&lt;/p&gt;
 &lt;h2 id=&#34;wal-readerwriter&#34;&gt;WAL Reader/Writer&lt;/h2&gt;
+&lt;p&gt;Writer 为向日志记录提供了一个抽象。存储媒介特定的内部细节，通过WriteableFile 接口屏蔽掉。
+类似地，Reader提供了 从特定日志文件中顺序读取日志记录的抽象。内部存储媒介的详细信息有 SequentailFile 接口处理。&lt;/p&gt;
 &lt;h2 id=&#34;log-file-格式&#34;&gt;Log File 格式&lt;/h2&gt;
+&lt;p&gt;日志文件有一系列可变长度的记录组成。记录按kBlockSize分组。如果某个记录无法放入剩余空间，则剩余空间将填充null数据。
+Writer 以kBlockSize为单位进行读/写&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;       +-----+-------------+--+----+----------+------+-- ... ----+
+ File  | r0  |        r1   |P | r2 |    r3    |  r4  |           |
+       +-----+-------------+--+----+----------+------+-- ... ----+
+       &amp;lt;--- kBlockSize ------&amp;gt;|&amp;lt;-- kBlockSize ------&amp;gt;|
+
+  rn = variable size records
+  P = Padding
+
+&lt;/code&gt;&lt;/pre&gt;
 &lt;h2 id=&#34;record-文件格式&#34;&gt;Record 文件格式&lt;/h2&gt;
+&lt;p&gt;Record 的布局格式有两种： Legacy 和 Recyclable&lt;/p&gt;
+&lt;h3 id=&#34;the-legacy-record-format&#34;&gt;The Legacy Record Format&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;+---------+-----------+-----------+--- ... ---+
+|CRC (4B) | Size (2B) | Type (1B) | Payload   |
++---------+-----------+-----------+--- ... ---+
+
+CRC = 32bit hash computed over the payload using CRC
+Size = Length of the payload data
+Type = Type of record
+       (kZeroType, kFullType, kFirstType, kLastType, kMiddleType )
+       The type is used to group a bunch of records together to represent
+       blocks that are larger than kBlockSize
+Payload = Byte stream as long as specified by the payload size
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;recyclable-record-format&#34;&gt;Recyclable Record Format&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;+---------+-----------+-----------+----------------+--- ... ---+
+|CRC (4B) | Size (2B) | Type (1B) | Log number (4B)| Payload   |
++---------+-----------+-----------+----------------+--- ... ---+
+Same as above, with the addition of
+Log number = 32bit log file number, so that we can distinguish between
+records written by the most recent log writer vs a previous one.
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;record-format-details-for-legacy-format&#34;&gt;Record Format Details For Legacy Format&lt;/h2&gt;
+&lt;p&gt;日志文件内容是一个32KB块的序列。唯一的例外是文件的尾部可能包含部分块。&lt;/p&gt;
+&lt;p&gt;每一个block 包含一系列记录组成:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+block := record* trailer?
+record :=
+  checksum: uint32	// crc32c of type and data[]
+  length: uint16
+  type: uint8		// One of FULL, FIRST, MIDDLE, LAST 
+  data: uint8[length]
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;记录永远不会在块的最后6个字节内开始（因为它不适合）。这里的任何剩余字节都构成了尾部，它必须完全由零字节组成，并且必须被读者跳过。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;如果当前的block 还剩下 7 个 bytes, 当新增一个非零长度的record时，写入的 writer 必须先发出一个记录(其中包含零字节
+的用户数据)以填充block 尾部的 7 个 bytes ,然后在后续的block 中，发出用户的所有数据&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;用户的记录的数据类型如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;FULL == 1
+FIRST == 2
+MIDDLE == 3
+LAST == 4
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;以后可以有更多的数据类型，一些 Readers 可能会跳过他们不理解的recored, 也有一些Readers 或报告 这些数据被忽略。&lt;/p&gt;
+&lt;p&gt;Full record 或包含整个用户记录。&lt;/p&gt;
+&lt;p&gt;FIRST, MIDDLE, LAST, 是用于用户记录的类型，这些类型被分割为多个片段（通常是因为block 的边界）。
+FIRST: user record 的第一个片段的类型
+LAST:  user record 的最后一个片段的类型
+MID: 是用户记录的所有内部片段的类型。&lt;/p&gt;
+&lt;p&gt;举例:&lt;/p&gt;
+&lt;p&gt;一序列用户的 records&lt;/p&gt;
+&lt;p&gt;A: length 1000&lt;/p&gt;
+&lt;p&gt;B: length  97270&lt;/p&gt;
+&lt;p&gt;C: length 8000&lt;/p&gt;
+&lt;p&gt;A 会作为完整记录存储在第一个block中
+B 会拆分成三个block. 第一个fragment 占据第一个block 剩余的部分
+第二个 fragment 会占据第二个block 的所有
+第三个 fragment 会占据第三个block 的前半部分，这将在第三个block中留下6个bytes  的空闲空间，该block 作为
+尾部留空
+C 作为完整的记录存在第四个block 中&lt;/p&gt;
 &lt;h2 id=&#34;优势&#34;&gt;优势&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;不需要任何启发式 resyncing  ， 只需要转到下一个block 边界 ，扫描。如果又损坏，请跳到
+下一个block。作为一个附带的好处，当一个日志文件的部分内容作为recode 潜入到另一个日志文件中时，我们
+不会感到困惑。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Splitting at approximate boundaries (e.g., for mapreduce) is simple:&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;找到下一个block 并跳过记录，直到找到完整的或第一个记录为止。&lt;/p&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;对于大的记录，我们不需要额外的缓冲。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;缺点:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;不能打包小的 records. 这个可以通过添加新的类型来解决，这是当前实现的一个缺点&lt;/li&gt;
+&lt;li&gt;不能压缩。同样，这个可以通过增加记录的类型来解决这个问题&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;wal的实现&#34;&gt;WAL的实现&lt;/h2&gt;
+&lt;h3 id=&#34;wla-文件格式&#34;&gt;WLA 文件格式&lt;/h3&gt;
+&lt;p&gt;WAL  按编号和顺序的段操作&lt;/p&gt;
+&lt;p&gt;·000000·
+·000001·
+·000002·
+·000003·&lt;/p&gt;
+&lt;p&gt;默认最大128M，&lt;/p&gt;
+&lt;p&gt;以32KB的页数写入一个段。只有最近一段的最后一页可能是不完整的。WAL记录是一个不透明的字节片，如果超过当前页面的剩余空间，
+,它被拆分成子记录。在 segment 边界，记录永远不会分开，如果单个记录超过默认段大小，则将创建更大尺寸的segment.&lt;/p&gt;
+&lt;p&gt;Prometheus tsdb 的WAL格式如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;┌───────────┬──────────┬────────────┬──────────────┐
+│ type &amp;lt;1b&amp;gt; │ len &amp;lt;2b&amp;gt; │ CRC32 &amp;lt;4b&amp;gt; │ data &amp;lt;bytes&amp;gt; │
+└───────────┴──────────┴────────────┴──────────────┘
+
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;类型标签又如下几种状态：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;0&lt;/code&gt;: rest of page will be empty&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;1&lt;/code&gt;: a full record encoded in a single fragment&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;2&lt;/code&gt;: first fragment of a record&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;3&lt;/code&gt;: middle fragment of a record&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;4&lt;/code&gt;: final fragment of a record&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;记录的编码格式&#34;&gt;记录的编码格式&lt;/h3&gt;
+&lt;p&gt;分三种类型&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;序列记录&lt;/li&gt;
+&lt;li&gt;样本记录&lt;/li&gt;
+&lt;li&gt;Tombstone 类型&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Series records encode the labels that identifies a series and its unique ID.&lt;/p&gt;
+&lt;h4 id=&#34;序列记录&#34;&gt;序列记录&lt;/h4&gt;
+&lt;p&gt;一个序列记录，会包含该序列的标签和唯一ID&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;┌────────────────────────────────────────────┐
+│ type = 1 &amp;lt;1b&amp;gt;                              │
+├────────────────────────────────────────────┤
+│ ┌─────────┬──────────────────────────────┐ │
+│ │ id &amp;lt;8b&amp;gt; │ n = len(labels) &amp;lt;uvarint&amp;gt;    │ │
+│ ├─────────┴────────────┬─────────────────┤ │
+│ │ len(str_1) &amp;lt;uvarint&amp;gt; │ str_1 &amp;lt;bytes&amp;gt;   │ │
+│ ├──────────────────────┴─────────────────┤ │
+│ │  ...                                   │ │
+│ ├───────────────────────┬────────────────┤ │
+│ │ len(str_2n) &amp;lt;uvarint&amp;gt; │ str_2n &amp;lt;bytes&amp;gt; │ │
+│ └───────────────────────┴────────────────┘ │
+│                  . . .                     │
+└────────────────────────────────────────────┘
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;采集样本记录&#34;&gt;采集样本记录&lt;/h4&gt;
+&lt;p&gt;采样数据样本记录 主要包含了 三元组 &lt;code&gt;（序列ID，时间戳，序列值Value）&lt;/code&gt;
+序列的索引ID和时间戳  被编码为 w.r.t
+第一个行存储了启始的ID 和启始的时间戳。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;┌──────────────────────────────────────────────────────────────────┐
+│ type = 2 &amp;lt;1b&amp;gt;                                                    │
+├──────────────────────────────────────────────────────────────────┤
+│ ┌────────────────────┬───────────────────────────┐               │
+│ │ id &amp;lt;8b&amp;gt;            │ timestamp &amp;lt;8b&amp;gt;            │               │
+│ └────────────────────┴───────────────────────────┘               │
+│ ┌────────────────────┬───────────────────────────┬─────────────┐ │
+│ │ id_delta &amp;lt;uvarint&amp;gt; │ timestamp_delta &amp;lt;uvarint&amp;gt; │ value &amp;lt;8b&amp;gt;  │ │
+│ └────────────────────┴───────────────────────────┴─────────────┘ │
+│                              . . .                               │
+└──────────────────────────────────────────────────────────────────┘
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;tombstone记录&#34;&gt;Tombstone记录&lt;/h4&gt;
+&lt;p&gt;Tombstone records encode tombstones as a list of triples &lt;code&gt;(series_id, min_time, max_time)&lt;/code&gt;
+and specify an interval for which samples of a series got deleted.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;┌─────────────────────────────────────────────────────┐
+│ type = 3 &amp;lt;1b&amp;gt;                                       │
+├─────────────────────────────────────────────────────┤
+│ ┌─────────┬───────────────────┬───────────────────┐ │
+│ │ id &amp;lt;8b&amp;gt; │ min_time &amp;lt;varint&amp;gt; │ max_time &amp;lt;varint&amp;gt; │ │
+│ └─────────┴───────────────────┴───────────────────┘ │
+│                        . . .                        │
+└─────────────────────────────────────────────────────┘
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;wla-顶层接口设计&#34;&gt;WLA 顶层接口设计&lt;/h3&gt;
+&lt;p&gt;数据结构设计&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+// WAL is a write ahead log that stores records in segment files.
+// It must be read from start to end once before logging new data.
+// If an error occurs during read, the repair procedure must be called
+// before it&#39;s safe to do further writes.
+//
+// Segments are written to in pages of 32KB, with records possibly split
+// across page boundaries.
+// Records are never split across segments to allow full segments to be
+// safely truncated. It also ensures that torn writes never corrupt records
+// beyond the most recent segment.
+type WAL struct {
+	dir         string
+	logger      log.Logger
+	segmentSize int
+	mtx         sync.RWMutex
+	segment     *Segment // Active segment.
+	donePages   int      // Pages written to the segment.
+	page        *page    // Active page.
+	stopc       chan chan struct{}
+	actorc      chan func()
+	closed      bool // To allow calling Close() more than once without blocking.
+	compress    bool
+	snappyBuf   []byte
+
+	metrics *walMetrics
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;段-segment&#34;&gt;段 Segment&lt;/h3&gt;
+&lt;p&gt;默认128M，&lt;/p&gt;
+&lt;h3 id=&#34;页-page&#34;&gt;页 Page&lt;/h3&gt;
+&lt;p&gt;页是内存的buffer , 用来向磁盘批量刷数据。
+如果 Records 比一个页大，此记录会被分割，并单独的刷写到磁盘。&lt;/p&gt;
+&lt;p&gt;磁盘的刷写动作在如下情况被触发：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;当一个记录不适合当前的page 大小&lt;/li&gt;
+&lt;li&gt;或剩下的空间放不下下一个记录&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code&gt;
+// page is an in memory buffer used to batch disk writes.
+// Records bigger than the page size are split and flushed separately.
+// A flush is triggered when a single records doesn&#39;t fit the page size or
+// when the next record can&#39;t fit in the remaining free page space.
+type page struct {
+	alloc   int
+	flushed int
+	buf     [pageSize]byte
+}
+
+
+&lt;/code&gt;&lt;/pre&gt;
 </description>
     </item>
     
