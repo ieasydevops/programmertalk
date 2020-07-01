@@ -17,8 +17,8 @@ type: docs  # Do not modify.
 # - weight: Position of link in menu.
 menu:
   ecology:
-    name: 监控生态
+    name: 服务质量评估体系建设
     weight: 1
 ---
 
-## [监控生态](../productization/healthybox/)
+## [监控生态概览](../ecology/ecology/)

@@ -23,9 +23,8 @@ menu:
 
 ## [服务质量评估体系生态](../monitor/ecology/)
 
-## [技术及架构](../monitor/tech/)
-
 ## [产品](../monitor/productization/)
 
-### [产品](../monitor/productization/)
+## [技术及架构](../monitor/tech/)
+
 
