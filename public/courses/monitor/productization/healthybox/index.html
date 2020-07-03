@@ -27,7 +27,7 @@
   
     
   
-  <meta name="description" content="目标">
+  <meta name="description" content="目标 通常，由于业务的复杂性，导致关键服务的核心指标也会非常繁">
 
   
   <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/monitor/productization/healthybox/">
@@ -238,7 +238,7 @@
   <meta property="og:site_name" content="ProgrammerTalk">
   <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/monitor/productization/healthybox/">
   <meta property="og:title" content="应用健康红绿大盘 | ProgrammerTalk">
-  <meta property="og:description" content="目标"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="og:description" content="目标 通常，由于业务的复杂性，导致关键服务的核心指标也会非常繁"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
   <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
   
     
@@ -654,7 +654,7 @@
       </li>
       
       <li class="active">
-        <a href="/programmertalk/courses/monitor/productization/healthybox/">监控红绿大盘</a>
+        <a href="/programmertalk/courses/monitor/productization/healthybox/">应用健康红绿大盘</a>
       </li>
       
     </ul>
@@ -676,6 +676,13 @@
       <nav id="TableOfContents">
   <ul>
     <li><a href="#目标">目标</a></li>
+    <li><a href="#健康红绿盘的需求分析">健康红绿盘的需求分析</a>
+      <ul>
+        <li><a href="#基本假设">基本假设</a></li>
+        <li><a href="#健康红绿盘应该具有的基本信息">健康红绿盘应该具有的基本信息</a></li>
+      </ul>
+    </li>
+    <li><a href="#参考文献">参考文献</a></li>
   </ul>
 </nav>
 
@@ -692,6 +699,39 @@
 
           <div class="article-style">
             <h2 id="目标">目标</h2>
+<p>通常，由于业务的复杂性，导致关键服务的核心指标也会非常繁多，我们基于这些指标会构建多个监控大盘。问题是: 这些指标构成的大盘虽然非常详细，但不够直观，并不能一眼就知道当前那些系统存在什么样的问题。为此我们需要一个高度抽象的服务健康红绿盘。</p>
+<p>通常，我们看到的仪表盘是这样的：</p>
+<p><img src="http://codecapsule.com/wp-content/uploads/2016/08/effective-dashboards-01.jpg" alt="dashbord_detail"></p>
+<h2 id="健康红绿盘的需求分析">健康红绿盘的需求分析</h2>
+<h3 id="基本假设">基本假设</h3>
+<p>为了更直观，我们假设所有的观察者：</p>
+<ul>
+<li>不知到每个图表的具体含义</li>
+<li>不知道当系统处变得不健康时，图形应该是什么样子</li>
+<li>不知道内部组件以及他们如何组合在一起</li>
+<li>从未读过对应服务的代码</li>
+</ul>
+<p>我们看下如下的仪表盘：</p>
+<p><img src="http://codecapsule.com/wp-content/uploads/2016/08/effective-dashboards-02.jpg" alt="effective_dashboard"></p>
+<p>从这个图中，我们可以直观的值得</p>
+<ul>
+<li>log_statistics_minutely 服务挂了，它应该在过去的90分钟内停止了</li>
+<li>pupuet 服务可能在storage-31 存在问题，问题可能不是很严重。</li>
+<li>其它的服务应该是健康的。</li>
+</ul>
+<h3 id="健康红绿盘应该具有的基本信息">健康红绿盘应该具有的基本信息</h3>
+<p><img src="../../../monitor/productization/images/effective-dashboards-03.jpg" alt="健康红绿盘"></p>
+<ul>
+<li>服务名称：代表那个服务</li>
+<li>状态：健康，警告，或严重（OK,WARNING,CRITICAL）</li>
+<li>简短信息提示: 一个简单的提示，表明是什么原因导致当前的状态</li>
+<li>操作码：服务处于当前这个状态的唯一标识符，通过该操作码能明确对应到对应的运维操作文档。此处是一个超级链接，能跳转到对应的运维操作文档。</li>
+</ul>
+<p>红绿盘的颜色需要简单明了，不能太多，否则容易让你迷惑</p>
+<p><img src="../../../monitor/productization/images/effective-dashboards-04.jpg" alt="健康红绿盘"></p>
+<h2 id="参考文献">参考文献</h2>
+<p>
+<a href="http://codecapsule.com/2016/08/11/optimize-your-monitoring-for-decision-making/" target="_blank" rel="noopener">optimize-your-monitoring-for-decision-making</a></p>
 
           </div>
 
