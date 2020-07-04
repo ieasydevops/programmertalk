@@ -799,6 +799,23 @@ Query是对数据查询操作抽象。Appender + DB 构成了tsdb 的总体写�
     
     <item>
       <title>Cortex HA</title>
+      <link>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/</link>
+      <pubDate>Sun, 05 May 2019 00:00:00 +0100</pubDate>
+      <guid>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/</guid>
+      <description>&lt;h2 id=&#34;cortex-核心组件分析&#34;&gt;Cortex 核心组件分析&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;数据摄入组件&lt;/li&gt;
+&lt;li&gt;查询组件&lt;/li&gt;
+&lt;li&gt;规则/告警 评估组件&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;数据摄入组件架构&#34;&gt;数据摄入组件架构&lt;/h2&gt;
+&lt;h2 id=&#34;查询组件架构&#34;&gt;查询组件架构&lt;/h2&gt;
+&lt;h2 id=&#34;规则告警-评估组件&#34;&gt;规则/告警 评估组件&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Cortex HA</title>
       <link>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/ha/</link>
       <pubDate>Sun, 05 May 2019 00:00:00 +0100</pubDate>
       <guid>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/ha/</guid>

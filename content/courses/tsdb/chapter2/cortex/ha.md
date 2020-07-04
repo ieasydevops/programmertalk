@@ -8,10 +8,10 @@ draft: false
 menu:
   tsdb:
     parent: 时间序列数据库
-    weight: 5
+    weight: 6
 
 # Prev/next pager order (if `docs_section_pager` enabled in `params.toml`)
-weight: 5
+weight: 6
 ---
 
 ## 多Prometheus 实例HA

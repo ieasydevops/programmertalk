@@ -1,5 +1,5 @@
 ---
-title: '常见的面试问题'
+title: 'Create a beautifully simple website'
 subtitle: 'Create a beautifully simple website in under 10 minutes :rocket:'
 summary: Create a beautifully simple website in under 10 minutes.
 authors:

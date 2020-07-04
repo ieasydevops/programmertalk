@@ -148,12 +148,17 @@
   </url>
   
   <url>
-    <loc>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/ha/</loc>
+    <loc>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/containertechnology/k8s/pv/pv/</loc>
+    <lastmod>2019-05-05T00:00:00+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/ha/</loc>
     <lastmod>2019-05-05T00:00:00+01:00</lastmod>
   </url>
   
@@ -273,17 +278,17 @@
   </url>
   
   <url>
+    <loc>https://meixinyun.github.io/programmertalk/post/getting-started/</loc>
+    <lastmod>2019-04-17T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://meixinyun.github.io/programmertalk/category/demo/</loc>
     <lastmod>2019-04-17T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://meixinyun.github.io/programmertalk/tags/</loc>
-    <lastmod>2019-04-17T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://meixinyun.github.io/programmertalk/post/getting-started/</loc>
     <lastmod>2019-04-17T00:00:00+00:00</lastmod>
   </url>
   

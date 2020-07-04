@@ -27,10 +27,10 @@
   
     
   
-  <meta name="description" content="目录 磁盘存储概览 Block 存储布局 Chunk 存储布局 Index 存储布局 WAL 存储布局 总结">
+  <meta name="description" content="Cortex 核心组件分析 数据摄入组件 查询组件 规则/告警 评估组件 数据摄入">
 
   
-  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/">
+  <link rel="alternate" hreflang="en-us" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/">
 
   
 
@@ -220,7 +220,7 @@
   <link rel="icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
   <link rel="apple-touch-icon" type="image/png" href="/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
 
-  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/">
+  <link rel="canonical" href="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/">
 
   
   
@@ -236,9 +236,9 @@
   <meta property="twitter:card" content="summary">
   
   <meta property="og:site_name" content="ProgrammerTalk">
-  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/">
-  <meta property="og:title" content="磁盘存储模型 | ProgrammerTalk">
-  <meta property="og:description" content="目录 磁盘存储概览 Block 存储布局 Chunk 存储布局 Index 存储布局 WAL 存储布局 总结"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="og:url" content="https://meixinyun.github.io/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/">
+  <meta property="og:title" content="Cortex HA | ProgrammerTalk">
+  <meta property="og:description" content="Cortex 核心组件分析 数据摄入组件 查询组件 规则/告警 评估组件 数据摄入"><meta property="og:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
   <meta property="twitter:image" content="https://meixinyun.github.io/programmertalk/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
   
     
@@ -263,7 +263,7 @@
 
 
 
-  <title>磁盘存储模型 | ProgrammerTalk</title>
+  <title>Cortex HA | ProgrammerTalk</title>
 
 </head>
 
@@ -649,7 +649,7 @@
     <a class="docs-toc-link" href="/programmertalk/courses/tsdb/">时间序列数据库</a>
     <ul class="nav docs-sidenav">
       
-      <li >
+      <li class="active">
         <a href="/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/">Cotext</a>
       </li>
       
@@ -670,7 +670,7 @@
         <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout/">内存模型</a>
       </li>
       
-      <li class="active">
+      <li >
         <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/">磁盘存储模型</a>
       </li>
       
@@ -696,14 +696,10 @@
 
       <nav id="TableOfContents">
   <ul>
-    <li><a href="#目录">目录</a></li>
-    <li><a href="#磁盘存储结构概览">磁盘存储结构概览</a>
-      <ul>
-        <li><a href="#heading"></a></li>
-      </ul>
-    </li>
-    <li><a href="#各个组件存储布局">各个组件存储布局</a></li>
-    <li><a href="#总结">总结</a></li>
+    <li><a href="#cortex-核心组件分析">Cortex 核心组件分析</a></li>
+    <li><a href="#数据摄入组件架构">数据摄入组件架构</a></li>
+    <li><a href="#查询组件架构">查询组件架构</a></li>
+    <li><a href="#规则告警-评估组件">规则/告警 评估组件</a></li>
   </ul>
 </nav>
 
@@ -716,34 +712,18 @@
       <article class="article">
 
         <div class="docs-article-container">
-          <h1>磁盘存储模型</h1>
+          <h1>Cortex HA</h1>
 
           <div class="article-style">
-            <h2 id="目录">目录</h2>
-<ul>
-<li>
-<p>磁盘存储概览</p>
-</li>
-<li>
-<p>Block 存储布局</p>
-</li>
-<li>
-<p>Chunk 存储布局</p>
-</li>
-<li>
-<p>Index 存储布局</p>
-</li>
-<li>
-<p>WAL 存储布局</p>
-</li>
-<li>
-<p>总结</p>
-</li>
-</ul>
-<h2 id="磁盘存储结构概览">磁盘存储结构概览</h2>
-<h3 id="heading"></h3>
-<h2 id="各个组件存储布局">各个组件存储布局</h2>
-<h2 id="总结">总结</h2>
+            <h2 id="cortex-核心组件分析">Cortex 核心组件分析</h2>
+<ol>
+<li>数据摄入组件</li>
+<li>查询组件</li>
+<li>规则/告警 评估组件</li>
+</ol>
+<h2 id="数据摄入组件架构">数据摄入组件架构</h2>
+<h2 id="查询组件架构">查询组件架构</h2>
+<h2 id="规则告警-评估组件">规则/告警 评估组件</h2>
 
           </div>
 
@@ -760,14 +740,14 @@
   
   <div class="post-nav-item">
     <div class="meta-nav">Previous</div>
-    <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/memorylayout/memorylayout/" rel="next">内存模型</a>
+    <a href="/programmertalk/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout/" rel="next">磁盘存储模型</a>
   </div>
   
   
   
   <div class="post-nav-item">
     <div class="meta-nav">Next</div>
-    <a href="/programmertalk/courses/tsdb/chapter2/cortex/cortexarc/" rel="prev">Cortex HA</a>
+    <a href="/programmertalk/courses/tsdb/chapter2/cortex/ha/" rel="prev">Cortex HA</a>
   </div>
   
 </div>
@@ -789,7 +769,7 @@
   
 
 <p class="edit-page">
-  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/courses/tsdb/chapter2/prometheustsdb/disklayout/disylayout.md">
+  <a href="https://github.com/gcushen/hugo-academic/edit/master/content/courses/tsdb/chapter2/cortex/cortexarc.md">
     <i class="fas fa-pen pr-2"></i>Edit this page
   </a>
 </p>
